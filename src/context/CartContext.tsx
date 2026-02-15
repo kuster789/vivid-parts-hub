@@ -1,15 +1,23 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
-import { Product } from "@/data/products";
+
+export interface CartProduct {
+  id: string;
+  name: string;
+  price: number;
+  brand: string;
+  model: string;
+  has_3d?: boolean;
+}
 
 export interface CartItem {
-  product: Product;
+  product: CartProduct;
   quantity: number;
   selectedVariations: Record<string, string>;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (product: Product, variations?: Record<string, string>) => void;
+  addItem: (product: CartProduct, variations?: Record<string, string>) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -22,7 +30,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  const addItem = useCallback((product: Product, variations: Record<string, string> = {}) => {
+  const addItem = useCallback((product: CartProduct, variations: Record<string, string> = {}) => {
     setItems((prev) => {
       const existing = prev.find((i) => i.product.id === product.id);
       if (existing) {

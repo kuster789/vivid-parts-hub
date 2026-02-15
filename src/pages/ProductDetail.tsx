@@ -1,15 +1,33 @@
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ShoppingCart, Package, CheckCircle, AlertTriangle } from "lucide-react";
-import { products } from "@/data/products";
+import { ArrowLeft, ShoppingCart, Package, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import ProductViewer3D from "@/components/ProductViewer3D";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const product = products.find((p) => p.id === id);
   const { addItem } = useCart();
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [selectedVariations, setSelectedVariations] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase.from("products").select("*").eq("id", id).maybeSingle();
+      setProduct(data);
+      setLoading(false);
+    };
+    load();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="container flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -21,6 +39,8 @@ const ProductDetail = () => {
     );
   }
 
+  const variations = Array.isArray(product.variations) ? product.variations : [];
+
   return (
     <main className="py-8">
       <div className="container">
@@ -29,9 +49,8 @@ const ProductDetail = () => {
         </Link>
 
         <div className="grid gap-8 lg:grid-cols-2">
-          {/* Left - 3D Viewer or Placeholder */}
           <div>
-            {product.has3D ? (
+            {product.has_3d ? (
               <ProductViewer3D />
             ) : (
               <div className="flex h-[400px] items-center justify-center rounded-lg border border-border bg-secondary md:h-[500px]">
@@ -40,17 +59,15 @@ const ProductDetail = () => {
             )}
           </div>
 
-          {/* Right - Info */}
           <div className="flex flex-col">
             <span className="mb-2 font-display text-[11px] font-bold uppercase tracking-widest text-primary">
-              {product.brand.toUpperCase()} · {product.model}
+              {product.brand?.toUpperCase()} · {product.model}
             </span>
             <h1 className="mb-3 font-display text-2xl font-bold uppercase tracking-wide text-foreground md:text-3xl">
               {product.name}
             </h1>
             <p className="mb-6 text-sm leading-relaxed text-muted-foreground">{product.description}</p>
 
-            {/* SKU & Stock */}
             <div className="mb-6 flex flex-wrap gap-4 text-xs">
               <span className="text-muted-foreground">SKU: <span className="font-mono text-foreground">{product.sku}</span></span>
               <span className="flex items-center gap-1">
@@ -64,12 +81,11 @@ const ProductDetail = () => {
               </span>
             </div>
 
-            {/* Variations */}
-            {product.variations.map((v) => (
+            {variations.map((v: any) => (
               <div key={v.name} className="mb-4">
                 <label className="mb-2 block font-display text-xs font-bold uppercase tracking-wider text-foreground">{v.name}</label>
                 <div className="flex flex-wrap gap-2">
-                  {v.options.map((opt) => (
+                  {(v.options || []).map((opt: string) => (
                     <button
                       key={opt}
                       onClick={() => setSelectedVariations({ ...selectedVariations, [v.name]: opt })}
@@ -86,16 +102,15 @@ const ProductDetail = () => {
               </div>
             ))}
 
-            {/* Price & Add to Cart */}
             <div className="mt-auto border-t border-border pt-6">
               <div className="mb-4 flex items-baseline gap-2">
                 <span className="font-display text-3xl font-black text-primary">
-                  R$ {product.price.toFixed(2).replace(".", ",")}
+                  R$ {Number(product.price).toFixed(2).replace(".", ",")}
                 </span>
                 <span className="text-xs text-muted-foreground">à vista</span>
               </div>
               <button
-                onClick={() => addItem(product, selectedVariations)}
+                onClick={() => addItem({ id: product.id, name: product.name, price: Number(product.price), brand: product.brand, model: product.model }, selectedVariations)}
                 disabled={product.stock === 0}
                 className="btn-primary-glow flex w-full items-center justify-center gap-2 rounded-md py-3 text-sm transition-all disabled:opacity-50"
               >

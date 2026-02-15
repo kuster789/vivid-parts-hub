@@ -79,9 +79,9 @@ const Cart = () => {
                 </span>
               </div>
             </div>
-            <button className="btn-primary-glow mb-3 w-full rounded-md py-3 text-sm transition-all">
+            <Link to="/checkout" className="btn-primary-glow mb-3 block w-full rounded-md py-3 text-center text-sm transition-all">
               Finalizar Compra
-            </button>
+            </Link>
             <button onClick={clearCart} className="w-full rounded-md border border-border py-2 text-xs text-muted-foreground transition-colors hover:text-destructive">
               Limpar carrinho
             </button>

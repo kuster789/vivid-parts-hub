@@ -1,22 +1,31 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Filter, Grid3X3, List } from "lucide-react";
+import { Filter, Grid3X3, List, Loader2 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
-import { products, brands } from "@/data/products";
+import { brands } from "@/data/products";
+import { supabase } from "@/integrations/supabase/client";
 
 const Catalog = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeBrand = searchParams.get("marca") || "";
   const [activeModel, setActiveModel] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const currentBrand = brands.find((b) => b.slug === activeBrand);
 
-  const filtered = useMemo(() => {
-    let result = products;
-    if (activeBrand) result = result.filter((p) => p.brand === activeBrand);
-    if (activeModel) result = result.filter((p) => p.model === activeModel);
-    return result;
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      let query = supabase.from("products").select("*").eq("active", true);
+      if (activeBrand) query = query.eq("brand", activeBrand);
+      if (activeModel) query = query.eq("model", activeModel);
+      const { data } = await query.order("created_at", { ascending: false });
+      setProducts(data || []);
+      setLoading(false);
+    };
+    load();
   }, [activeBrand, activeModel]);
 
   const setBrand = (slug: string) => {
@@ -34,7 +43,6 @@ const Catalog = () => {
       <div className="container">
         <h1 className="section-title mb-6">Catálogo de Peças</h1>
 
-        {/* Brand filters */}
         <div className="mb-6 flex flex-wrap gap-2">
           {brands.map((brand) => (
             <button
@@ -51,7 +59,6 @@ const Catalog = () => {
           ))}
         </div>
 
-        {/* Model filters */}
         {currentBrand && (
           <div className="mb-6 flex flex-wrap gap-2">
             {currentBrand.models.map((model) => (
@@ -70,10 +77,9 @@ const Catalog = () => {
           </div>
         )}
 
-        {/* Toolbar */}
         <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
           <span className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">{filtered.length}</span> produto(s) encontrado(s)
+            <span className="font-semibold text-foreground">{products.length}</span> produto(s)
           </span>
           <div className="flex items-center gap-1">
             <button onClick={() => setViewMode("grid")} className={`rounded-md p-2 ${viewMode === "grid" ? "bg-secondary text-foreground" : "text-muted-foreground"}`}>
@@ -85,15 +91,18 @@ const Catalog = () => {
           </div>
         </div>
 
-        {/* Products */}
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : products.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Filter className="mb-4 h-12 w-12 text-muted-foreground/30" />
-            <p className="text-muted-foreground">Nenhum produto encontrado para este filtro.</p>
+            <p className="text-muted-foreground">Nenhum produto encontrado.</p>
           </div>
         ) : (
           <div className={viewMode === "grid" ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "flex flex-col gap-4"}>
-            {filtered.map((product) => (
+            {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
