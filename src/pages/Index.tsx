@@ -1,12 +1,24 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Box, Shield, Truck, Headphones } from "lucide-react";
+import { ArrowRight, Box, Shield, Truck, Headphones, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import heroBanner from "@/assets/hero-banner.jpg";
 import ProductCard from "@/components/ProductCard";
-import { products, brands } from "@/data/products";
-
-const featuredProducts = products.slice(0, 4);
+import { brands } from "@/data/products";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
+  const [featured, setFeatured] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase.from("products").select("*").eq("active", true).limit(4);
+      setFeatured(data || []);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
   return (
     <main>
       {/* Hero */}
@@ -67,11 +79,15 @@ const Index = () => {
               Ver todos <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {featured.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
