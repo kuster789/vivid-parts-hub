@@ -13,45 +13,21 @@ export const colorOptions: ColorOption[] = [
   { name: "Amarelo", hex: "#eab308", filter: "brightness(1.1) saturate(1.5) hue-rotate(10deg)" },
   { name: "Vermelho", hex: "#dc2626", filter: "brightness(0.9) saturate(1.8) hue-rotate(330deg)" },
   { name: "Roxo", hex: "#7c3aed", filter: "brightness(0.8) saturate(1.5) hue-rotate(260deg)" },
-  { name: "Polido", hex: "#c0c0c0", filter: "brightness(1.2) saturate(0.2) contrast(1.1)" },
-  { name: "Escovado", hex: "#a0a0a0", filter: "brightness(0.95) saturate(0.15) contrast(0.9)" },
-  { name: "Cromado", hex: "#e8e8e8", filter: "brightness(1.4) saturate(0.1) contrast(1.2)" },
-  { name: "Fosco", hex: "#606060", filter: "brightness(0.6) saturate(0.1)" },
 ];
-
-/** Check if a variation option matches a known color */
-export const isColorOption = (optionName: string): boolean =>
-  colorOptions.some((c) => c.name.toLowerCase() === optionName.toLowerCase());
-
-/** Find variations that contain color-like options */
-export const getColorVariation = (variations: any[]): { name: string; options: string[] } | null => {
-  for (const v of variations) {
-    const opts = v.options || [];
-    const colorOpts = opts.filter((o: string) => isColorOption(o));
-    if (colorOpts.length >= 2 || (colorOpts.length >= 1 && opts.length <= 4)) {
-      return { name: v.name, options: colorOpts };
-    }
-  }
-  return null;
-};
 
 interface ColorSelectorProps {
   selectedColor: string;
   onColorChange: (color: string) => void;
-  availableColors?: string[];
 }
 
-const ColorSelector = ({ selectedColor, onColorChange, availableColors }: ColorSelectorProps) => {
-  const displayColors = availableColors
-    ? colorOptions.filter((c) => availableColors.some((ac) => ac.toLowerCase() === c.name.toLowerCase()))
-    : colorOptions;
+const ColorSelector = ({ selectedColor, onColorChange }: ColorSelectorProps) => {
   return (
     <div className="mb-4">
       <label className="mb-2 block font-display text-xs font-bold uppercase tracking-wider text-foreground">
         Cor: <span className="text-primary">{selectedColor || "Selecione"}</span>
       </label>
       <div className="flex flex-wrap gap-2">
-        {displayColors.map((color) => (
+        {colorOptions.map((color) => (
           <button
             key={color.name}
             onClick={() => onColorChange(color.name)}
