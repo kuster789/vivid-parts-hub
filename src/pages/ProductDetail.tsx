@@ -52,6 +52,10 @@ const ProductDetail = () => {
           <div>
             {product.has_3d ? (
               <ProductViewer3D />
+            ) : product.images && product.images.length > 0 ? (
+              <div className="overflow-hidden rounded-lg border border-border">
+                <img src={product.images[0]} alt={product.name} className="h-[400px] w-full object-cover md:h-[500px]" />
+              </div>
             ) : (
               <div className="flex h-[400px] items-center justify-center rounded-lg border border-border bg-secondary md:h-[500px]">
                 <Package className="h-24 w-24 text-muted-foreground/20" />

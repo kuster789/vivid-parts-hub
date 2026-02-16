@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigate } from "react-router-dom";
-import { Package, Users, ShoppingBag, Plus, Pencil, Trash2, Save, X, BarChart3 } from "lucide-react";
+import { Package, Users, ShoppingBag, Plus, Pencil, Trash2, Save, X, BarChart3, Upload, Image, Loader2 } from "lucide-react";
+import { uploadProductImage, deleteProductImage } from "@/lib/storage";
 
 type Tab = "dashboard" | "products" | "orders" | "users";
 
@@ -89,6 +90,9 @@ const AdminProducts = () => {
   const [editForm, setEditForm] = useState<any>({});
   const [showAdd, setShowAdd] = useState(false);
   const [newProduct, setNewProduct] = useState({ name: "", description: "", price: 0, sku: "", stock: 0, brand: "", model: "" });
+  const [uploading, setUploading] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadTarget, setUploadTarget] = useState<string | null>(null);
 
   useEffect(() => {
     loadProducts();
@@ -118,8 +122,42 @@ const AdminProducts = () => {
     loadProducts();
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !uploadTarget) return;
+    setUploading(uploadTarget);
+    try {
+      const url = await uploadProductImage(uploadTarget, file);
+      const product = products.find((p) => p.id === uploadTarget);
+      const currentImages = product?.images || [];
+      await supabase.from("products").update({ images: [...currentImages, url] }).eq("id", uploadTarget);
+      loadProducts();
+    } catch (err) {
+      console.error("Upload error:", err);
+    }
+    setUploading(null);
+    setUploadTarget(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleRemoveImage = async (productId: string, imageUrl: string) => {
+    if (!confirm("Remover esta imagem?")) return;
+    const product = products.find((p) => p.id === productId);
+    const updatedImages = (product?.images || []).filter((img: string) => img !== imageUrl);
+    await supabase.from("products").update({ images: updatedImages }).eq("id", productId);
+    await deleteProductImage(imageUrl);
+    loadProducts();
+  };
+
+  const triggerUpload = (productId: string) => {
+    setUploadTarget(productId);
+    fileInputRef.current?.click();
+  };
+
   return (
     <div>
+      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+
       <div className="mb-4 flex items-center justify-between">
         <span className="text-sm text-muted-foreground">{products.length} produto(s)</span>
         <button onClick={() => setShowAdd(!showAdd)} className="btn-primary-glow flex items-center gap-2 rounded-md px-4 py-2 text-xs">
@@ -151,30 +189,60 @@ const AdminProducts = () => {
 
       <div className="flex flex-col gap-2">
         {products.map((p) => (
-          <div key={p.id} className="card-industrial flex items-center gap-4 p-4">
-            {editing === p.id ? (
-              <div className="flex flex-1 flex-wrap gap-2">
-                <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className="flex-1 rounded-md border border-border bg-secondary px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none" />
-                <input type="number" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: Number(e.target.value) })}
-                  className="w-24 rounded-md border border-border bg-secondary px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none" />
-                <input type="number" value={editForm.stock} onChange={(e) => setEditForm({ ...editForm, stock: Number(e.target.value) })}
-                  className="w-20 rounded-md border border-border bg-secondary px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none" />
-                <button onClick={() => handleSave(p.id)} className="rounded-md bg-primary p-2 text-primary-foreground"><Save className="h-4 w-4" /></button>
-                <button onClick={() => setEditing(null)} className="rounded-md border border-border p-2 text-muted-foreground"><X className="h-4 w-4" /></button>
-              </div>
-            ) : (
-              <>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground">{p.name}</p>
-                  <p className="text-xs text-muted-foreground">{p.brand?.toUpperCase()} · {p.model} · SKU: {p.sku}</p>
+          <div key={p.id} className="card-industrial p-4">
+            <div className="flex items-center gap-4">
+              {editing === p.id ? (
+                <div className="flex flex-1 flex-wrap gap-2">
+                  <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    className="flex-1 rounded-md border border-border bg-secondary px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none" />
+                  <input type="number" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: Number(e.target.value) })}
+                    className="w-24 rounded-md border border-border bg-secondary px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none" />
+                  <input type="number" value={editForm.stock} onChange={(e) => setEditForm({ ...editForm, stock: Number(e.target.value) })}
+                    className="w-20 rounded-md border border-border bg-secondary px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none" />
+                  <button onClick={() => handleSave(p.id)} className="rounded-md bg-primary p-2 text-primary-foreground"><Save className="h-4 w-4" /></button>
+                  <button onClick={() => setEditing(null)} className="rounded-md border border-border p-2 text-muted-foreground"><X className="h-4 w-4" /></button>
                 </div>
-                <span className="text-xs text-muted-foreground">Estoque: {p.stock}</span>
-                <span className="font-display text-sm font-bold text-primary">R$ {Number(p.price).toFixed(2).replace(".", ",")}</span>
-                <button onClick={() => { setEditing(p.id); setEditForm({ name: p.name, price: p.price, stock: p.stock }); }}
-                  className="rounded-md p-2 text-muted-foreground hover:text-foreground"><Pencil className="h-4 w-4" /></button>
-                <button onClick={() => handleDelete(p.id)} className="rounded-md p-2 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
-              </>
+              ) : (
+                <>
+                  {/* Thumbnail */}
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-secondary">
+                    {p.images && p.images.length > 0 ? (
+                      <img src={p.images[0]} alt={p.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <Image className="h-5 w-5 text-muted-foreground/40" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground">{p.name}</p>
+                    <p className="text-xs text-muted-foreground">{p.brand?.toUpperCase()} · {p.model} · SKU: {p.sku}</p>
+                  </div>
+                  <span className="text-xs text-muted-foreground">Estoque: {p.stock}</span>
+                  <span className="font-display text-sm font-bold text-primary">R$ {Number(p.price).toFixed(2).replace(".", ",")}</span>
+                  <button onClick={() => triggerUpload(p.id)} disabled={uploading === p.id}
+                    className="rounded-md p-2 text-muted-foreground hover:text-primary" title="Upload imagem">
+                    {uploading === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  </button>
+                  <button onClick={() => { setEditing(p.id); setEditForm({ name: p.name, price: p.price, stock: p.stock }); }}
+                    className="rounded-md p-2 text-muted-foreground hover:text-foreground"><Pencil className="h-4 w-4" /></button>
+                  <button onClick={() => handleDelete(p.id)} className="rounded-md p-2 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+                </>
+              )}
+            </div>
+            {/* Image gallery */}
+            {p.images && p.images.length > 0 && !editing && (
+              <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
+                {p.images.map((img: string, idx: number) => (
+                  <div key={idx} className="group relative h-16 w-16 overflow-hidden rounded-md border border-border">
+                    <img src={img} alt={`${p.name} ${idx + 1}`} className="h-full w-full object-cover" />
+                    <button
+                      onClick={() => handleRemoveImage(p.id, img)}
+                      className="absolute inset-0 flex items-center justify-center bg-background/80 opacity-0 transition-opacity group-hover:opacity-100"
+                    >
+                      <X className="h-4 w-4 text-destructive" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         ))}
