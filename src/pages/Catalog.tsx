@@ -43,8 +43,11 @@ const Catalog = () => {
       const to = from + ITEMS_PER_PAGE - 1;
 
       let countQuery = supabase.from("products").select("*", { count: "exact", head: true }).eq("active", true);
-      if (activeBrand) countQuery = countQuery.eq("brand", activeBrand);
-      if (activeModel) countQuery = countQuery.eq("model", activeModel);
+      if (activeBrand && activeModel) {
+        countQuery = countQuery.or(`and(brand.eq.${activeBrand},model.eq.${activeModel}),compatible_models.cs.[{"brand":"${activeBrand}","model":"${activeModel}"}]`);
+      } else if (activeBrand) {
+        countQuery = countQuery.or(`brand.eq.${activeBrand},compatible_models.cs.[{"brand":"${activeBrand}"}]`);
+      }
       if (priceMin > 0) countQuery = countQuery.gte("price", priceMin);
       if (priceMax > 0) countQuery = countQuery.lte("price", priceMax);
       if (inStock) countQuery = countQuery.gt("stock", 0);
@@ -53,8 +56,11 @@ const Catalog = () => {
       setTotalCount(count || 0);
 
       let query = supabase.from("products").select("*").eq("active", true);
-      if (activeBrand) query = query.eq("brand", activeBrand);
-      if (activeModel) query = query.eq("model", activeModel);
+      if (activeBrand && activeModel) {
+        query = query.or(`and(brand.eq.${activeBrand},model.eq.${activeModel}),compatible_models.cs.[{"brand":"${activeBrand}","model":"${activeModel}"}]`);
+      } else if (activeBrand) {
+        query = query.or(`brand.eq.${activeBrand},compatible_models.cs.[{"brand":"${activeBrand}"}]`);
+      }
       if (priceMin > 0) query = query.gte("price", priceMin);
       if (priceMax > 0) query = query.lte("price", priceMax);
       if (inStock) query = query.gt("stock", 0);
