@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.shipping-calculate]
 verify_jwt = false
+
+[functions.send-production-email]
+verify_jwt = false
