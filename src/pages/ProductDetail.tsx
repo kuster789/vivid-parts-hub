@@ -199,7 +199,9 @@ const ProductDetail = () => {
                 </p>
               </div>
 
-              <ColorSelector selectedColor={selectedColor} onColorChange={handleColorChange} />
+              {variations.some((v: any) => v.name?.toLowerCase() === "cor") && (
+                <ColorSelector selectedColor={selectedColor} onColorChange={handleColorChange} />
+              )}
 
               {variations
                 .filter((v: any) => v.name?.toLowerCase() !== "cor")
