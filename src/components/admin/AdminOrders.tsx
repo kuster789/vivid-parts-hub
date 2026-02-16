@@ -63,8 +63,23 @@ const AdminOrders = () => {
   };
 
   const updateStatus = async (id: string, status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled") => {
+    const currentOrder = orders.find((o) => o.id === id);
     await supabase.from("orders").update({ status }).eq("id", id);
     setOrders(orders.map((o) => (o.id === id ? { ...o, status } : o)));
+
+    // Send email notification for status change
+    if (currentOrder) {
+      supabase.functions.invoke("send-production-email", {
+        body: {
+          order_id: id,
+          order_status: status,
+          tracking_code: currentOrder.tracking_code,
+          user_id: currentOrder.user_id,
+        },
+      }).then(({ error }) => {
+        if (error) console.error("Email send error:", error);
+      });
+    }
   };
 
   const updateProductionStage = async (id: string, stage: string) => {
