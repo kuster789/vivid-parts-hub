@@ -143,6 +143,11 @@ const Checkout = () => {
       return;
     }
 
+    if (!selectedShipping) {
+      toast({ title: "Selecione o frete", description: "Digite seu CEP e clique em 'Calcular' para escolher uma opção de frete.", variant: "destructive" });
+      return;
+    }
+
     setPaymentLoading(true);
 
     try {
@@ -236,7 +241,6 @@ const Checkout = () => {
               { key: "address", label: "Endereço", placeholder: "Rua, número, complemento" },
               { key: "city", label: "Cidade", placeholder: "Cidade" },
               { key: "state", label: "Estado", placeholder: "SP" },
-              { key: "zip", label: "CEP", placeholder: "00000-000" },
               { key: "phone", label: "Telefone", placeholder: "(11) 99999-9999" },
             ].map(({ key, label, placeholder }) => (
               <div key={key}>
@@ -246,12 +250,35 @@ const Checkout = () => {
                   required
                   value={(form as any)[key]}
                   onChange={(e) => updateForm(key, e.target.value)}
-                  onBlur={key === "zip" ? calculateShipping : undefined}
                   placeholder={placeholder}
                   className="w-full rounded-md border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
                 />
               </div>
             ))}
+
+            {/* CEP com botão de calcular frete */}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">CEP</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  required
+                  value={form.zip}
+                  onChange={(e) => updateForm("zip", e.target.value)}
+                  placeholder="00000-000"
+                  className="flex-1 rounded-md border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={calculateShipping}
+                  disabled={shippingLoading || !form.zip || form.zip.replace(/\D/g, "").length < 8}
+                  className="flex items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {shippingLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Truck className="h-4 w-4" />}
+                  Calcular
+                </button>
+              </div>
+            </div>
 
             {shippingLoading && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
