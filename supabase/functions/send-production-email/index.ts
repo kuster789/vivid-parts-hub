@@ -93,6 +93,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         from: "Auto Peças Agrale <onboarding@resend.dev>",
+        reply_to: "autopecaagralecagiva@outlook.com",
         to: [email],
         subject: `${stageEmoji} Pedido #${orderId} — ${stageLabel}`,
         html: htmlBody,
