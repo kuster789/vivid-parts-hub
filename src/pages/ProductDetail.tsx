@@ -2,6 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, ShoppingCart, Package, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import ProductViewer3D from "@/components/ProductViewer3D";
+import ColorSelector, { colorOptions } from "@/components/ColorSelector";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -11,6 +12,8 @@ const ProductDetail = () => {
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedVariations, setSelectedVariations] = useState<Record<string, string>>({});
+  const [selectedColor, setSelectedColor] = useState("");
+  const [activeImageIdx, setActiveImageIdx] = useState(0);
 
   useEffect(() => {
     const load = async () => {
@@ -40,6 +43,15 @@ const ProductDetail = () => {
   }
 
   const variations = Array.isArray(product.variations) ? product.variations : [];
+  const hasColorVariation = variations.some((v: any) => v.name?.toLowerCase() === "cor");
+  const colorFilter = selectedColor
+    ? colorOptions.find((c) => c.name === selectedColor)?.filter || ""
+    : "";
+
+  const handleColorChange = (color: string) => {
+    setSelectedColor(color === selectedColor ? "" : color);
+    setSelectedVariations((prev) => ({ ...prev, Cor: color === selectedColor ? "" : color }));
+  };
 
   return (
     <main className="py-8">
@@ -49,12 +61,52 @@ const ProductDetail = () => {
         </Link>
 
         <div className="grid gap-8 lg:grid-cols-2">
+          {/* Image / 3D viewer */}
           <div>
-            {product.has_3d ? (
+            {product.has_3d && product.model_3d_url ? (
               <ProductViewer3D />
             ) : product.images && product.images.length > 0 ? (
-              <div className="overflow-hidden rounded-lg border border-border">
-                <img src={product.images[0]} alt={product.name} className="h-[400px] w-full object-cover md:h-[500px]" />
+              <div className="space-y-3">
+                <div className="relative overflow-hidden rounded-lg border border-border">
+                  <img
+                    src={product.images[activeImageIdx] || product.images[0]}
+                    alt={product.name}
+                    className="h-[400px] w-full object-cover transition-all duration-500 md:h-[500px]"
+                    style={colorFilter ? { filter: colorFilter } : undefined}
+                  />
+                  {selectedColor && (
+                    <div className="absolute bottom-3 left-3 rounded-full border border-border bg-card/90 px-3 py-1 backdrop-blur-sm">
+                      <span className="flex items-center gap-2 text-xs font-medium text-foreground">
+                        <span
+                          className="inline-block h-3 w-3 rounded-full border border-border"
+                          style={{ backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex }}
+                        />
+                        {selectedColor}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {/* Thumbnails */}
+                {product.images.length > 1 && (
+                  <div className="flex gap-2">
+                    {product.images.map((img: string, idx: number) => (
+                      <button
+                        key={idx}
+                        onClick={() => setActiveImageIdx(idx)}
+                        className={`h-16 w-16 shrink-0 overflow-hidden rounded-md border transition-all ${
+                          activeImageIdx === idx ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/40"
+                        }`}
+                      >
+                        <img
+                          src={img}
+                          alt={`${product.name} ${idx + 1}`}
+                          className="h-full w-full object-cover"
+                          style={colorFilter ? { filter: colorFilter } : undefined}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex h-[400px] items-center justify-center rounded-lg border border-border bg-secondary md:h-[500px]">
@@ -63,6 +115,7 @@ const ProductDetail = () => {
             )}
           </div>
 
+          {/* Product info */}
           <div className="flex flex-col">
             <span className="mb-2 font-display text-[11px] font-bold uppercase tracking-widest text-primary">
               {product.brand?.toUpperCase()} · {product.model}
@@ -85,26 +138,32 @@ const ProductDetail = () => {
               </span>
             </div>
 
-            {variations.map((v: any) => (
-              <div key={v.name} className="mb-4">
-                <label className="mb-2 block font-display text-xs font-bold uppercase tracking-wider text-foreground">{v.name}</label>
-                <div className="flex flex-wrap gap-2">
-                  {(v.options || []).map((opt: string) => (
-                    <button
-                      key={opt}
-                      onClick={() => setSelectedVariations({ ...selectedVariations, [v.name]: opt })}
-                      className={`rounded-md border px-4 py-2 text-xs font-medium transition-all ${
-                        selectedVariations[v.name] === opt
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border text-muted-foreground hover:border-primary/40"
-                      }`}
-                    >
-                      {opt}
-                    </button>
-                  ))}
+            {/* Color selector */}
+            <ColorSelector selectedColor={selectedColor} onColorChange={handleColorChange} />
+
+            {/* Other variations */}
+            {variations
+              .filter((v: any) => v.name?.toLowerCase() !== "cor")
+              .map((v: any) => (
+                <div key={v.name} className="mb-4">
+                  <label className="mb-2 block font-display text-xs font-bold uppercase tracking-wider text-foreground">{v.name}</label>
+                  <div className="flex flex-wrap gap-2">
+                    {(v.options || []).map((opt: string) => (
+                      <button
+                        key={opt}
+                        onClick={() => setSelectedVariations({ ...selectedVariations, [v.name]: opt })}
+                        className={`rounded-md border px-4 py-2 text-xs font-medium transition-all ${
+                          selectedVariations[v.name] === opt
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border text-muted-foreground hover:border-primary/40"
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
 
             <div className="mt-auto border-t border-border pt-6">
               <div className="mb-4 flex items-baseline gap-2">
@@ -114,7 +173,7 @@ const ProductDetail = () => {
                 <span className="text-xs text-muted-foreground">à vista</span>
               </div>
               <button
-                onClick={() => addItem({ id: product.id, name: product.name, price: Number(product.price), brand: product.brand, model: product.model }, selectedVariations)}
+                onClick={() => addItem({ id: product.id, name: product.name, price: Number(product.price), brand: product.brand, model: product.model, has_3d: product.has_3d ?? false }, selectedVariations)}
                 disabled={product.stock === 0}
                 className="btn-primary-glow flex w-full items-center justify-center gap-2 rounded-md py-3 text-sm transition-all disabled:opacity-50"
               >
