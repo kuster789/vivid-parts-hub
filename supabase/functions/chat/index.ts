@@ -30,9 +30,33 @@ serve(async (req) => {
     if (!Array.isArray(messages) || messages.length === 0 || messages.length > 50) {
       return new Response(JSON.stringify({ error: "Mensagens inválidas" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    // Prompt injection detection patterns
+    const injectionPatterns = [
+      /ignore\s+(all\s+)?(previous|above|prior)\s+(instructions?|prompts?|rules?)/i,
+      /you\s+are\s+now\s+(a|an)\s+/i,
+      /system\s*:\s*/i,
+      /\bact\s+as\b.*\b(admin|root|system)\b/i,
+      /reveal\s+(your|the)\s+(system|initial|original)\s+(prompt|instructions?|message)/i,
+      /disregard\s+(all|any|your)\s+(previous|prior|above)/i,
+    ];
+
     for (const msg of messages) {
       if (!msg.role || !msg.content || typeof msg.content !== "string" || msg.content.length > 2000) {
         return new Response(JSON.stringify({ error: "Formato de mensagem inválido" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      // Only allow user and assistant roles from client
+      if (!["user", "assistant"].includes(msg.role)) {
+        return new Response(JSON.stringify({ error: "Role de mensagem inválido" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      // Check for prompt injection in user messages
+      if (msg.role === "user") {
+        for (const pattern of injectionPatterns) {
+          if (pattern.test(msg.content)) {
+            console.warn("Prompt injection attempt detected:", msg.content.substring(0, 100));
+            return new Response(JSON.stringify({ error: "Mensagem não permitida" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+        }
       }
     }
 

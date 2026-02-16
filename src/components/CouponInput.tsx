@@ -19,45 +19,26 @@ const CouponInput = ({ orderTotal, onApply, onRemove, appliedCode }: CouponInput
     setLoading(true);
     setError("");
 
-    const { data: coupon } = await supabase
-      .from("coupons")
-      .select("*")
-      .eq("code", code.toUpperCase().trim())
-      .eq("active", true)
-      .maybeSingle();
+    const { data, error: rpcError } = await supabase.rpc("validate_coupon", {
+      _code: code.trim(),
+      _order_total: orderTotal,
+    });
 
-    if (!coupon) {
-      setError("Cupom inválido ou expirado");
+    if (rpcError) {
+      setError("Erro ao validar cupom");
       setLoading(false);
       return;
     }
 
-    if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
-      setError("Cupom expirado");
+    const result = data as { valid: boolean; error?: string; discount?: number; code?: string };
+
+    if (!result.valid) {
+      setError(result.error || "Cupom inválido");
       setLoading(false);
       return;
     }
 
-    if (coupon.max_uses && coupon.used_count >= coupon.max_uses) {
-      setError("Cupom esgotado");
-      setLoading(false);
-      return;
-    }
-
-    if (coupon.min_order_value && orderTotal < Number(coupon.min_order_value)) {
-      setError(`Pedido mínimo: R$ ${Number(coupon.min_order_value).toFixed(2).replace(".", ",")}`);
-      setLoading(false);
-      return;
-    }
-
-    let discount = 0;
-    if (coupon.discount_percent > 0) {
-      discount = orderTotal * (coupon.discount_percent / 100);
-    } else if (Number(coupon.discount_amount) > 0) {
-      discount = Number(coupon.discount_amount);
-    }
-
-    onApply(Math.min(discount, orderTotal), code.toUpperCase().trim());
+    onApply(result.discount ?? 0, result.code ?? code.toUpperCase().trim());
     setLoading(false);
   };
 
