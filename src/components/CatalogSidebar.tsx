@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ChevronDown, ChevronRight, SlidersHorizontal, Box, Package } from "lucide-react";
+import { ChevronDown, ChevronRight, SlidersHorizontal, Box, Package, Palette } from "lucide-react";
 import { brands } from "@/data/products";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
@@ -18,6 +18,7 @@ const CatalogSidebar = () => {
   const priceMax = Number(searchParams.get("preco_max")) || 5000;
   const inStock = searchParams.get("em_estoque") === "1";
   const has3D = searchParams.get("has_3d") === "1";
+  const hasColors = searchParams.get("tem_cores") === "1";
 
   const [localPriceRange, setLocalPriceRange] = useState<number[]>([priceMin, priceMax]);
   const [brandCounts, setBrandCounts] = useState<CountMap>({});
@@ -72,7 +73,7 @@ const CatalogSidebar = () => {
     setLocalPriceRange([0, 5000]);
   };
 
-  const hasActiveFilters = priceMin > 0 || priceMax < 5000 || inStock || has3D || activeBrand;
+  const hasActiveFilters = priceMin > 0 || priceMax < 5000 || inStock || has3D || hasColors || activeBrand;
 
   return (
     <aside className="sticky top-4 w-64 shrink-0 hidden lg:block space-y-4">
@@ -157,6 +158,19 @@ const CatalogSidebar = () => {
               id="has-3d"
               checked={has3D}
               onCheckedChange={(checked) => updateFilter("has_3d", checked ? "1" : null)}
+            />
+          </div>
+
+          {/* Has Colors */}
+          <div className="flex items-center justify-between">
+            <Label htmlFor="has-colors" className="flex items-center gap-2 text-xs font-medium text-foreground cursor-pointer">
+              <Palette className="h-3.5 w-3.5 text-muted-foreground" />
+              Variações de cor
+            </Label>
+            <Switch
+              id="has-colors"
+              checked={hasColors}
+              onCheckedChange={(checked) => updateFilter("tem_cores", checked ? "1" : null)}
             />
           </div>
         </div>
