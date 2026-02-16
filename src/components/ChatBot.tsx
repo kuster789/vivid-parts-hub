@@ -133,14 +133,14 @@ const ChatBot = () => {
                       <ReactMarkdown
                         components={{
                           a: ({ href, children }) => (
-                            <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline font-semibold hover:opacity-80">
+                            <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline font-semibold hover:opacity-80 break-all">
                               {children}
                             </a>
                           ),
                           p: ({ children }) => <p className="m-0">{children}</p>,
                         }}
                       >
-                        {msg.content}
+                        {msg.content.replace(/(https?:\/\/[^\s)]+)/g, (url) => `[${url}](${url})`)}
                       </ReactMarkdown>
                     ) : (
                       msg.content
