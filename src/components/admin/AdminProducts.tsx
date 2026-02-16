@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Package, Plus, Pencil, Trash2, Save, X, Upload, Image, Loader2, FileBox,
-  Search, Eye, GripVertical, AlertTriangle, CheckCircle, Clock, Ban, ChevronDown
+  Search, Eye, GripVertical, AlertTriangle, CheckCircle, Clock, Ban, ChevronDown,
+  ChevronLeft, ChevronRight
 } from "lucide-react";
 import { uploadProductImage, deleteProductImage, upload3DModel } from "@/lib/storage";
 import { brands } from "@/data/products";
@@ -55,10 +56,13 @@ const AdminProducts = () => {
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
   const imageInputRef = useRef<HTMLInputElement>(null);
   const model3DInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { loadProducts(); }, []);
+  useEffect(() => { setCurrentPage(1); }, [searchTerm]);
 
   const loadProducts = async () => {
     const { data } = await supabase.from("products").select("*").order("created_at", { ascending: false });
@@ -214,6 +218,11 @@ const AdminProducts = () => {
     !searchTerm || p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || p.sku?.toLowerCase().includes(searchTerm.toLowerCase()) || p.brand?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedProducts = filteredProducts.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
+
+
   const lowStockCount = products.filter(p => p.stock > 0 && p.stock <= LOW_STOCK_THRESHOLD).length;
   const outOfStockCount = products.filter(p => p.stock === 0).length;
 
@@ -283,7 +292,7 @@ const AdminProducts = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {filteredProducts.map((p) => {
+            {paginatedProducts.map((p) => {
               const status = getProductStatus(p);
               const st = statusLabels[status];
               const StIcon = st.icon;
@@ -350,6 +359,42 @@ const AdminProducts = () => {
           <p className="py-12 text-center text-sm text-muted-foreground">Nenhum produto encontrado.</p>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">
+            Mostrando {(safePage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(safePage * ITEMS_PER_PAGE, filteredProducts.length)} de {filteredProducts.length}
+          </span>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={safePage <= 1}
+              className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-30 disabled:pointer-events-none"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`min-w-[2rem] rounded-lg px-2 py-1 text-xs font-medium transition-colors ${
+                  page === safePage ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={safePage >= totalPages}
+              className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-30 disabled:pointer-events-none"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Full product form modal */}
       {showForm && (
