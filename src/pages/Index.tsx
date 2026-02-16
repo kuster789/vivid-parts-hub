@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import heroBanner from "@/assets/hero-banner.jpg";
 import ProductCard from "@/components/ProductCard";
 import ProductCardSkeleton from "@/components/ProductCardSkeleton";
+import { ScrollReveal } from "@/hooks/useScrollReveal";
 import { brands } from "@/data/products";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -90,31 +91,34 @@ const Index = () => {
       {/* Brands */}
       <section className="border-y border-border bg-card/50 py-20">
         <div className="container">
-          <div className="mb-10 text-center">
-            <span className="mb-2 inline-block font-display text-[11px] font-bold uppercase tracking-widest text-primary">Especialistas</span>
-            <h2 className="section-title">Nossas Marcas</h2>
-          </div>
+          <ScrollReveal>
+            <div className="mb-10 text-center">
+              <span className="mb-2 inline-block font-display text-[11px] font-bold uppercase tracking-widest text-primary">Especialistas</span>
+              <h2 className="section-title">Nossas Marcas</h2>
+            </div>
+          </ScrollReveal>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:gap-6">
-            {brands.map((brand) => (
-              <Link
-                key={brand.slug}
-                to={`/catalogo?marca=${brand.slug}`}
-                className="card-industrial group relative flex flex-col items-center gap-4 overflow-hidden p-8 transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5"
-              >
-                <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                <div className="relative flex h-16 w-16 items-center justify-center rounded-xl bg-secondary/80 p-2 transition-transform duration-300 group-hover:scale-110">
-                  {brand.logo ? (
-                    <img src={brand.logo} alt={brand.name} className="h-full w-full object-contain" />
-                  ) : (
-                    <span className="text-3xl">{brand.icon}</span>
-                  )}
-                </div>
-                <div className="relative text-center">
-                  <span className="block font-display text-sm font-bold tracking-wider text-foreground">{brand.name}</span>
-                  <span className="mt-1 block text-xs text-muted-foreground">{brand.models.length} modelos</span>
-                </div>
-                <ArrowRight className="relative h-4 w-4 text-primary opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1" />
-              </Link>
+            {brands.map((brand, idx) => (
+              <ScrollReveal key={brand.slug} delay={idx * 100}>
+                <Link
+                  to={`/catalogo?marca=${brand.slug}`}
+                  className="card-industrial group relative flex flex-col items-center gap-4 overflow-hidden p-8 transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                  <div className="relative flex h-16 w-16 items-center justify-center rounded-xl bg-secondary/80 p-2 transition-transform duration-300 group-hover:scale-110">
+                    {brand.logo ? (
+                      <img src={brand.logo} alt={brand.name} className="h-full w-full object-contain" />
+                    ) : (
+                      <span className="text-3xl">{brand.icon}</span>
+                    )}
+                  </div>
+                  <div className="relative text-center">
+                    <span className="block font-display text-sm font-bold tracking-wider text-foreground">{brand.name}</span>
+                    <span className="mt-1 block text-xs text-muted-foreground">{brand.models.length} modelos</span>
+                  </div>
+                  <ArrowRight className="relative h-4 w-4 text-primary opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1" />
+                </Link>
+              </ScrollReveal>
             ))}
           </div>
         </div>
@@ -123,6 +127,7 @@ const Index = () => {
       {/* Featured Products */}
       <section className="py-20">
         <div className="container">
+          <ScrollReveal>
           <div className="mb-10 flex items-end justify-between">
             <div>
               <span className="mb-2 inline-block font-display text-[11px] font-bold uppercase tracking-widest text-primary">Catálogo</span>
@@ -132,6 +137,7 @@ const Index = () => {
               Ver todos <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
+          </ScrollReveal>
           {loading ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {Array.from({ length: 4 }).map((_, i) => <ProductCardSkeleton key={i} />)}
@@ -149,24 +155,28 @@ const Index = () => {
       {/* Features / Benefits */}
       <section className="border-t border-border bg-card/50 py-20">
         <div className="container">
-          <div className="mb-12 text-center">
-            <span className="mb-2 inline-block font-display text-[11px] font-bold uppercase tracking-widest text-primary">Por que nos escolher</span>
-            <h2 className="section-title">Qualidade e Confiança</h2>
-          </div>
+          <ScrollReveal>
+            <div className="mb-12 text-center">
+              <span className="mb-2 inline-block font-display text-[11px] font-bold uppercase tracking-widest text-primary">Por que nos escolher</span>
+              <h2 className="section-title">Qualidade e Confiança</h2>
+            </div>
+          </ScrollReveal>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
               { icon: Box, title: "Visualização 3D", desc: "Veja peças em 3D interativo antes de comprar. Gire, amplie e inspecione cada detalhe.", color: "from-amber-500/20 to-orange-500/20" },
               { icon: Shield, title: "Qualidade Garantida", desc: "Todas as peças com garantia de fábrica. Produtos originais e de alta durabilidade.", color: "from-emerald-500/20 to-green-500/20" },
               { icon: Truck, title: "Envio Nacional", desc: "Entrega para todo o Brasil com rastreamento em tempo real via Melhor Envio.", color: "from-blue-500/20 to-cyan-500/20" },
               { icon: Wrench, title: "Suporte Técnico", desc: "Equipe especializada para auxiliar na escolha da peça certa para sua moto.", color: "from-purple-500/20 to-violet-500/20" },
-            ].map(({ icon: Icon, title, desc, color }) => (
-              <div key={title} className="card-industrial group flex flex-col items-center p-8 text-center transition-all duration-300 hover:border-primary/40">
+            ].map(({ icon: Icon, title, desc, color }, idx) => (
+              <ScrollReveal key={title} delay={idx * 120}>
+              <div className="card-industrial group flex flex-col items-center p-8 text-center transition-all duration-300 hover:border-primary/40">
                 <div className={`mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br ${color} transition-transform duration-300 group-hover:scale-110`}>
                   <Icon className="h-7 w-7 text-primary" />
                 </div>
                 <h3 className="mb-2 font-display text-xs font-bold uppercase tracking-wider text-foreground">{title}</h3>
                 <p className="text-xs leading-relaxed text-muted-foreground">{desc}</p>
               </div>
+              </ScrollReveal>
             ))}
           </div>
         </div>
@@ -174,6 +184,7 @@ const Index = () => {
 
       {/* CTA Banner */}
       <section className="border-t border-border bg-gradient-to-r from-primary/10 via-primary/5 to-transparent py-16">
+        <ScrollReveal direction="left">
         <div className="container flex flex-col items-center gap-6 text-center md:flex-row md:text-left">
           <div className="flex-1">
             <h2 className="mb-2 font-display text-xl font-bold uppercase tracking-wide text-foreground md:text-2xl">
@@ -187,6 +198,7 @@ const Index = () => {
             Fale Conosco <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
+        </ScrollReveal>
       </section>
     </main>
   );
