@@ -111,11 +111,12 @@ const ProductDetail = () => {
               ) : product.images && product.images.length > 0 ? (
                 <div className="space-y-3">
                   <div className="relative overflow-hidden rounded-lg border border-border bg-secondary/30">
-                    <img
+                     <img
                       src={product.images[activeImageIdx] || product.images[0]}
                       alt={product.name}
-                      className="h-[400px] w-full object-cover transition-all duration-500 md:h-[500px]"
+                      className="h-[400px] w-full object-cover transition-all duration-500 hover:scale-110 cursor-zoom-in md:h-[500px]"
                       style={colorFilter ? { filter: colorFilter } : undefined}
+                      loading="lazy"
                     />
                     {selectedColor && (
                       <div className="absolute bottom-3 left-3 rounded-full border border-border bg-card/90 px-3 py-1 backdrop-blur-sm">
