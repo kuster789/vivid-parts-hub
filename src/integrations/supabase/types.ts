@@ -416,6 +416,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      count_products_by_brand_model: {
+        Args: never
+        Returns: {
+          brand: string
+          model: string
+          product_count: number
+        }[]
+      }
       filter_products_by_compatibility: {
         Args: { _brand?: string; _model?: string }
         Returns: {
