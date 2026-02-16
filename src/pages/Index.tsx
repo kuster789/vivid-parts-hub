@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Box, Shield, Truck, Headphones, Star, Wrench, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
-import heroBanner from "@/assets/hero-banner.jpg";
+import heroBanner from "@/assets/hero-banner-retro.png";
 import ProductCard from "@/components/ProductCard";
 import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import { ScrollReveal } from "@/hooks/useScrollReveal";
