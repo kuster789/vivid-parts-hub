@@ -20,6 +20,10 @@ const Catalog = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeBrand = searchParams.get("marca") || "";
   const activeModel = searchParams.get("modelo") || "";
+  const priceMin = Number(searchParams.get("preco_min")) || 0;
+  const priceMax = Number(searchParams.get("preco_max")) || 0;
+  const inStock = searchParams.get("em_estoque") === "1";
+  const has3D = searchParams.get("has_3d") === "1";
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState<string>("newest");
   const [products, setProducts] = useState<any[]>([]);
@@ -41,12 +45,20 @@ const Catalog = () => {
       let countQuery = supabase.from("products").select("*", { count: "exact", head: true }).eq("active", true);
       if (activeBrand) countQuery = countQuery.eq("brand", activeBrand);
       if (activeModel) countQuery = countQuery.eq("model", activeModel);
+      if (priceMin > 0) countQuery = countQuery.gte("price", priceMin);
+      if (priceMax > 0) countQuery = countQuery.lte("price", priceMax);
+      if (inStock) countQuery = countQuery.gt("stock", 0);
+      if (has3D) countQuery = countQuery.eq("has_3d", true);
       const { count } = await countQuery;
       setTotalCount(count || 0);
 
       let query = supabase.from("products").select("*").eq("active", true);
       if (activeBrand) query = query.eq("brand", activeBrand);
       if (activeModel) query = query.eq("model", activeModel);
+      if (priceMin > 0) query = query.gte("price", priceMin);
+      if (priceMax > 0) query = query.lte("price", priceMax);
+      if (inStock) query = query.gt("stock", 0);
+      if (has3D) query = query.eq("has_3d", true);
       
       if (sortBy === "price_asc") query = query.order("price", { ascending: true });
       else if (sortBy === "price_desc") query = query.order("price", { ascending: false });
@@ -60,7 +72,7 @@ const Catalog = () => {
       setLoading(false);
     };
     load();
-  }, [activeBrand, activeModel, sortBy, currentPage]);
+  }, [activeBrand, activeModel, sortBy, currentPage, priceMin, priceMax, inStock, has3D]);
 
   const goToPage = (page: number) => {
     const params = new URLSearchParams(searchParams);
