@@ -20,6 +20,7 @@ const Footer = () => (
           <div className="flex flex-col gap-2">
             <Link to="/sobre" className="text-sm text-muted-foreground hover:text-foreground">Sobre Nós</Link>
             <Link to="/catalogo" className="text-sm text-muted-foreground hover:text-foreground">Catálogo</Link>
+            <Link to="/blog" className="text-sm text-muted-foreground hover:text-foreground">Blog</Link>
             <Link to="/suporte" className="text-sm text-muted-foreground hover:text-foreground">Contato</Link>
           </div>
         </div>
@@ -27,6 +28,8 @@ const Footer = () => (
           <h4 className="mb-3 font-display text-xs font-bold uppercase tracking-wider text-foreground">Suporte</h4>
           <div className="flex flex-col gap-2">
             <Link to="/suporte" className="text-sm text-muted-foreground hover:text-foreground">Central de Ajuda</Link>
+            <Link to="/rastreamento" className="text-sm text-muted-foreground hover:text-foreground">Rastrear Pedido</Link>
+            <Link to="/favoritos" className="text-sm text-muted-foreground hover:text-foreground">Lista de Desejos</Link>
             <Link to="/privacidade" className="text-sm text-muted-foreground hover:text-foreground">Política de Privacidade</Link>
             <Link to="/termos" className="text-sm text-muted-foreground hover:text-foreground">Termos de Uso</Link>
             <Link to="/devolucao" className="text-sm text-muted-foreground hover:text-foreground">Política de Devolução</Link>

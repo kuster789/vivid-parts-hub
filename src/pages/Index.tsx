@@ -3,6 +3,7 @@ import { ArrowRight, Box, Shield, Truck, Headphones, Loader2 } from "lucide-reac
 import { useEffect, useState } from "react";
 import heroBanner from "@/assets/hero-banner.jpg";
 import ProductCard from "@/components/ProductCard";
+import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import { brands } from "@/data/products";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -84,7 +85,9 @@ const Index = () => {
             </Link>
           </div>
           {loading ? (
-            <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => <ProductCardSkeleton key={i} />)}
+            </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {featured.map((product) => (

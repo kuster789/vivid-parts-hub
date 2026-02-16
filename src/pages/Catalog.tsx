@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Filter, Grid3X3, List, Loader2 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
+import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import CatalogSidebar from "@/components/CatalogSidebar";
 import { brands } from "@/data/products";
 import { supabase } from "@/integrations/supabase/client";
@@ -120,8 +121,8 @@ const Catalog = () => {
 
             {/* Products */}
             {loading ? (
-              <div className="flex justify-center py-20">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, i) => <ProductCardSkeleton key={i} />)}
               </div>
             ) : products.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center">

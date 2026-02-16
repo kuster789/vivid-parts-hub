@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart, Box } from "lucide-react";
+import { ShoppingCart, Box, Heart } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
+import { useWishlist } from "@/hooks/useWishlist";
 
 interface ProductCardProps {
   product: {
@@ -18,12 +20,14 @@ interface ProductCardProps {
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const { addItem } = useCart();
+  const { user } = useAuth();
+  const { isWished, toggle } = useWishlist();
 
   return (
     <div className="card-industrial group flex flex-col overflow-hidden transition-all duration-300 hover:border-primary/40">
       <div className="relative flex h-48 items-center justify-center bg-secondary overflow-hidden">
         {product.images && product.images.length > 0 ? (
-          <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover" />
+          <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
         ) : (
           <Box className="h-16 w-16 text-muted-foreground/40" />
         )}
@@ -36,6 +40,14 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <span className="absolute left-2 top-2 rounded-sm bg-destructive px-2 py-0.5 text-[10px] font-bold text-destructive-foreground">
             Últimas unidades
           </span>
+        )}
+        {user && (
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(product.id); }}
+            className="absolute right-2 bottom-2 rounded-full bg-card/80 p-1.5 backdrop-blur-sm opacity-0 transition-opacity group-hover:opacity-100"
+          >
+            <Heart className={`h-4 w-4 ${isWished(product.id) ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
+          </button>
         )}
       </div>
       <div className="flex flex-1 flex-col p-4">

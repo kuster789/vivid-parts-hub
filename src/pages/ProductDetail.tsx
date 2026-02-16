@@ -1,14 +1,19 @@
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ShoppingCart, Package, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Package, CheckCircle, AlertTriangle, Loader2, Heart } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import ProductViewer3D from "@/components/ProductViewer3D";
 import ColorSelector, { colorOptions } from "@/components/ColorSelector";
+import ReviewSection from "@/components/ReviewSection";
+import { useWishlist } from "@/hooks/useWishlist";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const { addItem } = useCart();
+  const { user } = useAuth();
+  const { isWished, toggle } = useWishlist();
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedVariations, setSelectedVariations] = useState<Record<string, string>>({});
@@ -43,7 +48,6 @@ const ProductDetail = () => {
   }
 
   const variations = Array.isArray(product.variations) ? product.variations : [];
-  const hasColorVariation = variations.some((v: any) => v.name?.toLowerCase() === "cor");
   const colorFilter = selectedColor
     ? colorOptions.find((c) => c.name === selectedColor)?.filter || ""
     : "";
@@ -77,16 +81,12 @@ const ProductDetail = () => {
                   {selectedColor && (
                     <div className="absolute bottom-3 left-3 rounded-full border border-border bg-card/90 px-3 py-1 backdrop-blur-sm">
                       <span className="flex items-center gap-2 text-xs font-medium text-foreground">
-                        <span
-                          className="inline-block h-3 w-3 rounded-full border border-border"
-                          style={{ backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex }}
-                        />
+                        <span className="inline-block h-3 w-3 rounded-full border border-border" style={{ backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex }} />
                         {selectedColor}
                       </span>
                     </div>
                   )}
                 </div>
-                {/* Thumbnails */}
                 {product.images.length > 1 && (
                   <div className="flex gap-2">
                     {product.images.map((img: string, idx: number) => (
@@ -97,12 +97,7 @@ const ProductDetail = () => {
                           activeImageIdx === idx ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/40"
                         }`}
                       >
-                        <img
-                          src={img}
-                          alt={`${product.name} ${idx + 1}`}
-                          className="h-full w-full object-cover"
-                          style={colorFilter ? { filter: colorFilter } : undefined}
-                        />
+                        <img src={img} alt={`${product.name} ${idx + 1}`} className="h-full w-full object-cover" style={colorFilter ? { filter: colorFilter } : undefined} />
                       </button>
                     ))}
                   </div>
@@ -117,9 +112,16 @@ const ProductDetail = () => {
 
           {/* Product info */}
           <div className="flex flex-col">
-            <span className="mb-2 font-display text-[11px] font-bold uppercase tracking-widest text-primary">
-              {product.brand?.toUpperCase()} · {product.model}
-            </span>
+            <div className="mb-2 flex items-center justify-between">
+              <span className="font-display text-[11px] font-bold uppercase tracking-widest text-primary">
+                {product.brand?.toUpperCase()} · {product.model}
+              </span>
+              {user && (
+                <button onClick={() => toggle(product.id)} className="rounded-md p-2 transition-colors hover:bg-secondary" title="Favoritar">
+                  <Heart className={`h-5 w-5 ${isWished(product.id) ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
+                </button>
+              )}
+            </div>
             <h1 className="mb-3 font-display text-2xl font-bold uppercase tracking-wide text-foreground md:text-3xl">
               {product.name}
             </h1>
@@ -138,10 +140,8 @@ const ProductDetail = () => {
               </span>
             </div>
 
-            {/* Color selector */}
             <ColorSelector selectedColor={selectedColor} onColorChange={handleColorChange} />
 
-            {/* Other variations */}
             {variations
               .filter((v: any) => v.name?.toLowerCase() !== "cor")
               .map((v: any) => (
@@ -182,6 +182,9 @@ const ProductDetail = () => {
             </div>
           </div>
         </div>
+
+        {/* Reviews */}
+        <ReviewSection productId={product.id} />
       </div>
     </main>
   );
