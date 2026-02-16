@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, ShoppingBag, CheckCircle, Loader2, Truck } from "lucide-react";
+import { ArrowLeft, ShoppingBag, CheckCircle, Loader2, Truck, CreditCard, QrCode, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import CouponInput from "@/components/CouponInput";
+import { useToast } from "@/hooks/use-toast";
 
 interface ShippingOption {
   id: number;
@@ -19,7 +20,10 @@ const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
   const [selectedShipping, setSelectedShipping] = useState<ShippingOption | null>(null);
@@ -27,6 +31,10 @@ const Checkout = () => {
   const [form, setForm] = useState({ name: "", address: "", city: "", state: "", zip: "", phone: "" });
   const [discount, setDiscount] = useState(0);
   const [couponCode, setCouponCode] = useState("");
+
+  // Check payment status from Mercado Pago redirect
+  const paymentStatus = searchParams.get("status");
+  const isPaymentApproved = paymentStatus === "approved";
 
   if (!user) {
     return (
@@ -37,7 +45,7 @@ const Checkout = () => {
     );
   }
 
-  if (items.length === 0 && !success) {
+  if (items.length === 0 && !success && !isPaymentApproved) {
     return (
       <main className="container flex min-h-[60vh] flex-col items-center justify-center">
         <ShoppingBag className="mb-4 h-16 w-16 text-muted-foreground/30" />
@@ -47,12 +55,18 @@ const Checkout = () => {
     );
   }
 
-  if (success) {
+  if (success || isPaymentApproved) {
     return (
       <main className="container flex min-h-[60vh] flex-col items-center justify-center text-center">
         <CheckCircle className="mb-4 h-16 w-16 text-success" />
-        <h1 className="mb-2 font-display text-2xl font-bold text-foreground">Pedido Realizado!</h1>
-        <p className="mb-6 text-sm text-muted-foreground">Seu pedido foi registrado com sucesso.</p>
+        <h1 className="mb-2 font-display text-2xl font-bold text-foreground">
+          {isPaymentApproved ? "Pagamento Aprovado!" : "Pedido Realizado!"}
+        </h1>
+        <p className="mb-6 text-sm text-muted-foreground">
+          {isPaymentApproved
+            ? "Seu pagamento foi confirmado e o pedido está sendo processado."
+            : "Seu pedido foi registrado com sucesso."}
+        </p>
         <Link to="/rastreamento" className="btn-primary-glow rounded-md px-6 py-3 text-sm">Rastrear Pedido</Link>
       </main>
     );
@@ -85,10 +99,7 @@ const Checkout = () => {
   const shippingCost = selectedShipping ? Number(selectedShipping.price) : 0;
   const finalTotal = totalPrice - discount + shippingCost;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
+  const createOrder = async () => {
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert({
@@ -107,16 +118,7 @@ const Checkout = () => {
       .select()
       .single();
 
-    if (orderError || !order) {
-      setLoading(false);
-      return;
-    }
-
-    // Increment coupon usage
-    if (couponCode) {
-      await supabase.rpc("has_role", { _role: "admin", _user_id: user.id }); // just to have a valid call
-      // Simple increment - in production use a DB function
-    }
+    if (orderError || !order) return null;
 
     const orderItems = items.map((item) => ({
       order_id: order.id,
@@ -127,9 +129,93 @@ const Checkout = () => {
     }));
 
     await supabase.from("order_items").insert(orderItems);
-    clearCart();
+    return order;
+  };
+
+  const handlePayWithMercadoPago = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validate form
+    const requiredFields = ["name", "address", "city", "state", "zip", "phone"];
+    const missing = requiredFields.filter((f) => !(form as any)[f]);
+    if (missing.length > 0) {
+      toast({ title: "Preencha todos os campos", description: "Todos os campos de endereço são obrigatórios.", variant: "destructive" });
+      return;
+    }
+
+    setPaymentLoading(true);
+
+    try {
+      // Create the order first
+      const order = await createOrder();
+      if (!order) {
+        toast({ title: "Erro ao criar pedido", description: "Tente novamente.", variant: "destructive" });
+        setPaymentLoading(false);
+        return;
+      }
+
+      // Create Mercado Pago preference
+      const mpItems = items.map((item) => ({
+        title: item.product.name,
+        quantity: item.quantity,
+        unit_price: Number(item.product.price),
+      }));
+
+      // Add shipping as item if selected
+      if (selectedShipping && shippingCost > 0) {
+        mpItems.push({
+          title: `Frete: ${selectedShipping.name}`,
+          quantity: 1,
+          unit_price: shippingCost,
+        });
+      }
+
+      // Add discount as negative item if exists
+      if (discount > 0) {
+        mpItems.push({
+          title: `Desconto (${couponCode})`,
+          quantity: 1,
+          unit_price: -discount,
+        });
+      }
+
+      const { data, error } = await supabase.functions.invoke("mercadopago-create-preference", {
+        body: {
+          items: mpItems,
+          payer: { name: form.name },
+          external_reference: order.id,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.init_point) {
+        clearCart();
+        // Redirect to Mercado Pago checkout
+        window.location.href = data.init_point;
+      } else {
+        throw new Error("URL de pagamento não retornada");
+      }
+    } catch (err: any) {
+      console.error("Payment error:", err);
+      toast({
+        title: "Erro no pagamento",
+        description: err.message || "Não foi possível iniciar o pagamento. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+    setPaymentLoading(false);
+  };
+
+  const handleSubmitWithoutPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const order = await createOrder();
+    if (order) {
+      clearCart();
+      setSuccess(true);
+    }
     setLoading(false);
-    setSuccess(true);
   };
 
   const updateForm = (key: string, value: string) => setForm({ ...form, [key]: value });
@@ -143,7 +229,7 @@ const Checkout = () => {
         <h1 className="section-title mb-6">Finalizar Compra</h1>
 
         <div className="grid gap-8 lg:grid-cols-3">
-          <form onSubmit={handleSubmit} className="lg:col-span-2 flex flex-col gap-4">
+          <form onSubmit={handlePayWithMercadoPago} className="lg:col-span-2 flex flex-col gap-4">
             <h2 className="font-display text-sm font-bold uppercase tracking-wider text-foreground">Endereço de Entrega</h2>
             {[
               { key: "name", label: "Nome completo", placeholder: "Seu nome" },
@@ -209,9 +295,52 @@ const Checkout = () => {
               appliedCode={couponCode}
             />
 
-            <button type="submit" disabled={loading} className="btn-primary-glow mt-4 rounded-md py-3 text-sm transition-all disabled:opacity-50">
-              {loading ? "Processando..." : `Confirmar Pedido — R$ ${finalTotal.toFixed(2).replace(".", ",")}`}
-            </button>
+            {/* Payment buttons */}
+            <div className="mt-4 space-y-3">
+              <h2 className="font-display text-sm font-bold uppercase tracking-wider text-foreground">Forma de Pagamento</h2>
+
+              <button
+                type="submit"
+                disabled={paymentLoading}
+                className="btn-primary-glow flex w-full items-center justify-center gap-3 rounded-md py-3.5 text-sm font-semibold transition-all disabled:opacity-50"
+              >
+                {paymentLoading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <>
+                    <CreditCard className="h-5 w-5" />
+                    Pagar com Mercado Pago — R$ {finalTotal.toFixed(2).replace(".", ",")}
+                  </>
+                )}
+              </button>
+
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <div className="h-px flex-1 bg-border" />
+                <span>Aceita PIX, cartão de crédito/débito e boleto</span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+
+              <div className="flex items-center justify-center gap-4 text-muted-foreground">
+                <div className="flex items-center gap-1.5 text-xs">
+                  <QrCode className="h-4 w-4 text-primary" /> PIX
+                </div>
+                <div className="flex items-center gap-1.5 text-xs">
+                  <CreditCard className="h-4 w-4 text-primary" /> Cartão
+                </div>
+                <div className="flex items-center gap-1.5 text-xs">
+                  <ExternalLink className="h-4 w-4 text-primary" /> Boleto
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSubmitWithoutPayment}
+                disabled={loading}
+                className="w-full rounded-md border border-border py-2.5 text-xs text-muted-foreground transition-all hover:border-primary/40 hover:text-foreground disabled:opacity-50"
+              >
+                {loading ? "Processando..." : "Confirmar pedido sem pagamento online"}
+              </button>
+            </div>
           </form>
 
           <div className="card-industrial h-fit p-5">
