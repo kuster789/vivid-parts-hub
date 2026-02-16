@@ -24,7 +24,7 @@ const Catalog = () => {
   const priceMax = Number(searchParams.get("preco_max")) || 0;
   const inStock = searchParams.get("em_estoque") === "1";
   const has3D = searchParams.get("has_3d") === "1";
-  const hasColors = searchParams.get("tem_cores") === "1";
+  
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState<string>("newest");
   const [products, setProducts] = useState<any[]>([]);
@@ -59,7 +59,7 @@ const Catalog = () => {
         if (priceMax > 0) filtered = filtered.filter(p => p.price <= priceMax);
         if (inStock) filtered = filtered.filter(p => p.stock > 0);
         if (has3D) filtered = filtered.filter(p => p.has_3d === true);
-        if (hasColors) filtered = filtered.filter(p => p.variations && Array.isArray(p.variations) && (p.variations as any[]).length > 0);
+        
 
         // Sort
         if (sortBy === "price_asc") filtered.sort((a, b) => a.price - b.price);
@@ -76,7 +76,7 @@ const Catalog = () => {
         if (priceMax > 0) countQuery = countQuery.lte("price", priceMax);
         if (inStock) countQuery = countQuery.gt("stock", 0);
         if (has3D) countQuery = countQuery.eq("has_3d", true);
-        if (hasColors) countQuery = countQuery.not("variations", "is", null).neq("variations", "[]");
+        
         const { count } = await countQuery;
         setTotalCount(count || 0);
 
@@ -85,7 +85,7 @@ const Catalog = () => {
         if (priceMax > 0) query = query.lte("price", priceMax);
         if (inStock) query = query.gt("stock", 0);
         if (has3D) query = query.eq("has_3d", true);
-        if (hasColors) query = query.not("variations", "is", null).neq("variations", "[]");
+        
         
         if (sortBy === "price_asc") query = query.order("price", { ascending: true });
         else if (sortBy === "price_desc") query = query.order("price", { ascending: false });
@@ -101,7 +101,7 @@ const Catalog = () => {
       setLoading(false);
     };
     load();
-  }, [activeBrand, activeModel, sortBy, currentPage, priceMin, priceMax, inStock, has3D, hasColors]);
+  }, [activeBrand, activeModel, sortBy, currentPage, priceMin, priceMax, inStock, has3D]);
 
   const goToPage = (page: number) => {
     const params = new URLSearchParams(searchParams);
