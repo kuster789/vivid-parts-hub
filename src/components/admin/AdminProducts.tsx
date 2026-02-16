@@ -12,7 +12,7 @@ const AdminProducts = () => {
   const [editing, setEditing] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
   const [showAdd, setShowAdd] = useState(false);
-  const [newProduct, setNewProduct] = useState({ name: "", description: "", price: 0, sku: "", stock: 0, brand: "", model: "" });
+  const [newProduct, setNewProduct] = useState({ name: "", description: "", price: 0, sku: "", stock: 0, brand: "", model: "", hasColors: false });
   const [uploading, setUploading] = useState<string | null>(null);
   const [uploading3D, setUploading3D] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,9 +41,12 @@ const AdminProducts = () => {
   };
 
   const handleAdd = async () => {
-    await supabase.from("products").insert({ ...newProduct, active: true });
+    const variations = newProduct.hasColors
+      ? [{ name: "Cor", options: ["Preto", "Branco", "Azul", "Amarelo", "Vermelho", "Roxo"] }]
+      : [];
+    await supabase.from("products").insert({ name: newProduct.name, description: newProduct.description, price: newProduct.price, sku: newProduct.sku, stock: newProduct.stock, brand: newProduct.brand, model: newProduct.model, active: true, variations });
     setShowAdd(false);
-    setNewProduct({ name: "", description: "", price: 0, sku: "", stock: 0, brand: "", model: "" });
+    setNewProduct({ name: "", description: "", price: 0, sku: "", stock: 0, brand: "", model: "", hasColors: false });
     loadProducts();
   };
 
@@ -140,6 +143,11 @@ const AdminProducts = () => {
           </div>
           <textarea placeholder="Descrição" value={newProduct.description} onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
             className={`${inputClass} mt-3 w-full`} rows={2} />
+          <label className="mt-3 flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={newProduct.hasColors} onChange={(e) => setNewProduct({ ...newProduct, hasColors: e.target.checked })}
+              className="h-4 w-4 rounded border-border text-primary focus:ring-primary" />
+            <span className="text-sm text-foreground">Produto com variação de cores</span>
+          </label>
           <div className="mt-4 flex gap-2">
             <button onClick={handleAdd} className="btn-primary-glow rounded-lg px-5 py-2 text-xs font-semibold">Salvar</button>
             <button onClick={() => setShowAdd(false)} className="rounded-lg border border-border px-5 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors">Cancelar</button>

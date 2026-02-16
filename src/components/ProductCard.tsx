@@ -89,12 +89,18 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <p className="text-[10px] text-muted-foreground">
             ou 12x de <span className="font-semibold text-foreground">R$ {installment}</span>
           </p>
-          <button
-            onClick={() => addItem({ id: product.id, name: product.name, price, brand: product.brand, model: product.model, has_3d: product.has_3d ?? false })}
-            className="btn-primary-glow flex w-full items-center justify-center gap-2 rounded-md py-2.5 text-xs font-semibold transition-all"
-          >
-            <ShoppingCart className="h-3.5 w-3.5" /> Adicionar
-          </button>
+          {product.stock > 0 ? (
+            <button
+              onClick={() => addItem({ id: product.id, name: product.name, price, brand: product.brand, model: product.model, has_3d: product.has_3d ?? false })}
+              className="btn-primary-glow flex w-full items-center justify-center gap-2 rounded-md py-2.5 text-xs font-semibold transition-all"
+            >
+              <ShoppingCart className="h-3.5 w-3.5" /> Adicionar
+            </button>
+          ) : (
+            <span className="flex w-full items-center justify-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 py-2.5 text-xs font-semibold text-destructive">
+              Indisponível
+            </span>
+          )}
         </div>
       </div>
     </div>
