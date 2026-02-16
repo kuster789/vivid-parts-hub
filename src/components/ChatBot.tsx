@@ -140,7 +140,7 @@ const ChatBot = () => {
                           p: ({ children }) => <p className="m-0">{children}</p>,
                         }}
                       >
-                        {msg.content.replace(/(https?:\/\/[^\s)]+)/g, (url) => `[${url}](${url})`)}
+                        {msg.content.replace(/(?<!\]\()(?<!\()(https?:\/\/[^\s)]+)/g, (url) => `[${url}](${url})`)}
                       </ReactMarkdown>
                     ) : (
                       msg.content
