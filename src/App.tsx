@@ -21,6 +21,10 @@ import SobreNos from "./pages/SobreNos";
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import TermosUso from "./pages/TermosUso";
 import PoliticaDevolucao from "./pages/PoliticaDevolucao";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
+import Wishlist from "./pages/Wishlist";
+import Tracking from "./pages/Tracking";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +52,10 @@ const App = () => (
               <Route path="/privacidade" element={<PoliticaPrivacidade />} />
               <Route path="/termos" element={<TermosUso />} />
               <Route path="/devolucao" element={<PoliticaDevolucao />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/favoritos" element={<Wishlist />} />
+              <Route path="/rastreamento" element={<Tracking />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Footer />

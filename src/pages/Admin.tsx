@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { uploadProductImage, deleteProductImage, upload3DModel } from "@/lib/storage";
 import { brands } from "@/data/products";
+import AdminCharts from "@/components/AdminCharts";
 
 type Tab = "dashboard" | "products" | "orders" | "users";
 
@@ -78,18 +79,21 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {cards.map(({ label, value, icon: Icon, color }) => (
-        <div key={label} className="card-industrial flex items-center gap-4 p-6">
-          <div className="flex h-12 w-12 items-center justify-center rounded-md bg-primary/10">
-            <Icon className={`h-6 w-6 ${color}`} />
+    <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {cards.map(({ label, value, icon: Icon, color }) => (
+          <div key={label} className="card-industrial flex items-center gap-4 p-6">
+            <div className="flex h-12 w-12 items-center justify-center rounded-md bg-primary/10">
+              <Icon className={`h-6 w-6 ${color}`} />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">{label}</p>
+              <p className="font-display text-xl font-bold text-foreground">{value}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-xs text-muted-foreground">{label}</p>
-            <p className="font-display text-xl font-bold text-foreground">{value}</p>
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
+      <AdminCharts />
     </div>
   );
 };

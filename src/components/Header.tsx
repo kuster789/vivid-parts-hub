@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart, Search, Menu, X, User, LogOut, Shield } from "lucide-react";
+import { ShoppingCart, Menu, X, User, LogOut, Shield, Heart } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
+import SearchBar from "@/components/SearchBar";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const Header = () => {
   const { totalItems } = useCart();
@@ -25,6 +27,7 @@ const Header = () => {
         <nav className="hidden items-center gap-6 md:flex">
           <Link to="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Início</Link>
           <Link to="/catalogo" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Catálogo</Link>
+          <Link to="/blog" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Blog</Link>
           <Link to="/suporte" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Suporte</Link>
           {(isAdmin || isEmployee) && (
             <Link to="/admin" className="flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary/80">
@@ -33,7 +36,16 @@ const Header = () => {
           )}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          <SearchBar />
+          <ThemeToggle />
+
+          {user && (
+            <Link to="/favoritos" className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" title="Favoritos">
+              <Heart className="h-5 w-5" />
+            </Link>
+          )}
+
           <Link to="/carrinho" className="relative rounded-md p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
             <ShoppingCart className="h-5 w-5" />
             {totalItems > 0 && (
@@ -45,7 +57,7 @@ const Header = () => {
 
           {user ? (
             <div className="flex items-center gap-1">
-              <Link to="/suporte" className="rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-foreground">
+              <Link to="/rastreamento" className="rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-foreground" title="Meus pedidos">
                 <User className="h-5 w-5" />
               </Link>
               <button onClick={() => signOut()} className="rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-foreground">
@@ -69,7 +81,10 @@ const Header = () => {
           <nav className="flex flex-col gap-3">
             <Link to="/" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-muted-foreground">Início</Link>
             <Link to="/catalogo" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-muted-foreground">Catálogo</Link>
+            <Link to="/blog" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-muted-foreground">Blog</Link>
             <Link to="/suporte" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-muted-foreground">Suporte</Link>
+            <Link to="/rastreamento" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-muted-foreground">Meus Pedidos</Link>
+            <Link to="/favoritos" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-muted-foreground">Favoritos</Link>
             {(isAdmin || isEmployee) && (
               <Link to="/admin" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-primary">Admin</Link>
             )}
