@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ChevronDown, ChevronRight, SlidersHorizontal, Box, Package } from "lucide-react";
 import { brands } from "@/data/products";
@@ -6,6 +6,9 @@ import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+
+type CountMap = Record<string, number>;
 
 const CatalogSidebar = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -17,6 +20,25 @@ const CatalogSidebar = () => {
   const has3D = searchParams.get("has_3d") === "1";
 
   const [localPriceRange, setLocalPriceRange] = useState<number[]>([priceMin, priceMax]);
+  const [brandCounts, setBrandCounts] = useState<CountMap>({});
+  const [modelCounts, setModelCounts] = useState<CountMap>({});
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      const { data } = await supabase.rpc("count_products_by_brand_model");
+      if (!data) return;
+      const bc: CountMap = {};
+      const mc: CountMap = {};
+      for (const row of data) {
+        const key = `${row.brand}::${row.model}`;
+        mc[key] = (mc[key] || 0) + Number(row.product_count);
+        bc[row.brand] = (bc[row.brand] || 0) + Number(row.product_count);
+      }
+      setBrandCounts(bc);
+      setModelCounts(mc);
+    };
+    fetchCounts();
+  }, []);
 
   const updateFilter = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams);
@@ -68,6 +90,8 @@ const CatalogSidebar = () => {
               brand={brand}
               isActive={activeBrand === brand.slug}
               activeModel={activeBrand === brand.slug ? activeModel : ""}
+              brandCount={brandCounts[brand.slug] || 0}
+              modelCounts={modelCounts}
             />
           ))}
         </nav>
@@ -145,9 +169,11 @@ interface BrandGroupProps {
   brand: (typeof brands)[0];
   isActive: boolean;
   activeModel: string;
+  brandCount: number;
+  modelCounts: CountMap;
 }
 
-const BrandGroup = ({ brand, isActive, activeModel }: BrandGroupProps) => {
+const BrandGroup = ({ brand, isActive, activeModel, brandCount, modelCounts }: BrandGroupProps) => {
   const [open, setOpen] = useState(isActive);
 
   return (
@@ -167,6 +193,11 @@ const BrandGroup = ({ brand, isActive, activeModel }: BrandGroupProps) => {
           <span className="text-sm">{brand.icon}</span>
         )}
         <span className="flex-1 font-medium">{brand.name}</span>
+        {brandCount > 0 && (
+          <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+            {brandCount}
+          </span>
+        )}
         {open ? (
           <ChevronDown className="h-3.5 w-3.5 shrink-0" />
         ) : (
@@ -179,28 +210,37 @@ const BrandGroup = ({ brand, isActive, activeModel }: BrandGroupProps) => {
           <Link
             to={`/catalogo?marca=${brand.slug}`}
             className={cn(
-              "block rounded-sm px-3 py-1.5 text-xs transition-colors",
+              "flex items-center justify-between rounded-sm px-3 py-1.5 text-xs transition-colors",
               isActive && !activeModel
                 ? "bg-primary/10 font-semibold text-primary"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            Todos os modelos
+            <span>Todos os modelos</span>
+            {brandCount > 0 && (
+              <span className="text-[10px] text-muted-foreground">{brandCount}</span>
+            )}
           </Link>
-          {brand.models.map((model) => (
-            <Link
-              key={model}
-              to={`/catalogo?marca=${brand.slug}&modelo=${encodeURIComponent(model)}`}
-              className={cn(
-                "block rounded-sm px-3 py-1.5 text-xs transition-colors",
-                activeModel === model
-                  ? "bg-primary/10 font-semibold text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {model}
-            </Link>
-          ))}
+          {brand.models.map((model) => {
+            const count = modelCounts[`${brand.slug}::${model}`] || 0;
+            return (
+              <Link
+                key={model}
+                to={`/catalogo?marca=${brand.slug}&modelo=${encodeURIComponent(model)}`}
+                className={cn(
+                  "flex items-center justify-between rounded-sm px-3 py-1.5 text-xs transition-colors",
+                  activeModel === model
+                    ? "bg-primary/10 font-semibold text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <span>{model}</span>
+                {count > 0 && (
+                  <span className="text-[10px] text-muted-foreground">{count}</span>
+                )}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>
