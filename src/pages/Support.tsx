@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Package, Truck, Headphones, ChevronRight } from "lucide-react";
+import { Search, Package, Truck, Headphones, ChevronRight, MessageSquare, Phone, Mail } from "lucide-react";
 
 const Support = () => {
   const [trackingCode, setTrackingCode] = useState("");
@@ -29,12 +29,47 @@ const Support = () => {
           </div>
         </section>
 
+        {/* Contact Info */}
+        <section className="card-industrial mb-8 p-6">
+          <h2 className="mb-4 flex items-center gap-2 font-display text-sm font-bold uppercase tracking-wider text-foreground">
+            <MessageSquare className="h-4 w-4 text-primary" /> Fale Conosco
+          </h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            <a
+              href="https://wa.me/554396438823"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-lg border border-border p-4 transition-all hover:border-primary/40"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10">
+                <Phone className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">WhatsApp</p>
+                <p className="text-xs text-muted-foreground">+55 43 9643-8823</p>
+              </div>
+            </a>
+            <a
+              href="mailto:autopecaagralecagiva@outlook.com"
+              className="flex items-center gap-3 rounded-lg border border-border p-4 transition-all hover:border-primary/40"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10">
+                <Mail className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">E-mail</p>
+                <p className="text-xs text-muted-foreground">autopecaagralecagiva@outlook.com</p>
+              </div>
+            </a>
+          </div>
+        </section>
+
         {/* Quick links */}
         <div className="grid gap-4 md:grid-cols-3">
           {[
             { icon: Package, title: "Meus Pedidos", desc: "Consulte seus pedidos" },
             { icon: Truck, title: "Entregas", desc: "Informações de envio" },
-            { icon: Headphones, title: "Contato", desc: "Fale com a equipe" },
+            { icon: Headphones, title: "Chat IA", desc: "Assistente virtual 24h" },
           ].map(({ icon: Icon, title, desc }) => (
             <button key={title} className="card-industrial flex items-center gap-4 p-5 text-left transition-all hover:border-primary/40">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10">
