@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, ShoppingBag, CheckCircle, Loader2, Truck, CreditCard, QrCode, ExternalLink } from "lucide-react";
+import { ArrowLeft, ShoppingBag, CheckCircle, Loader2, Truck, CreditCard, QrCode, ExternalLink, MapPin, Package } from "lucide-react";
 import { Link } from "react-router-dom";
 import CouponInput from "@/components/CouponInput";
 import { useToast } from "@/hooks/use-toast";
@@ -231,7 +231,26 @@ const Checkout = () => {
         <Link to="/carrinho" className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Voltar ao carrinho
         </Link>
-        <h1 className="section-title mb-6">Finalizar Compra</h1>
+        <h1 className="section-title mb-4">Finalizar Compra</h1>
+
+        {/* Progress Steps */}
+        <div className="mb-8 flex items-center gap-2">
+          {[
+            { icon: MapPin, label: "Endereço", done: !!(form.name && form.address && form.city) },
+            { icon: Truck, label: "Frete", done: !!selectedShipping },
+            { icon: CreditCard, label: "Pagamento", done: false },
+          ].map(({ icon: Icon, label, done }, i) => (
+            <div key={label} className="flex items-center gap-2">
+              {i > 0 && <div className={`h-px w-6 ${done || i === 0 ? "bg-primary" : "bg-border"}`} />}
+              <div className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-medium transition-all ${
+                done ? "border-primary/50 bg-primary/10 text-primary" : "border-border text-muted-foreground"
+              }`}>
+                {done ? <CheckCircle className="h-3 w-3" /> : <Icon className="h-3 w-3" />}
+                {label}
+              </div>
+            </div>
+          ))}
+        </div>
 
         <div className="grid gap-8 lg:grid-cols-3">
           <form onSubmit={handlePayWithMercadoPago} className="lg:col-span-2 flex flex-col gap-4">
