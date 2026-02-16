@@ -22,6 +22,10 @@ const Footer = () => (
             <Link to="/catalogo" className="text-sm text-muted-foreground hover:text-foreground">Catálogo</Link>
             <Link to="/blog" className="text-sm text-muted-foreground hover:text-foreground">Blog</Link>
             <Link to="/suporte" className="text-sm text-muted-foreground hover:text-foreground">Contato</Link>
+            <Link to="/visualizacao-3d" className="text-sm text-muted-foreground hover:text-foreground">Visualização 3D</Link>
+            <Link to="/qualidade" className="text-sm text-muted-foreground hover:text-foreground">Qualidade Garantida</Link>
+            <Link to="/envio" className="text-sm text-muted-foreground hover:text-foreground">Envio Nacional</Link>
+            <Link to="/suporte-tecnico" className="text-sm text-muted-foreground hover:text-foreground">Suporte Técnico</Link>
           </div>
         </div>
         <div>
