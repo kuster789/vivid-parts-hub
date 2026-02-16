@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -31,11 +31,9 @@ serve(async (req) => {
       if (!msg.role || !msg.content || typeof msg.content !== "string" || msg.content.length > 2000) {
         return new Response(JSON.stringify({ error: "Formato de mensagem inválido" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-      // Only allow user and assistant roles from client
       if (!["user", "assistant"].includes(msg.role)) {
         return new Response(JSON.stringify({ error: "Role de mensagem inválido" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-      // Check for prompt injection in user messages
       if (msg.role === "user") {
         for (const pattern of injectionPatterns) {
           if (pattern.test(msg.content)) {
@@ -43,6 +41,27 @@ serve(async (req) => {
             return new Response(JSON.stringify({ error: "Mensagem não permitida" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
           }
         }
+      }
+    }
+
+    // Detect if user is requesting human support
+    const lastUserMsg = [...messages].reverse().find(m => m.role === "user");
+    const humanKeywords = /\b(atendente|humano|pessoa|falar\s+com\s+algu[eé]m|suporte\s+humano|atendimento\s+humano|falar\s+com\s+voc[eê]s|ligar|telefonar|quero\s+falar|preciso\s+de\s+ajuda\s+humana)\b/i;
+    
+    if (lastUserMsg && humanKeywords.test(lastUserMsg.content)) {
+      // Create notification for admin
+      try {
+        const supabase = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+        );
+        await supabase.from("notifications").insert({
+          title: "🧑‍💼 Solicitação de atendimento humano",
+          message: `Cliente solicitou atendimento humano no chat. Última mensagem: "${lastUserMsg.content.substring(0, 100)}"`,
+          type: "support",
+        });
+      } catch (notifErr) {
+        console.error("Failed to create support notification:", notifErr);
       }
     }
 
@@ -69,12 +88,19 @@ Seu papel é:
 - Orientar sobre formas de pagamento e entrega
 - Ser cordial, técnico e objetivo
 
+IMPORTANTE - Atendimento Humano:
+Quando o cliente pedir para falar com uma pessoa, atendente humano, ou demonstrar que precisa de ajuda além do que você pode oferecer, SEMPRE responda com:
+"Entendi! Vou te conectar com nosso atendimento humano. 😊
+Clique no link abaixo para falar diretamente com nossa equipe pelo WhatsApp:
+👉 https://wa.me/554396438823?text=Ol%C3%A1%2C%20vim%20pelo%20chat%20do%20site%20e%20preciso%20de%20atendimento
+Nossa equipe está disponível de segunda a sexta, das 8h às 18h."
+
 Informações da loja:
-- WhatsApp: +55 43 9643-8823
+- WhatsApp: +55 43 9643-8823 (link: https://wa.me/554396438823)
 - E-mail: autopecaagralecagiva@outlook.com
 - Marcas: Yamaha (RD 125/135, RDZ 125/135, DT 180/200, RD 350), Agrale (13.5, 16.5, 27.5, Dakar 30.0, Elefant), Cagiva (Super City 125, Mito), KTM (950cc)
 
-Responda sempre em português brasileiro. Seja conciso e útil.`,
+Responda sempre em português brasileiro. Seja conciso e útil. Sempre que mencionar contato, inclua o link do WhatsApp.`,
           },
           ...messages,
         ],

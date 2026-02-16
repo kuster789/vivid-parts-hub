@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Loader2, Bot, User } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -128,7 +129,22 @@ const ChatBot = () => {
                       ? "bg-primary text-primary-foreground"
                       : "bg-secondary text-foreground"
                   }`}>
-                    {msg.content}
+                    {msg.role === "assistant" ? (
+                      <ReactMarkdown
+                        components={{
+                          a: ({ href, children }) => (
+                            <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline font-semibold hover:opacity-80">
+                              {children}
+                            </a>
+                          ),
+                          p: ({ children }) => <p className="m-0">{children}</p>,
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    ) : (
+                      msg.content
+                    )}
                   </div>
                   {msg.role === "user" && (
                     <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted">
