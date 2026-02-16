@@ -112,27 +112,23 @@ const ProductDetail = () => {
                       <img
                         src={product.images[activeImageIdx] || product.images[0]}
                         alt={product.name}
-                        className="h-[400px] w-full object-cover transition-all duration-500 hover:scale-110 cursor-zoom-in md:h-[500px]"
-                        style={selectedColor ? { filter: selectedColor === "Preto" ? "brightness(0.35) saturate(0.1)" : selectedColor === "Branco" ? "brightness(1.15) saturate(0.2)" : "saturate(0.15) brightness(0.95)" } : undefined}
+                        className="h-[400px] w-full object-contain transition-all duration-500 hover:scale-110 cursor-zoom-in md:h-[500px]"
                         loading="lazy"
                       />
-                      {selectedColor && selectedColor !== "Preto" && selectedColor !== "Branco" && (
+                      {selectedColor && (
                         <div
                           className="pointer-events-none absolute inset-0 transition-all duration-500"
                           style={{
                             backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex,
-                            mixBlendMode: "multiply",
-                            opacity: 0.55,
-                          }}
-                        />
-                      )}
-                      {selectedColor && selectedColor !== "Preto" && selectedColor !== "Branco" && (
-                        <div
-                          className="pointer-events-none absolute inset-0 transition-all duration-500"
-                          style={{
-                            backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex,
-                            mixBlendMode: "color",
-                            opacity: 0.7,
+                            WebkitMaskImage: `url(${product.images[activeImageIdx] || product.images[0]})`,
+                            maskImage: `url(${product.images[activeImageIdx] || product.images[0]})`,
+                            WebkitMaskSize: "contain",
+                            maskSize: "contain",
+                            WebkitMaskPosition: "center",
+                            maskPosition: "center",
+                            WebkitMaskRepeat: "no-repeat",
+                            maskRepeat: "no-repeat",
+                            opacity: selectedColor === "Preto" ? 0.85 : selectedColor === "Branco" ? 0.6 : 0.65,
                           }}
                         />
                       )}
@@ -159,12 +155,16 @@ const ProductDetail = () => {
                              activeImageIdx === idx ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/40"
                            }`}
                          >
-                           <img src={img} alt={`${product.name} ${idx + 1}`} className="h-full w-full object-cover" style={selectedColor ? { filter: selectedColor === "Preto" ? "brightness(0.35) saturate(0.1)" : selectedColor === "Branco" ? "brightness(1.15) saturate(0.2)" : "saturate(0.15) brightness(0.95)" } : undefined} />
-                           {selectedColor && selectedColor !== "Preto" && selectedColor !== "Branco" && (
-                             <>
-                               <div className="pointer-events-none absolute inset-0" style={{ backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex, mixBlendMode: "multiply", opacity: 0.55 }} />
-                               <div className="pointer-events-none absolute inset-0" style={{ backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex, mixBlendMode: "color", opacity: 0.7 }} />
-                             </>
+                           <img src={img} alt={`${product.name} ${idx + 1}`} className="h-full w-full object-contain" />
+                           {selectedColor && (
+                             <div className="pointer-events-none absolute inset-0" style={{
+                               backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex,
+                               WebkitMaskImage: `url(${img})`, maskImage: `url(${img})`,
+                               WebkitMaskSize: "contain", maskSize: "contain",
+                               WebkitMaskPosition: "center", maskPosition: "center",
+                               WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+                               opacity: selectedColor === "Preto" ? 0.85 : selectedColor === "Branco" ? 0.6 : 0.65,
+                             }} />
                            )}
                          </button>
                       ))}
