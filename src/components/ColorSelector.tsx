@@ -7,13 +7,13 @@ export interface ColorOption {
 }
 
 export const colorOptions: ColorOption[] = [
-  { name: "Preto", hex: "#1a1a1a", filter: "brightness(0.3) saturate(0)" },
-  { name: "Branco", hex: "#f5f5f5", filter: "brightness(1.3) saturate(0.1)" },
-  { name: "Azul", hex: "#2563eb", filter: "brightness(0.8) saturate(1.5) hue-rotate(200deg)" },
-  { name: "Amarelo", hex: "#eab308", filter: "brightness(1.1) saturate(1.5) hue-rotate(10deg)" },
-  { name: "Verde", hex: "#16a34a", filter: "brightness(0.85) saturate(1.5) hue-rotate(100deg)" },
-  { name: "Vermelho", hex: "#dc2626", filter: "brightness(0.9) saturate(1.8) hue-rotate(330deg)" },
-  { name: "Roxo", hex: "#7c3aed", filter: "brightness(0.8) saturate(1.5) hue-rotate(260deg)" },
+  { name: "Preto", hex: "#1a1a1a", filter: "brightness(0.4) saturate(0.1)" },
+  { name: "Branco", hex: "#f5f5f5", filter: "brightness(1.15) saturate(0.2)" },
+  { name: "Azul", hex: "#2563eb", filter: "sepia(1) saturate(3) hue-rotate(190deg) brightness(0.85)" },
+  { name: "Amarelo", hex: "#eab308", filter: "sepia(1) saturate(2.5) hue-rotate(10deg) brightness(1.05)" },
+  { name: "Verde", hex: "#16a34a", filter: "sepia(1) saturate(2.5) hue-rotate(85deg) brightness(0.85)" },
+  { name: "Vermelho", hex: "#dc2626", filter: "sepia(1) saturate(3) hue-rotate(330deg) brightness(0.85)" },
+  { name: "Roxo", hex: "#7c3aed", filter: "sepia(1) saturate(3) hue-rotate(240deg) brightness(0.8)" },
 ];
 
 interface ColorSelectorProps {
