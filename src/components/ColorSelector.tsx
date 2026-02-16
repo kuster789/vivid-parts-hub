@@ -7,13 +7,13 @@ export interface ColorOption {
 }
 
 export const colorOptions: ColorOption[] = [
-  { name: "Preto", hex: "#1a1a1a", filter: "brightness(0.4) saturate(0.1)" },
-  { name: "Branco", hex: "#f5f5f5", filter: "brightness(1.15) saturate(0.2)" },
-  { name: "Azul", hex: "#2563eb", filter: "sepia(1) saturate(3) hue-rotate(190deg) brightness(0.85)" },
-  { name: "Amarelo", hex: "#eab308", filter: "sepia(1) saturate(2.5) hue-rotate(10deg) brightness(1.05)" },
-  { name: "Verde", hex: "#16a34a", filter: "sepia(1) saturate(2.5) hue-rotate(85deg) brightness(0.85)" },
-  { name: "Vermelho", hex: "#dc2626", filter: "sepia(1) saturate(3) hue-rotate(330deg) brightness(0.85)" },
-  { name: "Roxo", hex: "#7c3aed", filter: "sepia(1) saturate(3) hue-rotate(240deg) brightness(0.8)" },
+  { name: "Preto", hex: "#1a1a1a", filter: "" },
+  { name: "Branco", hex: "#f5f5f5", filter: "" },
+  { name: "Azul", hex: "#2563eb", filter: "" },
+  { name: "Amarelo", hex: "#eab308", filter: "" },
+  { name: "Verde", hex: "#16a34a", filter: "" },
+  { name: "Vermelho", hex: "#dc2626", filter: "" },
+  { name: "Roxo", hex: "#7c3aed", filter: "" },
 ];
 
 interface ColorSelectorProps {
