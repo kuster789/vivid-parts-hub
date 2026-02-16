@@ -76,7 +76,7 @@ const Catalog = () => {
         if (priceMax > 0) countQuery = countQuery.lte("price", priceMax);
         if (inStock) countQuery = countQuery.gt("stock", 0);
         if (has3D) countQuery = countQuery.eq("has_3d", true);
-        if (hasColors) countQuery = countQuery.not("variations", "is", null);
+        if (hasColors) countQuery = countQuery.not("variations", "is", null).neq("variations", "[]");
         const { count } = await countQuery;
         setTotalCount(count || 0);
 
@@ -85,7 +85,7 @@ const Catalog = () => {
         if (priceMax > 0) query = query.lte("price", priceMax);
         if (inStock) query = query.gt("stock", 0);
         if (has3D) query = query.eq("has_3d", true);
-        if (hasColors) query = query.not("variations", "is", null);
+        if (hasColors) query = query.not("variations", "is", null).neq("variations", "[]");
         
         if (sortBy === "price_asc") query = query.order("price", { ascending: true });
         else if (sortBy === "price_desc") query = query.order("price", { ascending: false });
