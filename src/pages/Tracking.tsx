@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Package, Truck, CheckCircle, Clock, XCircle, Loader2, Search } from "lucide-react";
+import { Package, Truck, CheckCircle, Clock, XCircle, Loader2, Search, Factory, Paintbrush, PackageCheck, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 
@@ -11,6 +11,14 @@ const statusConfig: Record<string, { icon: any; label: string; color: string }> 
   delivered: { icon: CheckCircle, label: "Entregue", color: "text-green-500" },
   cancelled: { icon: XCircle, label: "Cancelado", color: "text-destructive" },
 };
+
+const productionStages = [
+  { key: "producao", label: "Produção", icon: Factory },
+  { key: "acabamento", label: "Acabamento", icon: Paintbrush },
+  { key: "pintura", label: "Pintura", icon: Paintbrush },
+  { key: "embalagem", label: "Embalagem", icon: PackageCheck },
+  { key: "postagem", label: "Postagem", icon: Mail },
+];
 
 const statusOrder = ["pending", "confirmed", "shipped", "delivered"];
 
@@ -118,6 +126,34 @@ const Tracking = () => {
                         {statusOrder.map((s) => (
                           <span key={s} className="text-[9px] text-muted-foreground">{statusConfig[s].label}</span>
                         ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Production stages */}
+                  {order.production_stage && (
+                    <div className="mb-4">
+                      <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Processo de Produção</p>
+                      <div className="flex items-center gap-1">
+                        {productionStages.map((stage, i) => {
+                          const currentIdx = productionStages.findIndex(s => s.key === order.production_stage);
+                          const isActive = order.production_stage === stage.key;
+                          const isPast = i < currentIdx;
+                          const StageIcon = stage.icon;
+                          return (
+                            <div key={stage.key} className="flex flex-1 items-center">
+                              <div className={`flex flex-col items-center gap-0.5 rounded-lg border p-1.5 w-full ${
+                                isActive ? "border-primary bg-primary/20" : isPast ? "border-primary/30 bg-primary/5" : "border-border"
+                              }`}>
+                                <StageIcon className={`h-3 w-3 ${isActive ? "text-primary" : isPast ? "text-primary/50" : "text-muted-foreground/30"}`} />
+                                <span className={`text-[7px] font-semibold uppercase leading-tight text-center ${isActive ? "text-primary" : isPast ? "text-primary/50" : "text-muted-foreground/40"}`}>{stage.label}</span>
+                              </div>
+                              {i < productionStages.length - 1 && (
+                                <div className={`h-0.5 w-1 shrink-0 ${isPast || isActive ? "bg-primary/30" : "bg-border"}`} />
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}

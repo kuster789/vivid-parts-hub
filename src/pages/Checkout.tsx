@@ -42,7 +42,6 @@ const Checkout = () => {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [step, setStep] = useState<Step>(1);
-  const [loading, setLoading] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
@@ -247,19 +246,6 @@ const Checkout = () => {
     setPaymentLoading(false);
   };
 
-  const handleSubmitWithoutPayment = async () => {
-    if (!selectedShipping) {
-      toast({ title: "Selecione o frete", description: "Escolha uma opção de entrega.", variant: "destructive" });
-      return;
-    }
-    setLoading(true);
-    const order = await createOrder();
-    if (order) {
-      clearCart();
-      setSuccess(true);
-    }
-    setLoading(false);
-  };
 
   const updateForm = (key: string, value: string) => {
     let formatted = value;
@@ -574,13 +560,6 @@ const Checkout = () => {
                     ))}
                   </div>
 
-                  <button
-                    onClick={handleSubmitWithoutPayment}
-                    disabled={loading}
-                    className="w-full rounded-lg border border-border py-3 text-xs text-muted-foreground transition-all hover:border-primary/40 hover:text-foreground disabled:opacity-50"
-                  >
-                    {loading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : "Confirmar pedido sem pagamento online"}
-                  </button>
                 </div>
 
                 {/* Trust badges */}
@@ -614,14 +593,17 @@ const Checkout = () => {
               </h2>
 
               <div className="max-h-60 space-y-3 overflow-y-auto pr-1">
-                {items.map(({ product, quantity }) => (
+                {items.map(({ product, quantity, selectedVariations }) => (
                   <div key={product.id} className="flex items-center gap-3">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary">
                       <Package className="h-5 w-5 text-muted-foreground/30" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-xs font-medium text-foreground">{product.name}</p>
-                      <p className="text-[10px] text-muted-foreground">Qtd: {quantity}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        Qtd: {quantity}
+                        {selectedVariations?.Cor && ` · Cor: ${selectedVariations.Cor}`}
+                      </p>
                     </div>
                     <span className="shrink-0 text-xs font-semibold text-foreground">
                       R$ {(product.price * quantity).toFixed(2).replace(".", ",")}
