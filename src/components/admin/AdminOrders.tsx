@@ -72,6 +72,20 @@ const AdminOrders = () => {
     const newStage = currentOrder?.production_stage === stage ? null : stage;
     await supabase.from("orders").update({ production_stage: newStage } as any).eq("id", id);
     setOrders(orders.map((o) => (o.id === id ? { ...o, production_stage: newStage } : o)));
+
+    // Send email notification if stage is set (not cleared)
+    if (newStage && currentOrder) {
+      supabase.functions.invoke("send-production-email", {
+        body: {
+          order_id: id,
+          production_stage: newStage,
+          tracking_code: currentOrder.tracking_code,
+          user_id: currentOrder.user_id,
+        },
+      }).then(({ error }) => {
+        if (error) console.error("Email send error:", error);
+      });
+    }
   };
 
   const saveTracking = async (id: string) => {
