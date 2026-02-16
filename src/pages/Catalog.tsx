@@ -42,39 +42,58 @@ const Catalog = () => {
       const from = (currentPage - 1) * ITEMS_PER_PAGE;
       const to = from + ITEMS_PER_PAGE - 1;
 
-      let countQuery = supabase.from("products").select("*", { count: "exact", head: true }).eq("active", true);
-      if (activeBrand && activeModel) {
-        countQuery = countQuery.or(`and(brand.eq.${activeBrand},model.eq.${activeModel}),compatible_models.cs.[{"brand":"${activeBrand}","model":"${activeModel}"}]`);
-      } else if (activeBrand) {
-        countQuery = countQuery.or(`brand.eq.${activeBrand},compatible_models.cs.[{"brand":"${activeBrand}"}]`);
-      }
-      if (priceMin > 0) countQuery = countQuery.gte("price", priceMin);
-      if (priceMax > 0) countQuery = countQuery.lte("price", priceMax);
-      if (inStock) countQuery = countQuery.gt("stock", 0);
-      if (has3D) countQuery = countQuery.eq("has_3d", true);
-      const { count } = await countQuery;
-      setTotalCount(count || 0);
+      const needsCompatFilter = !!(activeBrand);
 
-      let query = supabase.from("products").select("*").eq("active", true);
-      if (activeBrand && activeModel) {
-        query = query.or(`and(brand.eq.${activeBrand},model.eq.${activeModel}),compatible_models.cs.[{"brand":"${activeBrand}","model":"${activeModel}"}]`);
-      } else if (activeBrand) {
-        query = query.or(`brand.eq.${activeBrand},compatible_models.cs.[{"brand":"${activeBrand}"}]`);
-      }
-      if (priceMin > 0) query = query.gte("price", priceMin);
-      if (priceMax > 0) query = query.lte("price", priceMax);
-      if (inStock) query = query.gt("stock", 0);
-      if (has3D) query = query.eq("has_3d", true);
-      
-      if (sortBy === "price_asc") query = query.order("price", { ascending: true });
-      else if (sortBy === "price_desc") query = query.order("price", { ascending: false });
-      else if (sortBy === "name") query = query.order("name", { ascending: true });
-      else query = query.order("created_at", { ascending: false });
-      
-      query = query.range(from, to);
+      if (needsCompatFilter) {
+        // Use RPC function that handles compatible_models filtering
+        const { data: allFiltered } = await supabase.rpc("filter_products_by_compatibility", {
+          _brand: activeBrand || null,
+          _model: activeModel || null,
+        });
 
-      const { data } = await query;
-      setProducts(data || []);
+        let filtered = (allFiltered || []) as any[];
+
+        // Apply additional client-side filters
+        if (priceMin > 0) filtered = filtered.filter(p => p.price >= priceMin);
+        if (priceMax > 0) filtered = filtered.filter(p => p.price <= priceMax);
+        if (inStock) filtered = filtered.filter(p => p.stock > 0);
+        if (has3D) filtered = filtered.filter(p => p.has_3d === true);
+
+        // Sort
+        if (sortBy === "price_asc") filtered.sort((a, b) => a.price - b.price);
+        else if (sortBy === "price_desc") filtered.sort((a, b) => b.price - a.price);
+        else if (sortBy === "name") filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+        else filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+        setTotalCount(filtered.length);
+        setProducts(filtered.slice(from, to + 1));
+      } else {
+        // No brand filter: use standard query
+        let countQuery = supabase.from("products").select("*", { count: "exact", head: true }).eq("active", true);
+        if (priceMin > 0) countQuery = countQuery.gte("price", priceMin);
+        if (priceMax > 0) countQuery = countQuery.lte("price", priceMax);
+        if (inStock) countQuery = countQuery.gt("stock", 0);
+        if (has3D) countQuery = countQuery.eq("has_3d", true);
+        const { count } = await countQuery;
+        setTotalCount(count || 0);
+
+        let query = supabase.from("products").select("*").eq("active", true);
+        if (priceMin > 0) query = query.gte("price", priceMin);
+        if (priceMax > 0) query = query.lte("price", priceMax);
+        if (inStock) query = query.gt("stock", 0);
+        if (has3D) query = query.eq("has_3d", true);
+        
+        if (sortBy === "price_asc") query = query.order("price", { ascending: true });
+        else if (sortBy === "price_desc") query = query.order("price", { ascending: false });
+        else if (sortBy === "name") query = query.order("name", { ascending: true });
+        else query = query.order("created_at", { ascending: false });
+        
+        query = query.range(from, to);
+
+        const { data } = await query;
+        setProducts(data || []);
+      }
+
       setLoading(false);
     };
     load();

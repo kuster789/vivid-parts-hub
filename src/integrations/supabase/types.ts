@@ -416,6 +416,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      filter_products_by_compatibility: {
+        Args: { _brand?: string; _model?: string }
+        Returns: {
+          active: boolean | null
+          brand: string
+          compatible_models: Json | null
+          created_at: string
+          description: string | null
+          has_3d: boolean | null
+          id: string
+          images: string[] | null
+          model: string
+          model_3d_url: string | null
+          name: string
+          price: number
+          sku: string | null
+          stock: number
+          updated_at: string
+          variations: Json | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "products"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
