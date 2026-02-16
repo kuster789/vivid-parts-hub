@@ -45,7 +45,7 @@ export const brands: BrandData[] = [
     slug: "cagiva",
     icon: "🏍",
     logo: cagivaLogo,
-    models: ["Super City 125", "Mito Evo 2", "Mito"],
+    models: ["Super City 125", "Mito Evo 2", "Mito", "W8", "W16"],
   },
   {
     name: "KTM",
