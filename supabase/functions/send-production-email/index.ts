@@ -22,6 +22,22 @@ const stageEmojis: Record<string, string> = {
   postagem: "📬",
 };
 
+const statusLabels: Record<string, string> = {
+  pending: "Pendente",
+  confirmed: "Confirmado",
+  shipped: "Enviado",
+  delivered: "Entregue",
+  cancelled: "Cancelado",
+};
+
+const statusEmojis: Record<string, string> = {
+  pending: "⏳",
+  confirmed: "✅",
+  shipped: "🚚",
+  delivered: "📦",
+  cancelled: "❌",
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -33,9 +49,9 @@ Deno.serve(async (req) => {
       throw new Error("RESEND_API_KEY not configured");
     }
 
-    const { order_id, production_stage, tracking_code, user_id } = await req.json();
+    const { order_id, production_stage, order_status, tracking_code, user_id } = await req.json();
 
-    if (!order_id || !production_stage || !user_id) {
+    if (!order_id || (!production_stage && !order_status) || !user_id) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -57,11 +73,32 @@ Deno.serve(async (req) => {
     }
 
     const email = userData.user.email;
-    const stageLabel = stageLabels[production_stage] || production_stage;
-    const stageEmoji = stageEmojis[production_stage] || "📋";
     const orderId = order_id.slice(0, 8);
 
-    const trackingSection = production_stage === "postagem" && tracking_code
+    let subjectEmoji: string;
+    let subjectText: string;
+    let bodyTitle: string;
+    let bodyBgColor: string;
+    let bodyBorderColor: string;
+    let bodyTextColor: string;
+
+    if (production_stage) {
+      subjectEmoji = stageEmojis[production_stage] || "📋";
+      subjectText = stageLabels[production_stage] || production_stage;
+      bodyTitle = `Seu pedido está ${subjectText}`;
+      bodyBgColor = "#fef2f2";
+      bodyBorderColor = "#fecaca";
+      bodyTextColor = "#991b1b";
+    } else {
+      subjectEmoji = statusEmojis[order_status] || "📋";
+      subjectText = statusLabels[order_status] || order_status;
+      bodyTitle = `Status do pedido: ${subjectText}`;
+      bodyBgColor = order_status === "cancelled" ? "#fef2f2" : "#eff6ff";
+      bodyBorderColor = order_status === "cancelled" ? "#fecaca" : "#bfdbfe";
+      bodyTextColor = order_status === "cancelled" ? "#991b1b" : "#1e40af";
+    }
+
+    const trackingSection = tracking_code
       ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin-top:16px;">
            <p style="margin:0;font-weight:600;color:#166534;">📮 Código de Rastreio</p>
            <p style="margin:4px 0 0;font-size:18px;font-weight:700;color:#15803d;letter-spacing:1px;">${tracking_code}</p>
@@ -76,9 +113,9 @@ Deno.serve(async (req) => {
       </div>
       <div style="padding:32px;">
         <p style="font-size:14px;color:#6b7280;margin:0 0 8px;">Pedido <strong>#${orderId}</strong></p>
-        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:20px;text-align:center;">
-          <p style="font-size:32px;margin:0;">${stageEmoji}</p>
-          <p style="margin:8px 0 0;font-size:16px;font-weight:600;color:#991b1b;">Seu pedido está ${stageLabel}</p>
+        <div style="background:${bodyBgColor};border:1px solid ${bodyBorderColor};border-radius:8px;padding:20px;text-align:center;">
+          <p style="font-size:32px;margin:0;">${subjectEmoji}</p>
+          <p style="margin:8px 0 0;font-size:16px;font-weight:600;color:${bodyTextColor};">${bodyTitle}</p>
         </div>
         ${trackingSection}
         <p style="margin:24px 0 0;font-size:13px;color:#9ca3af;text-align:center;">Acompanhe seu pedido no nosso site.</p>
@@ -95,7 +132,7 @@ Deno.serve(async (req) => {
         from: "Auto Peças Agrale <onboarding@resend.dev>",
         reply_to: "autopecaagralecagiva@outlook.com",
         to: [email],
-        subject: `${stageEmoji} Pedido #${orderId} — ${stageLabel}`,
+        subject: `${subjectEmoji} Pedido #${orderId} — ${subjectText}`,
         html: htmlBody,
       }),
     });
