@@ -1,0 +1,222 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Package, Pencil, Save, X, Loader2, ChevronDown, ChevronUp, Truck, MapPin, MessageSquare
+} from "lucide-react";
+
+const statusLabels: Record<string, string> = {
+  pending: "Pendente",
+  confirmed: "Confirmado",
+  shipped: "Enviado",
+  delivered: "Entregue",
+  cancelled: "Cancelado",
+};
+
+const statusColors: Record<string, string> = {
+  pending: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+  confirmed: "bg-blue-400/10 text-blue-400 border-blue-400/20",
+  shipped: "bg-purple-400/10 text-purple-400 border-purple-400/20",
+  delivered: "bg-green-500/10 text-green-500 border-green-500/20",
+  cancelled: "bg-destructive/10 text-destructive border-destructive/20",
+};
+
+const AdminOrders = () => {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const [orderItems, setOrderItems] = useState<Record<string, any[]>>({});
+  const [statusFilter, setStatusFilter] = useState("");
+  const [trackingEditing, setTrackingEditing] = useState<string | null>(null);
+  const [trackingCode, setTrackingCode] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const { data } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
+      setOrders(data || []);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const loadOrderItems = async (orderId: string) => {
+    if (orderItems[orderId]) return;
+    const { data } = await supabase.from("order_items").select("*, products(name, sku, brand, model, images)").eq("order_id", orderId);
+    setOrderItems((prev) => ({ ...prev, [orderId]: data || [] }));
+  };
+
+  const toggleExpand = async (orderId: string) => {
+    if (expandedOrder === orderId) {
+      setExpandedOrder(null);
+    } else {
+      setExpandedOrder(orderId);
+      await loadOrderItems(orderId);
+    }
+  };
+
+  const updateStatus = async (id: string, status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled") => {
+    await supabase.from("orders").update({ status }).eq("id", id);
+    setOrders(orders.map((o) => (o.id === id ? { ...o, status } : o)));
+  };
+
+  const saveTracking = async (id: string) => {
+    await supabase.from("orders").update({ tracking_code: trackingCode }).eq("id", id);
+    setOrders(orders.map((o) => (o.id === id ? { ...o, tracking_code: trackingCode } : o)));
+    setTrackingEditing(null);
+    setTrackingCode("");
+  };
+
+  const filteredOrders = orders.filter((o) => !statusFilter || o.status === statusFilter);
+
+  if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+
+  return (
+    <div>
+      {/* Status filter pills */}
+      <div className="mb-5 flex flex-wrap gap-2">
+        <button onClick={() => setStatusFilter("")}
+          className={`rounded-lg border px-4 py-2 text-xs font-medium transition-all ${!statusFilter ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
+          Todos ({orders.length})
+        </button>
+        {Object.entries(statusLabels).map(([key, label]) => {
+          const count = orders.filter((o) => o.status === key).length;
+          if (count === 0) return null;
+          return (
+            <button key={key} onClick={() => setStatusFilter(key)}
+              className={`rounded-lg border px-4 py-2 text-xs font-medium transition-all ${statusFilter === key ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
+              {label} ({count})
+            </button>
+          );
+        })}
+      </div>
+
+      {filteredOrders.length === 0 && <p className="py-12 text-center text-sm text-muted-foreground">Nenhum pedido encontrado.</p>}
+
+      <div className="space-y-3">
+        {filteredOrders.map((o) => (
+          <div key={o.id} className="overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-border/80">
+            {/* Header */}
+            <button onClick={() => toggleExpand(o.id)} className="flex w-full items-center gap-4 p-4 text-left transition-colors hover:bg-secondary/20">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="font-mono text-xs font-bold text-foreground">#{o.id.slice(0, 8)}</span>
+                  <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusColors[o.status]}`}>
+                    {statusLabels[o.status]}
+                  </span>
+                  {o.tracking_code && (
+                    <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                      <Truck className="h-3 w-3" /> {o.tracking_code}
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm font-medium text-foreground">{o.shipping_name || "Sem nome"}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {o.shipping_city && `${o.shipping_city}, ${o.shipping_state}`}
+                  {o.shipping_phone && ` · ${o.shipping_phone}`}
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="font-display text-lg font-bold text-primary">R$ {Number(o.total).toFixed(2).replace(".", ",")}</p>
+                <p className="text-[10px] text-muted-foreground">{new Date(o.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>
+              </div>
+              {expandedOrder === o.id ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />}
+            </button>
+
+            {/* Expanded */}
+            {expandedOrder === o.id && (
+              <div className="border-t border-border bg-secondary/10 p-5 space-y-5">
+                {/* Items */}
+                <div>
+                  <h4 className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <Package className="h-3 w-3" /> Itens do Pedido
+                  </h4>
+                  <div className="space-y-1.5">
+                    {(orderItems[o.id] || []).map((item: any) => (
+                      <div key={item.id} className="flex items-center gap-3 rounded-lg bg-card p-2.5">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary">
+                          {item.products?.images?.[0] ? (
+                            <img src={item.products.images[0]} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <Package className="h-4 w-4 text-muted-foreground/40" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-foreground truncate">{item.products?.name || "Produto"}</p>
+                          <p className="text-[10px] text-muted-foreground">{item.products?.brand?.toUpperCase()} · {item.products?.model}</p>
+                        </div>
+                        <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">x{item.quantity}</span>
+                        <span className="text-xs font-bold text-foreground">R$ {Number(item.unit_price * item.quantity).toFixed(2).replace(".", ",")}</span>
+                      </div>
+                    ))}
+                    {!orderItems[o.id] && <Loader2 className="mx-auto h-5 w-5 animate-spin text-primary" />}
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {/* Tracking */}
+                  <div>
+                    <h4 className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      <Truck className="h-3 w-3" /> Rastreio
+                    </h4>
+                    {trackingEditing === o.id ? (
+                      <div className="flex gap-2">
+                        <input value={trackingCode} onChange={(e) => setTrackingCode(e.target.value)} placeholder="Ex: BR123456789BR"
+                          className="flex-1 rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none" />
+                        <button onClick={() => saveTracking(o.id)} className="rounded-lg bg-primary px-3 py-1.5 text-xs text-primary-foreground"><Save className="h-4 w-4" /></button>
+                        <button onClick={() => setTrackingEditing(null)} className="rounded-lg border border-border px-3 py-1.5 text-muted-foreground"><X className="h-4 w-4" /></button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-foreground">{o.tracking_code || "Sem rastreio"}</span>
+                        <button onClick={() => { setTrackingEditing(o.id); setTrackingCode(o.tracking_code || ""); }}
+                          className="rounded-lg p-1 text-muted-foreground hover:text-primary"><Pencil className="h-3.5 w-3.5" /></button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Address */}
+                  {o.shipping_address && (
+                    <div>
+                      <h4 className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        <MapPin className="h-3 w-3" /> Endereço
+                      </h4>
+                      <p className="text-xs text-foreground">{o.shipping_address}</p>
+                      <p className="text-xs text-muted-foreground">{o.shipping_city}, {o.shipping_state} - {o.shipping_zip}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Notes */}
+                {o.notes && (
+                  <div>
+                    <h4 className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      <MessageSquare className="h-3 w-3" /> Observações
+                    </h4>
+                    <p className="text-xs text-foreground">{o.notes}</p>
+                  </div>
+                )}
+
+                {/* Status buttons */}
+                <div>
+                  <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Alterar Status</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {(["pending", "confirmed", "shipped", "delivered", "cancelled"] as const).map((s) => (
+                      <button key={s} onClick={() => updateStatus(o.id, s)}
+                        className={`rounded-lg border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider transition-all ${
+                          o.status === s ? statusColors[s] : "border-border text-muted-foreground hover:text-foreground"
+                        }`}>
+                        {statusLabels[s]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default AdminOrders;
