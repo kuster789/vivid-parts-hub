@@ -25,6 +25,10 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Wishlist from "./pages/Wishlist";
 import Tracking from "./pages/Tracking";
+import Visualizacao3D from "./pages/Visualizacao3D";
+import QualidadeGarantida from "./pages/QualidadeGarantida";
+import EnvioNacional from "./pages/EnvioNacional";
+import SuporteTecnico from "./pages/SuporteTecnico";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +60,10 @@ const App = () => (
               <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/favoritos" element={<Wishlist />} />
               <Route path="/rastreamento" element={<Tracking />} />
+              <Route path="/visualizacao-3d" element={<Visualizacao3D />} />
+              <Route path="/qualidade" element={<QualidadeGarantida />} />
+              <Route path="/envio" element={<EnvioNacional />} />
+              <Route path="/suporte-tecnico" element={<SuporteTecnico />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Footer />

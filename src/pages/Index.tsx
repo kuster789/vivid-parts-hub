@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Box, Shield, Truck, Headphones, Star, Wrench, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import heroBanner from "@/assets/hero-banner-agrale.png";
@@ -163,19 +163,22 @@ const Index = () => {
           </ScrollReveal>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { icon: Box, title: "Visualização 3D", desc: "Veja peças em 3D interativo antes de comprar. Gire, amplie e inspecione cada detalhe.", color: "from-amber-500/20 to-orange-500/20" },
-              { icon: Shield, title: "Qualidade Garantida", desc: "Todas as peças com garantia de fábrica. Produtos originais e de alta durabilidade.", color: "from-emerald-500/20 to-green-500/20" },
-              { icon: Truck, title: "Envio Nacional", desc: "Entrega para todo o Brasil com rastreamento em tempo real via Melhor Envio.", color: "from-blue-500/20 to-cyan-500/20" },
-              { icon: Wrench, title: "Suporte Técnico", desc: "Equipe especializada para auxiliar na escolha da peça certa para sua moto.", color: "from-purple-500/20 to-violet-500/20" },
-            ].map(({ icon: Icon, title, desc, color }, idx) => (
+              { icon: Box, title: "Visualização 3D", desc: "Veja peças em 3D interativo antes de comprar. Gire, amplie e inspecione cada detalhe.", color: "from-amber-500/20 to-orange-500/20", link: "/visualizacao-3d" },
+              { icon: Shield, title: "Qualidade Garantida", desc: "Todas as peças com garantia de fábrica. Produtos originais e de alta durabilidade.", color: "from-emerald-500/20 to-green-500/20", link: "/qualidade" },
+              { icon: Truck, title: "Envio Nacional", desc: "Entrega para todo o Brasil com rastreamento em tempo real via Melhor Envio.", color: "from-blue-500/20 to-cyan-500/20", link: "/envio" },
+              { icon: Wrench, title: "Suporte Técnico", desc: "Equipe especializada para auxiliar na escolha da peça certa para sua moto.", color: "from-purple-500/20 to-violet-500/20", link: "/suporte-tecnico" },
+            ].map(({ icon: Icon, title, desc, color, link }, idx) => (
               <ScrollReveal key={title} delay={idx * 120}>
-              <div className="card-industrial group flex flex-col items-center p-8 text-center transition-all duration-300 hover:border-primary/40">
+              <Link to={link} className="card-industrial group flex flex-col items-center p-8 text-center transition-all duration-300 hover:border-primary/40 cursor-pointer">
                 <div className={`mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br ${color} transition-transform duration-300 group-hover:scale-110`}>
                   <Icon className="h-7 w-7 text-primary" />
                 </div>
                 <h3 className="mb-2 font-display text-xs font-bold uppercase tracking-wider text-foreground">{title}</h3>
                 <p className="text-xs leading-relaxed text-muted-foreground">{desc}</p>
-              </div>
+                <span className="mt-3 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                  Saiba mais <ArrowRight className="h-3 w-3" />
+                </span>
+              </Link>
               </ScrollReveal>
             ))}
           </div>
