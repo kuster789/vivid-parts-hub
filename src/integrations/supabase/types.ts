@@ -177,6 +177,7 @@ export type Database = {
           discount: number | null
           id: string
           notes: string | null
+          production_stage: string | null
           shipping_address: string | null
           shipping_city: string | null
           shipping_name: string | null
@@ -195,6 +196,7 @@ export type Database = {
           discount?: number | null
           id?: string
           notes?: string | null
+          production_stage?: string | null
           shipping_address?: string | null
           shipping_city?: string | null
           shipping_name?: string | null
@@ -213,6 +215,7 @@ export type Database = {
           discount?: number | null
           id?: string
           notes?: string | null
+          production_stage?: string | null
           shipping_address?: string | null
           shipping_city?: string | null
           shipping_name?: string | null
