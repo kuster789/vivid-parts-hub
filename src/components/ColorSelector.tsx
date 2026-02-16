@@ -11,6 +11,7 @@ export const colorOptions: ColorOption[] = [
   { name: "Branco", hex: "#f5f5f5", filter: "brightness(1.3) saturate(0.1)" },
   { name: "Azul", hex: "#2563eb", filter: "brightness(0.8) saturate(1.5) hue-rotate(200deg)" },
   { name: "Amarelo", hex: "#eab308", filter: "brightness(1.1) saturate(1.5) hue-rotate(10deg)" },
+  { name: "Verde", hex: "#16a34a", filter: "brightness(0.85) saturate(1.5) hue-rotate(100deg)" },
   { name: "Vermelho", hex: "#dc2626", filter: "brightness(0.9) saturate(1.8) hue-rotate(330deg)" },
   { name: "Roxo", hex: "#7c3aed", filter: "brightness(0.8) saturate(1.5) hue-rotate(260deg)" },
 ];
