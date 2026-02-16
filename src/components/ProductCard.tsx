@@ -12,6 +12,7 @@ interface ProductCardProps {
     model: string;
     stock: number;
     has_3d: boolean | null;
+    images: string[] | null;
   };
 }
 
@@ -20,8 +21,12 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   return (
     <div className="card-industrial group flex flex-col overflow-hidden transition-all duration-300 hover:border-primary/40">
-      <div className="relative flex h-48 items-center justify-center bg-secondary">
-        <Box className="h-16 w-16 text-muted-foreground/40" />
+      <div className="relative flex h-48 items-center justify-center bg-secondary overflow-hidden">
+        {product.images && product.images.length > 0 ? (
+          <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover" />
+        ) : (
+          <Box className="h-16 w-16 text-muted-foreground/40" />
+        )}
         {product.has_3d && (
           <span className="absolute right-2 top-2 rounded-sm bg-primary px-2 py-0.5 font-display text-[10px] font-bold text-primary-foreground">
             3D
