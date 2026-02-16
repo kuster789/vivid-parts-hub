@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ShoppingCart, Package, CheckCircle, AlertTriangle, Loader2, Heart, Share2, Truck, Shield, RotateCcw } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Package, CheckCircle, AlertTriangle, Loader2, Heart, Share2, Truck, Shield, RotateCcw, Bike } from "lucide-react";
+import { brands as brandsList } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import ProductViewer3D from "@/components/ProductViewer3D";
@@ -287,7 +288,7 @@ const ProductDetail = () => {
             <TabsContent value="description" className="pt-6">
               <div className="prose prose-sm max-w-none text-muted-foreground">
                 <p className="text-sm leading-relaxed">{product.description || "Sem descrição disponível."}</p>
-                {variations.length > 0 && (
+                {(variations.length > 0 || (Array.isArray(product.compatible_models) && product.compatible_models.length > 0)) && (
                   <div className="mt-6">
                     <h3 className="mb-3 font-display text-xs font-bold uppercase tracking-wider text-foreground">Especificações</h3>
                     <div className="rounded-lg border border-border overflow-hidden">
@@ -315,6 +316,30 @@ const ProductDetail = () => {
                           ))}
                         </tbody>
                       </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Compatible models section */}
+                {Array.isArray(product.compatible_models) && product.compatible_models.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="mb-3 flex items-center gap-2 font-display text-xs font-bold uppercase tracking-wider text-foreground">
+                      <Bike className="h-4 w-4 text-primary" />
+                      Compatibilidade
+                    </h3>
+                    <p className="mb-3 text-xs text-muted-foreground">Esta peça também é compatível com os seguintes modelos:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {(product.compatible_models as { brand: string; model: string }[]).map((cm, i) => (
+                        <Link
+                          key={i}
+                          to={`/catalogo?marca=${cm.brand}`}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                        >
+                          <span className="font-bold text-primary">{brandsList.find(b => b.slug === cm.brand)?.name || cm.brand.toUpperCase()}</span>
+                          <span className="text-muted-foreground">·</span>
+                          <span>{cm.model}</span>
+                        </Link>
+                      ))}
                     </div>
                   </div>
                 )}
