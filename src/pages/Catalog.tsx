@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Filter, Grid3X3, List, Loader2 } from "lucide-react";
+import { Filter, Grid3X3, List, Loader2, ArrowUpDown } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import CatalogSidebar from "@/components/CatalogSidebar";
@@ -12,6 +12,7 @@ const Catalog = () => {
   const activeBrand = searchParams.get("marca") || "";
   const activeModel = searchParams.get("modelo") || "";
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [sortBy, setSortBy] = useState<string>("newest");
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -23,12 +24,18 @@ const Catalog = () => {
       let query = supabase.from("products").select("*").eq("active", true);
       if (activeBrand) query = query.eq("brand", activeBrand);
       if (activeModel) query = query.eq("model", activeModel);
-      const { data } = await query.order("created_at", { ascending: false });
+      
+      if (sortBy === "price_asc") query = query.order("price", { ascending: true });
+      else if (sortBy === "price_desc") query = query.order("price", { ascending: false });
+      else if (sortBy === "name") query = query.order("name", { ascending: true });
+      else query = query.order("created_at", { ascending: false });
+      
+      const { data } = await query;
       setProducts(data || []);
       setLoading(false);
     };
     load();
-  }, [activeBrand, activeModel]);
+  }, [activeBrand, activeModel, sortBy]);
 
   const setBrand = (slug: string) => {
     if (slug === activeBrand) {
@@ -109,13 +116,25 @@ const Catalog = () => {
                   <span> · <span className="font-medium text-foreground">{activeModel}</span></span>
                 )}
               </span>
-              <div className="flex items-center gap-1">
-                <button onClick={() => setViewMode("grid")} className={`rounded-md p-2 ${viewMode === "grid" ? "bg-secondary text-foreground" : "text-muted-foreground"}`}>
-                  <Grid3X3 className="h-4 w-4" />
-                </button>
-                <button onClick={() => setViewMode("list")} className={`rounded-md p-2 ${viewMode === "list" ? "bg-secondary text-foreground" : "text-muted-foreground"}`}>
-                  <List className="h-4 w-4" />
-                </button>
+              <div className="flex items-center gap-2">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground focus:border-primary focus:outline-none"
+                >
+                  <option value="newest">Mais recentes</option>
+                  <option value="price_asc">Menor preço</option>
+                  <option value="price_desc">Maior preço</option>
+                  <option value="name">A-Z</option>
+                </select>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setViewMode("grid")} className={`rounded-md p-2 ${viewMode === "grid" ? "bg-secondary text-foreground" : "text-muted-foreground"}`}>
+                    <Grid3X3 className="h-4 w-4" />
+                  </button>
+                  <button onClick={() => setViewMode("list")} className={`rounded-md p-2 ${viewMode === "list" ? "bg-secondary text-foreground" : "text-muted-foreground"}`}>
+                    <List className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
 
