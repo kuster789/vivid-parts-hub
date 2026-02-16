@@ -2,3 +2,9 @@ project_id = "nohatbgbowlnfizrqtap"
 
 [functions.mercadopago-create-preference]
 verify_jwt = false
+
+[functions.chat]
+verify_jwt = false
+
+[functions.shipping-calculate]
+verify_jwt = false

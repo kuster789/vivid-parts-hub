@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,6 +13,20 @@ serve(async (req) => {
   }
 
   try {
+    // Auth check
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Não autorizado" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Não autorizado" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const ACCESS_TOKEN = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
     if (!ACCESS_TOKEN) {
       throw new Error("MERCADO_PAGO_ACCESS_TOKEN is not configured");
@@ -24,6 +39,21 @@ serve(async (req) => {
         JSON.stringify({ error: "Items are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Validate each item
+    for (const item of items) {
+      if (!item.title || typeof item.title !== "string" || item.title.length > 200) {
+        return new Response(JSON.stringify({ error: "Invalid item title" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const price = Number(item.unit_price);
+      const qty = Number(item.quantity);
+      if (isNaN(price) || price < -10000 || price > 100000) {
+        return new Response(JSON.stringify({ error: "Invalid price" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (isNaN(qty) || qty < 1 || qty > 1000) {
+        return new Response(JSON.stringify({ error: "Invalid quantity" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
     }
 
     const preference = {
