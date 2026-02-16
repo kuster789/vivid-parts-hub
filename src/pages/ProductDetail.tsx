@@ -4,7 +4,7 @@ import { brands as brandsList } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import ProductViewer3D from "@/components/ProductViewer3D";
-import ColorSelector, { colorOptions, getColorVariation } from "@/components/ColorSelector";
+import ColorSelector, { colorOptions } from "@/components/ColorSelector";
 import ReviewSection from "@/components/ReviewSection";
 import { useWishlist } from "@/hooks/useWishlist";
 import { ScrollReveal } from "@/hooks/useScrollReveal";
@@ -66,7 +66,7 @@ const ProductDetail = () => {
   }
 
   const variations = Array.isArray(product.variations) ? product.variations : [];
-  const colorVariation = getColorVariation(variations);
+  const hasColorVariation = variations.some((v: any) => v.name?.toLowerCase() === "cor");
   const colorFilter = selectedColor
     ? colorOptions.find((c) => c.name === selectedColor)?.filter || ""
     : "";
@@ -201,12 +201,12 @@ const ProductDetail = () => {
                 </p>
               </div>
 
-              {colorVariation && (
-                <ColorSelector selectedColor={selectedColor} onColorChange={handleColorChange} availableColors={colorVariation.options} />
+              {hasColorVariation && (
+                <ColorSelector selectedColor={selectedColor} onColorChange={handleColorChange} />
               )}
 
               {variations
-                .filter((v: any) => !colorVariation || v.name !== colorVariation.name)
+                .filter((v: any) => v.name?.toLowerCase() !== "cor")
                 .map((v: any) => (
                   <div key={v.name} className="mb-4">
                     <label className="mb-2 block font-display text-xs font-bold uppercase tracking-wider text-foreground">{v.name}</label>
