@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
 import SearchBar from "@/components/SearchBar";
 import ThemeToggle from "@/components/ThemeToggle";
+import NotificationBell from "@/components/NotificationBell";
 
 const Header = () => {
   const { totalItems } = useCart();
@@ -39,6 +40,7 @@ const Header = () => {
         <div className="flex items-center gap-1">
           <SearchBar />
           <ThemeToggle />
+          <NotificationBell />
 
           {user && (
             <Link to="/favoritos" className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" title="Favoritos">

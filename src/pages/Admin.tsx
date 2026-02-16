@@ -5,13 +5,13 @@ import { Navigate } from "react-router-dom";
 import {
   Package, Users, ShoppingBag, Plus, Pencil, Trash2, Save, X,
   BarChart3, Upload, Image, Loader2, Eye, Truck, FileBox, Search,
-  ChevronDown, ChevronUp, Calendar, DollarSign, TrendingUp
+  ChevronDown, ChevronUp, Calendar, DollarSign, TrendingUp, Bell, Send
 } from "lucide-react";
 import { uploadProductImage, deleteProductImage, upload3DModel } from "@/lib/storage";
 import { brands } from "@/data/products";
 import AdminCharts from "@/components/AdminCharts";
 
-type Tab = "dashboard" | "products" | "orders" | "users";
+type Tab = "dashboard" | "products" | "orders" | "users" | "notifications";
 
 const Admin = () => {
   const { user, isAdmin, isEmployee, loading } = useAuth();
@@ -29,6 +29,7 @@ const Admin = () => {
             { id: "dashboard", label: "Dashboard", icon: BarChart3 },
             { id: "products", label: "Produtos", icon: Package },
             { id: "orders", label: "Pedidos", icon: ShoppingBag },
+            { id: "notifications" as Tab, label: "Notificações", icon: Bell },
             ...(isAdmin ? [{ id: "users" as Tab, label: "Usuários", icon: Users }] : []),
           ] as { id: Tab; label: string; icon: any }[]).map(({ id, label, icon: Icon }) => (
             <button key={id} onClick={() => setTab(id)}
@@ -42,6 +43,7 @@ const Admin = () => {
         {tab === "dashboard" && <AdminDashboard />}
         {tab === "products" && <AdminProducts />}
         {tab === "orders" && <AdminOrders />}
+        {tab === "notifications" && <AdminNotifications />}
         {tab === "users" && isAdmin && <AdminUsers />}
       </div>
     </main>
@@ -585,6 +587,96 @@ const AdminUsers = () => {
           </div>
         </div>
       ))}
+    </div>
+  );
+};
+
+/* ─── NOTIFICATIONS ─── */
+const AdminNotifications = () => {
+  const [title, setTitle] = useState("");
+  const [message, setMessage] = useState("");
+  const [type, setType] = useState("promotion");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const handleSend = async () => {
+    if (!title || !message) return;
+    setSending(true);
+    await supabase.from("notifications").insert({
+      user_id: null, // broadcast
+      title,
+      message,
+      type,
+    });
+    setSending(false);
+    setSent(true);
+    setTitle("");
+    setMessage("");
+    setTimeout(() => setSent(false), 3000);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="card-industrial p-6">
+        <h3 className="mb-4 font-display text-sm font-bold uppercase tracking-wider text-foreground">
+          Enviar Notificação para Todos
+        </h3>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-xs text-muted-foreground">Tipo</label>
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+            >
+              <option value="promotion">🎉 Promoção</option>
+              <option value="new_product">🆕 Novo Produto</option>
+              <option value="info">ℹ️ Informação</option>
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-muted-foreground">Título</label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Ex: Grande promoção de inverno!"
+              className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+            />
+          </div>
+        </div>
+        <div className="mt-4">
+          <label className="mb-1 block text-xs text-muted-foreground">Mensagem</label>
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Descreva a notificação..."
+            rows={3}
+            className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+          />
+        </div>
+        <div className="mt-4 flex items-center gap-3">
+          <button
+            onClick={handleSend}
+            disabled={sending || !title || !message}
+            className="btn-primary-glow flex items-center gap-2 rounded-md px-6 py-2 text-xs disabled:opacity-50"
+          >
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            Enviar para todos
+          </button>
+          {sent && <span className="text-xs text-green-500">✅ Notificação enviada!</span>}
+        </div>
+      </div>
+
+      <div className="card-industrial p-4">
+        <p className="text-xs text-muted-foreground">
+          <strong>Gatilhos automáticos configurados:</strong>
+        </p>
+        <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+          <li>📦 <strong>Status do pedido</strong> — Notifica o cliente quando o pedido muda de status</li>
+          <li>🆕 <strong>Novo produto</strong> — Notifica todos quando um produto ativo é adicionado</li>
+          <li>🎉 <strong>Novo cupom</strong> — Notifica todos quando um cupom é criado</li>
+        </ul>
+      </div>
     </div>
   );
 };
