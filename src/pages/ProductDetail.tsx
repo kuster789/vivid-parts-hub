@@ -111,21 +111,33 @@ const ProductDetail = () => {
               ) : product.images && product.images.length > 0 ? (
                 <div className="space-y-3">
                   <div className="relative overflow-hidden rounded-lg border border-border bg-secondary/30">
-                     <img
-                      src={product.images[activeImageIdx] || product.images[0]}
-                      alt={product.name}
-                      className="h-[400px] w-full object-cover transition-all duration-500 hover:scale-110 cursor-zoom-in md:h-[500px]"
-                      style={colorFilter ? { filter: colorFilter } : undefined}
-                      loading="lazy"
-                    />
-                    {selectedColor && (
-                      <div className="absolute bottom-3 left-3 rounded-full border border-border bg-card/90 px-3 py-1 backdrop-blur-sm">
-                        <span className="flex items-center gap-2 text-xs font-medium text-foreground">
-                          <span className="inline-block h-3 w-3 rounded-full border border-border" style={{ backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex }} />
-                          {selectedColor}
-                        </span>
-                      </div>
-                    )}
+                    <div className="relative">
+                      <img
+                        src={product.images[activeImageIdx] || product.images[0]}
+                        alt={product.name}
+                        className="h-[400px] w-full object-cover transition-all duration-500 hover:scale-110 cursor-zoom-in md:h-[500px]"
+                        style={colorFilter ? { filter: colorFilter } : undefined}
+                        loading="lazy"
+                      />
+                      {selectedColor && (
+                        <div
+                          className="pointer-events-none absolute inset-0 transition-all duration-500"
+                          style={{
+                            backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex,
+                            mixBlendMode: "color",
+                            opacity: 0.45,
+                          }}
+                        />
+                      )}
+                    </div>
+                     {selectedColor && (
+                       <div className="absolute bottom-3 left-3 rounded-full border border-border bg-card/90 px-3 py-1 backdrop-blur-sm">
+                         <span className="flex items-center gap-2 text-xs font-medium text-foreground">
+                           <span className="inline-block h-3 w-3 rounded-full border border-border" style={{ backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex }} />
+                           {selectedColor}
+                         </span>
+                       </div>
+                     )}
                     {product.has_3d && (
                       <span className="absolute left-3 top-3 rounded-md bg-primary px-2 py-0.5 font-display text-[10px] font-bold text-primary-foreground">3D</span>
                     )}
@@ -133,15 +145,18 @@ const ProductDetail = () => {
                   {product.images.length > 1 && (
                     <div className="flex gap-2 overflow-x-auto pb-1">
                       {product.images.map((img: string, idx: number) => (
-                        <button
-                          key={idx}
-                          onClick={() => setActiveImageIdx(idx)}
-                          className={`h-16 w-16 shrink-0 overflow-hidden rounded-md border transition-all ${
-                            activeImageIdx === idx ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/40"
-                          }`}
-                        >
-                          <img src={img} alt={`${product.name} ${idx + 1}`} className="h-full w-full object-cover" style={colorFilter ? { filter: colorFilter } : undefined} />
-                        </button>
+                         <button
+                           key={idx}
+                           onClick={() => setActiveImageIdx(idx)}
+                           className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-md border transition-all ${
+                             activeImageIdx === idx ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/40"
+                           }`}
+                         >
+                           <img src={img} alt={`${product.name} ${idx + 1}`} className="h-full w-full object-cover" style={colorFilter ? { filter: colorFilter } : undefined} />
+                           {selectedColor && (
+                             <div className="pointer-events-none absolute inset-0" style={{ backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex, mixBlendMode: "color", opacity: 0.45 }} />
+                           )}
+                         </button>
                       ))}
                     </div>
                   )}
