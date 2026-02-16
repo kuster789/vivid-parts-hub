@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Package, Pencil, Save, X, Loader2, ChevronDown, ChevronUp, Truck, MapPin, MessageSquare
+  Package, Pencil, Save, X, Loader2, ChevronDown, ChevronUp, Truck, MapPin, MessageSquare, Factory, Paintbrush, PackageCheck, Mail
 } from "lucide-react";
 
 const statusLabels: Record<string, string> = {
@@ -19,6 +19,14 @@ const statusColors: Record<string, string> = {
   delivered: "bg-green-500/10 text-green-500 border-green-500/20",
   cancelled: "bg-destructive/10 text-destructive border-destructive/20",
 };
+
+const productionStages = [
+  { key: "producao", label: "Produção", icon: Factory },
+  { key: "acabamento", label: "Acabamento", icon: Paintbrush },
+  { key: "pintura", label: "Pintura", icon: Paintbrush },
+  { key: "embalagem", label: "Embalagem", icon: PackageCheck },
+  { key: "postagem", label: "Postagem", icon: Mail },
+];
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState<any[]>([]);
@@ -57,6 +65,13 @@ const AdminOrders = () => {
   const updateStatus = async (id: string, status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled") => {
     await supabase.from("orders").update({ status }).eq("id", id);
     setOrders(orders.map((o) => (o.id === id ? { ...o, status } : o)));
+  };
+
+  const updateProductionStage = async (id: string, stage: string) => {
+    const currentOrder = orders.find((o) => o.id === id);
+    const newStage = currentOrder?.production_stage === stage ? null : stage;
+    await supabase.from("orders").update({ production_stage: newStage } as any).eq("id", id);
+    setOrders(orders.map((o) => (o.id === id ? { ...o, production_stage: newStage } : o)));
   };
 
   const saveTracking = async (id: string) => {
@@ -98,11 +113,16 @@ const AdminOrders = () => {
             {/* Header */}
             <button onClick={() => toggleExpand(o.id)} className="flex w-full items-center gap-4 p-4 text-left transition-colors hover:bg-secondary/20">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
+                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                   <span className="font-mono text-xs font-bold text-foreground">#{o.id.slice(0, 8)}</span>
                   <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusColors[o.status]}`}>
                     {statusLabels[o.status]}
                   </span>
+                  {o.production_stage && (
+                    <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                      {productionStages.find(s => s.key === o.production_stage)?.label || o.production_stage}
+                    </span>
+                  )}
                   {o.tracking_code && (
                     <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
                       <Truck className="h-3 w-3" /> {o.tracking_code}
@@ -142,7 +162,10 @@ const AdminOrders = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium text-foreground truncate">{item.products?.name || "Produto"}</p>
-                          <p className="text-[10px] text-muted-foreground">{item.products?.brand?.toUpperCase()} · {item.products?.model}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {item.products?.brand?.toUpperCase()} · {item.products?.model}
+                            {item.variations?.Cor && <span className="ml-1 text-primary">· Cor: {item.variations.Cor}</span>}
+                          </p>
                         </div>
                         <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">x{item.quantity}</span>
                         <span className="text-xs font-bold text-foreground">R$ {Number(item.unit_price * item.quantity).toFixed(2).replace(".", ",")}</span>
@@ -150,6 +173,45 @@ const AdminOrders = () => {
                     ))}
                     {!orderItems[o.id] && <Loader2 className="mx-auto h-5 w-5 animate-spin text-primary" />}
                   </div>
+                </div>
+
+                {/* Production Stage */}
+                <div>
+                  <h4 className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <Factory className="h-3 w-3" /> Processo de Produção
+                  </h4>
+                  <div className="flex items-center gap-1">
+                    {productionStages.map((stage, i) => {
+                      const currentIdx = productionStages.findIndex(s => s.key === o.production_stage);
+                      const isActive = o.production_stage === stage.key;
+                      const isPast = currentIdx >= 0 && i < currentIdx;
+                      const StageIcon = stage.icon;
+                      return (
+                        <div key={stage.key} className="flex flex-1 items-center">
+                          <button
+                            onClick={() => updateProductionStage(o.id, stage.key)}
+                            title={stage.label}
+                            className={`flex flex-col items-center gap-1 rounded-lg border p-2 w-full transition-all ${
+                              isActive
+                                ? "border-primary bg-primary/20 text-primary"
+                                : isPast
+                                ? "border-primary/40 bg-primary/5 text-primary/60"
+                                : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                            }`}
+                          >
+                            <StageIcon className="h-4 w-4" />
+                            <span className="text-[8px] font-semibold uppercase tracking-wider leading-tight text-center">{stage.label}</span>
+                          </button>
+                          {i < productionStages.length - 1 && (
+                            <div className={`h-0.5 w-1 shrink-0 ${isPast || isActive ? "bg-primary/40" : "bg-border"}`} />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-1.5 text-[9px] text-muted-foreground">
+                    Clique para atualizar a etapa. O cliente será notificado automaticamente.
+                  </p>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
