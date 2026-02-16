@@ -61,7 +61,11 @@ const Index = () => {
                 to={`/catalogo?marca=${brand.slug}`}
                 className="card-industrial flex flex-col items-center gap-3 p-6 transition-all hover:border-primary/40 hover:scale-[1.02]"
               >
-                <span className="text-3xl">{brand.icon}</span>
+                {brand.logo ? (
+                  <img src={brand.logo} alt={brand.name} className="h-12 w-auto object-contain" />
+                ) : (
+                  <span className="text-3xl">{brand.icon}</span>
+                )}
                 <span className="font-display text-sm font-bold tracking-wider text-foreground">{brand.name}</span>
                 <span className="text-xs text-muted-foreground">{brand.models.length} modelos</span>
               </Link>
