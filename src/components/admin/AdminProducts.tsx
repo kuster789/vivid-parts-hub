@@ -7,6 +7,11 @@ import { uploadProductImage, deleteProductImage, upload3DModel } from "@/lib/sto
 import { brands } from "@/data/products";
 import { Link } from "react-router-dom";
 
+interface CompatibleModel {
+  brand: string;
+  model: string;
+}
+
 const AdminProducts = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [editing, setEditing] = useState<string | null>(null);
@@ -16,10 +21,18 @@ const AdminProducts = () => {
   const [uploading, setUploading] = useState<string | null>(null);
   const [uploading3D, setUploading3D] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const file3DInputRef = useRef<HTMLInputElement>(null);
-  const [uploadTarget, setUploadTarget] = useState<string | null>(null);
-  const [upload3DTarget, setUpload3DTarget] = useState<string | null>(null);
+  const imageInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const model3DInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  // Compatible models state for new product
+  const [newCompatModels, setNewCompatModels] = useState<CompatibleModel[]>([]);
+  const [newCompatBrand, setNewCompatBrand] = useState("");
+  const [newCompatModel, setNewCompatModel] = useState("");
+
+  // Compatible models state for editing
+  const [editCompatModels, setEditCompatModels] = useState<CompatibleModel[]>([]);
+  const [editCompatBrand, setEditCompatBrand] = useState("");
+  const [editCompatModel, setEditCompatModel] = useState("");
 
   useEffect(() => { loadProducts(); }, []);
 
@@ -29,7 +42,7 @@ const AdminProducts = () => {
   };
 
   const handleSave = async (id: string) => {
-    await supabase.from("products").update(editForm).eq("id", id);
+    await supabase.from("products").update({ ...editForm, compatible_models: editCompatModels }).eq("id", id);
     setEditing(null);
     loadProducts();
   };
@@ -44,44 +57,49 @@ const AdminProducts = () => {
     const variations = newProduct.hasColors
       ? [{ name: "Cor", options: ["Preto", "Branco", "Azul", "Amarelo", "Vermelho", "Roxo"] }]
       : [];
-    await supabase.from("products").insert({ name: newProduct.name, description: newProduct.description, price: newProduct.price, sku: newProduct.sku, stock: newProduct.stock, brand: newProduct.brand, model: newProduct.model, active: true, variations });
+    await supabase.from("products").insert([{
+      name: newProduct.name, description: newProduct.description, price: newProduct.price,
+      sku: newProduct.sku, stock: newProduct.stock, brand: newProduct.brand, model: newProduct.model,
+      active: true, variations, compatible_models: newCompatModels as any
+    }]);
     setShowAdd(false);
     setNewProduct({ name: "", description: "", price: 0, sku: "", stock: 0, brand: "", model: "", hasColors: false });
+    setNewCompatModels([]);
     loadProducts();
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (productId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !uploadTarget) return;
-    setUploading(uploadTarget);
+    if (!file) return;
+    setUploading(productId);
     try {
-      const url = await uploadProductImage(uploadTarget, file);
-      const product = products.find((p) => p.id === uploadTarget);
+      const url = await uploadProductImage(productId, file);
+      const product = products.find((p) => p.id === productId);
       const currentImages = product?.images || [];
-      await supabase.from("products").update({ images: [...currentImages, url] }).eq("id", uploadTarget);
+      await supabase.from("products").update({ images: [...currentImages, url] }).eq("id", productId);
       loadProducts();
     } catch (err: any) {
-      alert("Erro no upload: " + err.message);
+      alert("Erro no upload de imagem: " + err.message);
     }
     setUploading(null);
-    setUploadTarget(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    const ref = imageInputRefs.current[productId];
+    if (ref) ref.value = "";
   };
 
-  const handle3DUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handle3DUpload = async (productId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !upload3DTarget) return;
-    setUploading3D(upload3DTarget);
+    if (!file) return;
+    setUploading3D(productId);
     try {
-      const url = await upload3DModel(upload3DTarget, file);
-      await supabase.from("products").update({ model_3d_url: url, has_3d: true }).eq("id", upload3DTarget);
+      const url = await upload3DModel(productId, file);
+      await supabase.from("products").update({ model_3d_url: url, has_3d: true }).eq("id", productId);
       loadProducts();
     } catch (err: any) {
       alert("Erro no upload 3D: " + err.message);
     }
     setUploading3D(null);
-    setUpload3DTarget(null);
-    if (file3DInputRef.current) file3DInputRef.current.value = "";
+    const ref = model3DInputRefs.current[productId];
+    if (ref) ref.value = "";
   };
 
   const handleRemoveImage = async (productId: string, imageUrl: string) => {
@@ -99,17 +117,58 @@ const AdminProducts = () => {
     loadProducts();
   };
 
+  const addCompatModel = (list: CompatibleModel[], setList: (v: CompatibleModel[]) => void, brand: string, model: string, setBrand: (v: string) => void, setModel: (v: string) => void) => {
+    if (!brand || !model) return;
+    if (list.some(c => c.brand === brand && c.model === model)) return;
+    setList([...list, { brand, model }]);
+    setBrand("");
+    setModel("");
+  };
+
+  const removeCompatModel = (list: CompatibleModel[], setList: (v: CompatibleModel[]) => void, index: number) => {
+    setList(list.filter((_, i) => i !== index));
+  };
+
   const filteredProducts = products.filter((p) =>
     !searchTerm || p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || p.sku?.toLowerCase().includes(searchTerm.toLowerCase()) || p.brand?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const inputClass = "rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30";
 
+  const CompatModelsEditor = ({ list, setList, brand, setBrand, model, setModel }: {
+    list: CompatibleModel[]; setList: (v: CompatibleModel[]) => void;
+    brand: string; setBrand: (v: string) => void; model: string; setModel: (v: string) => void;
+  }) => (
+    <div className="mt-3">
+      <label className="mb-1 block text-xs font-semibold text-muted-foreground uppercase tracking-wider">Modelos Compatíveis</label>
+      <div className="flex flex-wrap gap-1.5 mb-2">
+        {list.map((c, i) => (
+          <span key={i} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs text-primary">
+            {brands.find(b => b.slug === c.brand)?.name || c.brand} — {c.model}
+            <button onClick={() => removeCompatModel(list, setList, i)} className="hover:text-destructive"><X className="h-3 w-3" /></button>
+          </span>
+        ))}
+        {list.length === 0 && <span className="text-xs text-muted-foreground">Nenhum modelo adicionado</span>}
+      </div>
+      <div className="flex gap-2 items-end">
+        <select value={brand} onChange={(e) => { setBrand(e.target.value); setModel(""); }} className={`${inputClass} flex-1`}>
+          <option value="">Marca</option>
+          {brands.map((b) => <option key={b.slug} value={b.slug}>{b.name}</option>)}
+        </select>
+        <select value={model} onChange={(e) => setModel(e.target.value)} className={`${inputClass} flex-1`}>
+          <option value="">Modelo</option>
+          {brands.find((b) => b.slug === brand)?.models.map((m) => <option key={m} value={m}>{m}</option>)}
+        </select>
+        <button onClick={() => addCompatModel(list, setList, brand, model, setBrand, setModel)} type="button"
+          className="rounded-lg bg-primary/20 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/30 transition-colors">
+          <Plus className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <div>
-      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-      <input ref={file3DInputRef} type="file" accept=".glb,.gltf,.obj,.stl,.usdz" className="hidden" onChange={handle3DUpload} />
-
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -131,11 +190,11 @@ const AdminProducts = () => {
             <input placeholder="Nome" value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} className={inputClass} />
             <input placeholder="SKU" value={newProduct.sku} onChange={(e) => setNewProduct({ ...newProduct, sku: e.target.value })} className={inputClass} />
             <select value={newProduct.brand} onChange={(e) => setNewProduct({ ...newProduct, brand: e.target.value, model: "" })} className={inputClass}>
-              <option value="">Marca</option>
+              <option value="">Marca Principal</option>
               {brands.map((b) => <option key={b.slug} value={b.slug}>{b.name}</option>)}
             </select>
             <select value={newProduct.model} onChange={(e) => setNewProduct({ ...newProduct, model: e.target.value })} className={inputClass}>
-              <option value="">Modelo</option>
+              <option value="">Modelo Principal</option>
               {brands.find((b) => b.slug === newProduct.brand)?.models.map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
             <input type="number" placeholder="Preço" value={newProduct.price || ""} onChange={(e) => setNewProduct({ ...newProduct, price: Number(e.target.value) })} className={inputClass} />
@@ -148,6 +207,7 @@ const AdminProducts = () => {
               className="h-4 w-4 rounded border-border text-primary focus:ring-primary" />
             <span className="text-sm text-foreground">Produto com variação de cores</span>
           </label>
+          <CompatModelsEditor list={newCompatModels} setList={setNewCompatModels} brand={newCompatBrand} setBrand={setNewCompatBrand} model={newCompatModel} setModel={setNewCompatModel} />
           <div className="mt-4 flex gap-2">
             <button onClick={handleAdd} className="btn-primary-glow rounded-lg px-5 py-2 text-xs font-semibold">Salvar</button>
             <button onClick={() => setShowAdd(false)} className="rounded-lg border border-border px-5 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors">Cancelar</button>
@@ -181,11 +241,14 @@ const AdminProducts = () => {
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-foreground truncate">{p.name}</p>
-                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground flex-wrap">
                         <span>{p.brand?.toUpperCase()}</span>
                         <span>·</span>
                         <span>{p.model}</span>
                         {p.has_3d && <span className="rounded bg-primary/20 px-1 py-0.5 font-bold text-primary">3D</span>}
+                        {(p.compatible_models as CompatibleModel[])?.length > 0 && (
+                          <span className="rounded bg-accent/20 px-1 py-0.5 font-bold text-accent-foreground">+{(p.compatible_models as CompatibleModel[]).length} compat.</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -208,15 +271,31 @@ const AdminProducts = () => {
                     <Link to={`/produto/${p.id}`} className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors" title="Ver">
                       <Eye className="h-3.5 w-3.5" />
                     </Link>
-                    <button onClick={() => { setUploadTarget(p.id); fileInputRef.current?.click(); }} disabled={uploading === p.id}
+                    {/* Individual file input per product for images */}
+                    <input
+                      ref={(el) => { imageInputRefs.current[p.id] = el; }}
+                      type="file" accept="image/*" className="hidden"
+                      onChange={(e) => handleImageUpload(p.id, e)}
+                    />
+                    <button onClick={() => imageInputRefs.current[p.id]?.click()} disabled={uploading === p.id}
                       className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-primary transition-colors" title="Upload foto">
                       {uploading === p.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                     </button>
-                    <button onClick={() => { setUpload3DTarget(p.id); file3DInputRef.current?.click(); }} disabled={uploading3D === p.id}
+                    {/* Individual file input per product for 3D */}
+                    <input
+                      ref={(el) => { model3DInputRefs.current[p.id] = el; }}
+                      type="file" accept=".glb,.gltf,.obj,.stl,.usdz" className="hidden"
+                      onChange={(e) => handle3DUpload(p.id, e)}
+                    />
+                    <button onClick={() => model3DInputRefs.current[p.id]?.click()} disabled={uploading3D === p.id}
                       className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-primary transition-colors" title="Upload 3D">
                       {uploading3D === p.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileBox className="h-3.5 w-3.5" />}
                     </button>
-                    <button onClick={() => { setEditing(p.id); setEditForm({ name: p.name, price: p.price, stock: p.stock, brand: p.brand, model: p.model }); }}
+                    <button onClick={() => {
+                      setEditing(p.id);
+                      setEditForm({ name: p.name, price: p.price, stock: p.stock, brand: p.brand, model: p.model });
+                      setEditCompatModels((p.compatible_models as CompatibleModel[]) || []);
+                    }}
                       className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors" title="Editar">
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
@@ -237,7 +316,7 @@ const AdminProducts = () => {
       {/* Edit modal */}
       {editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm" onClick={() => setEditing(null)}>
-          <div className="mx-4 w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="mx-4 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="mb-4 font-display text-sm font-bold uppercase tracking-wider text-foreground">Editar Produto</h3>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="sm:col-span-2">
@@ -245,14 +324,14 @@ const AdminProducts = () => {
                 <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className={`${inputClass} w-full`} />
               </div>
               <div>
-                <label className="mb-1 block text-xs text-muted-foreground">Marca</label>
+                <label className="mb-1 block text-xs text-muted-foreground">Marca Principal</label>
                 <select value={editForm.brand || ""} onChange={(e) => setEditForm({ ...editForm, brand: e.target.value, model: "" })} className={`${inputClass} w-full`}>
                   <option value="">Marca</option>
                   {brands.map((b) => <option key={b.slug} value={b.slug}>{b.name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs text-muted-foreground">Modelo</label>
+                <label className="mb-1 block text-xs text-muted-foreground">Modelo Principal</label>
                 <select value={editForm.model || ""} onChange={(e) => setEditForm({ ...editForm, model: e.target.value })} className={`${inputClass} w-full`}>
                   <option value="">Modelo</option>
                   {brands.find((b) => b.slug === editForm.brand)?.models.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -267,6 +346,7 @@ const AdminProducts = () => {
                 <input type="number" value={editForm.stock} onChange={(e) => setEditForm({ ...editForm, stock: Number(e.target.value) })} className={`${inputClass} w-full`} />
               </div>
             </div>
+            <CompatModelsEditor list={editCompatModels} setList={setEditCompatModels} brand={editCompatBrand} setBrand={setEditCompatBrand} model={editCompatModel} setModel={setEditCompatModel} />
             <div className="mt-5 flex justify-end gap-2">
               <button onClick={() => setEditing(null)} className="rounded-lg border border-border px-5 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors">Cancelar</button>
               <button onClick={() => handleSave(editing)} className="btn-primary-glow rounded-lg px-5 py-2 text-xs font-semibold">

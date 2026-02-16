@@ -231,6 +231,7 @@ export type Database = {
         Row: {
           active: boolean | null
           brand: string
+          compatible_models: Json | null
           created_at: string
           description: string | null
           has_3d: boolean | null
@@ -248,6 +249,7 @@ export type Database = {
         Insert: {
           active?: boolean | null
           brand: string
+          compatible_models?: Json | null
           created_at?: string
           description?: string | null
           has_3d?: boolean | null
@@ -265,6 +267,7 @@ export type Database = {
         Update: {
           active?: boolean | null
           brand?: string
+          compatible_models?: Json | null
           created_at?: string
           description?: string | null
           has_3d?: boolean | null
