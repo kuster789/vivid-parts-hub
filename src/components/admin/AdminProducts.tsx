@@ -26,13 +26,9 @@ const AdminProducts = () => {
 
   // Compatible models state for new product
   const [newCompatModels, setNewCompatModels] = useState<CompatibleModel[]>([]);
-  const [newCompatBrand, setNewCompatBrand] = useState("");
-  const [newCompatModel, setNewCompatModel] = useState("");
 
   // Compatible models state for editing
   const [editCompatModels, setEditCompatModels] = useState<CompatibleModel[]>([]);
-  const [editCompatBrand, setEditCompatBrand] = useState("");
-  const [editCompatModel, setEditCompatModel] = useState("");
 
   useEffect(() => { loadProducts(); }, []);
 
@@ -117,17 +113,6 @@ const AdminProducts = () => {
     loadProducts();
   };
 
-  const addCompatModel = (list: CompatibleModel[], setList: (v: CompatibleModel[]) => void, brand: string, model: string, setBrand: (v: string) => void, setModel: (v: string) => void) => {
-    if (!brand || !model) return;
-    if (list.some(c => c.brand === brand && c.model === model)) return;
-    setList([...list, { brand, model }]);
-    setBrand("");
-    setModel("");
-  };
-
-  const removeCompatModel = (list: CompatibleModel[], setList: (v: CompatibleModel[]) => void, index: number) => {
-    setList(list.filter((_, i) => i !== index));
-  };
 
   const filteredProducts = products.filter((p) =>
     !searchTerm || p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || p.sku?.toLowerCase().includes(searchTerm.toLowerCase()) || p.brand?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -135,34 +120,69 @@ const AdminProducts = () => {
 
   const inputClass = "rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30";
 
-  const CompatModelsEditor = ({ list, setList, brand, setBrand, model, setModel }: {
+  const toggleCompatModel = (list: CompatibleModel[], setList: (v: CompatibleModel[]) => void, brand: string, model: string) => {
+    const exists = list.some(c => c.brand === brand && c.model === model);
+    if (exists) {
+      setList(list.filter(c => !(c.brand === brand && c.model === model)));
+    } else {
+      setList([...list, { brand, model }]);
+    }
+  };
+
+  const toggleAllBrandModels = (list: CompatibleModel[], setList: (v: CompatibleModel[]) => void, brandSlug: string, models: string[]) => {
+    const allSelected = models.every(m => list.some(c => c.brand === brandSlug && c.model === m));
+    if (allSelected) {
+      setList(list.filter(c => c.brand !== brandSlug));
+    } else {
+      const without = list.filter(c => c.brand !== brandSlug);
+      setList([...without, ...models.map(m => ({ brand: brandSlug, model: m }))]);
+    }
+  };
+
+  const CompatModelsEditor = ({ list, setList }: {
     list: CompatibleModel[]; setList: (v: CompatibleModel[]) => void;
-    brand: string; setBrand: (v: string) => void; model: string; setModel: (v: string) => void;
   }) => (
     <div className="mt-3">
-      <label className="mb-1 block text-xs font-semibold text-muted-foreground uppercase tracking-wider">Modelos Compatíveis</label>
-      <div className="flex flex-wrap gap-1.5 mb-2">
-        {list.map((c, i) => (
-          <span key={i} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs text-primary">
-            {brands.find(b => b.slug === c.brand)?.name || c.brand} — {c.model}
-            <button onClick={() => removeCompatModel(list, setList, i)} className="hover:text-destructive"><X className="h-3 w-3" /></button>
-          </span>
-        ))}
-        {list.length === 0 && <span className="text-xs text-muted-foreground">Nenhum modelo adicionado</span>}
-      </div>
-      <div className="flex gap-2 items-end">
-        <select value={brand} onChange={(e) => { setBrand(e.target.value); setModel(""); }} className={`${inputClass} flex-1`}>
-          <option value="">Marca</option>
-          {brands.map((b) => <option key={b.slug} value={b.slug}>{b.name}</option>)}
-        </select>
-        <select value={model} onChange={(e) => setModel(e.target.value)} className={`${inputClass} flex-1`}>
-          <option value="">Modelo</option>
-          {brands.find((b) => b.slug === brand)?.models.map((m) => <option key={m} value={m}>{m}</option>)}
-        </select>
-        <button onClick={() => addCompatModel(list, setList, brand, model, setBrand, setModel)} type="button"
-          className="rounded-lg bg-primary/20 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/30 transition-colors">
-          <Plus className="h-4 w-4" />
-        </button>
+      <label className="mb-2 block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        Modelos Compatíveis
+        {list.length > 0 && <span className="ml-2 rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-bold text-primary">{list.length}</span>}
+      </label>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {brands.map((b) => {
+          const allSelected = b.models.every(m => list.some(c => c.brand === b.slug && c.model === m));
+          const someSelected = b.models.some(m => list.some(c => c.brand === b.slug && c.model === m));
+          return (
+            <div key={b.slug} className="rounded-lg border border-border bg-secondary/30 p-3">
+              <label className="flex items-center gap-2 cursor-pointer mb-2 pb-2 border-b border-border">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  ref={(el) => { if (el) el.indeterminate = someSelected && !allSelected; }}
+                  onChange={() => toggleAllBrandModels(list, setList, b.slug, b.models)}
+                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                />
+                <span className="text-xs font-bold text-foreground">{b.name}</span>
+                {someSelected && <span className="text-[10px] text-muted-foreground">({b.models.filter(m => list.some(c => c.brand === b.slug && c.model === m)).length}/{b.models.length})</span>}
+              </label>
+              <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                {b.models.map((m) => {
+                  const checked = list.some(c => c.brand === b.slug && c.model === m);
+                  return (
+                    <label key={m} className="flex items-center gap-2 cursor-pointer rounded px-1.5 py-1 hover:bg-secondary transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleCompatModel(list, setList, b.slug, m)}
+                        className="h-3.5 w-3.5 rounded border-border text-primary focus:ring-primary"
+                      />
+                      <span className={`text-xs ${checked ? "text-foreground font-medium" : "text-muted-foreground"}`}>{m}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -207,7 +227,7 @@ const AdminProducts = () => {
               className="h-4 w-4 rounded border-border text-primary focus:ring-primary" />
             <span className="text-sm text-foreground">Produto com variação de cores</span>
           </label>
-          <CompatModelsEditor list={newCompatModels} setList={setNewCompatModels} brand={newCompatBrand} setBrand={setNewCompatBrand} model={newCompatModel} setModel={setNewCompatModel} />
+          <CompatModelsEditor list={newCompatModels} setList={setNewCompatModels} />
           <div className="mt-4 flex gap-2">
             <button onClick={handleAdd} className="btn-primary-glow rounded-lg px-5 py-2 text-xs font-semibold">Salvar</button>
             <button onClick={() => setShowAdd(false)} className="rounded-lg border border-border px-5 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors">Cancelar</button>
@@ -346,7 +366,7 @@ const AdminProducts = () => {
                 <input type="number" value={editForm.stock} onChange={(e) => setEditForm({ ...editForm, stock: Number(e.target.value) })} className={`${inputClass} w-full`} />
               </div>
             </div>
-            <CompatModelsEditor list={editCompatModels} setList={setEditCompatModels} brand={editCompatBrand} setBrand={setEditCompatBrand} model={editCompatModel} setModel={setEditCompatModel} />
+            <CompatModelsEditor list={editCompatModels} setList={setEditCompatModels} />
             <div className="mt-5 flex justify-end gap-2">
               <button onClick={() => setEditing(null)} className="rounded-lg border border-border px-5 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors">Cancelar</button>
               <button onClick={() => handleSave(editing)} className="btn-primary-glow rounded-lg px-5 py-2 text-xs font-semibold">
