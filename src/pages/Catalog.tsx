@@ -6,6 +6,15 @@ import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import CatalogSidebar from "@/components/CatalogSidebar";
 import { brands } from "@/data/products";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
 
 const Catalog = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -15,12 +24,26 @@ const Catalog = () => {
   const [sortBy, setSortBy] = useState<string>("newest");
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+  const ITEMS_PER_PAGE = 12;
+  const currentPage = Number(searchParams.get("pagina")) || 1;
 
   const currentBrand = brands.find((b) => b.slug === activeBrand);
+
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
+      const from = (currentPage - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+
+      let countQuery = supabase.from("products").select("*", { count: "exact", head: true }).eq("active", true);
+      if (activeBrand) countQuery = countQuery.eq("brand", activeBrand);
+      if (activeModel) countQuery = countQuery.eq("model", activeModel);
+      const { count } = await countQuery;
+      setTotalCount(count || 0);
+
       let query = supabase.from("products").select("*").eq("active", true);
       if (activeBrand) query = query.eq("brand", activeBrand);
       if (activeModel) query = query.eq("model", activeModel);
@@ -30,12 +53,36 @@ const Catalog = () => {
       else if (sortBy === "name") query = query.order("name", { ascending: true });
       else query = query.order("created_at", { ascending: false });
       
+      query = query.range(from, to);
+
       const { data } = await query;
       setProducts(data || []);
       setLoading(false);
     };
     load();
-  }, [activeBrand, activeModel, sortBy]);
+  }, [activeBrand, activeModel, sortBy, currentPage]);
+
+  const goToPage = (page: number) => {
+    const params = new URLSearchParams(searchParams);
+    if (page <= 1) params.delete("pagina");
+    else params.set("pagina", String(page));
+    setSearchParams(params);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const getPageNumbers = () => {
+    const pages: (number | "ellipsis")[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push("ellipsis");
+      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) pages.push(i);
+      if (currentPage < totalPages - 2) pages.push("ellipsis");
+      pages.push(totalPages);
+    }
+    return pages;
+  };
 
   const setBrand = (slug: string) => {
     if (slug === activeBrand) {
@@ -108,7 +155,7 @@ const Catalog = () => {
             {/* Toolbar */}
             <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
               <span className="text-sm text-muted-foreground">
-                <span className="font-semibold text-foreground">{products.length}</span> produto(s)
+                <span className="font-semibold text-foreground">{totalCount}</span> produto(s)
                 {activeBrand && currentBrand && (
                   <span> em <span className="font-medium text-foreground">{currentBrand.name}</span></span>
                 )}
@@ -154,6 +201,43 @@ const Catalog = () => {
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
+            )}
+
+            {/* Pagination */}
+            {!loading && totalPages > 1 && (
+              <Pagination className="mt-8">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => currentPage > 1 && goToPage(currentPage - 1)}
+                      className={currentPage <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  {getPageNumbers().map((page, i) =>
+                    page === "ellipsis" ? (
+                      <PaginationItem key={`e-${i}`}>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    ) : (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          isActive={currentPage === page}
+                          onClick={() => goToPage(page)}
+                          className="cursor-pointer"
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )
+                  )}
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => currentPage < totalPages && goToPage(currentPage + 1)}
+                      className={currentPage >= totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             )}
           </div>
         </div>
