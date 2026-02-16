@@ -17,6 +17,10 @@ import Support from "./pages/Support";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Admin from "./pages/Admin";
+import SobreNos from "./pages/SobreNos";
+import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
+import TermosUso from "./pages/TermosUso";
+import PoliticaDevolucao from "./pages/PoliticaDevolucao";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +44,10 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/cadastro" element={<Register />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/sobre" element={<SobreNos />} />
+              <Route path="/privacidade" element={<PoliticaPrivacidade />} />
+              <Route path="/termos" element={<TermosUso />} />
+              <Route path="/devolucao" element={<PoliticaDevolucao />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Footer />
