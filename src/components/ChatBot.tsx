@@ -167,7 +167,7 @@ const ChatBot = () => {
               </button>
             </div>
             <div className="mt-2 flex gap-2 text-[10px] text-muted-foreground">
-              <a href="https://wa.me/5543964388​23" target="_blank" rel="noopener" className="hover:text-primary">📱 WhatsApp</a>
+              <a href="https://wa.me/554396438823?text=Ol%C3%A1%20vim%20pelo%20Site" target="_blank" rel="noopener" className="hover:text-primary">📱 WhatsApp</a>
               <span>·</span>
               <a href="mailto:autopecaagralecagiva@outlook.com" className="hover:text-primary">✉️ Email</a>
             </div>
