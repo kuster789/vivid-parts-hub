@@ -43,18 +43,23 @@ const Catalog = () => {
       <div className="container">
         <h1 className="section-title mb-6">Catálogo de Peças</h1>
 
-        <div className="mb-6 flex flex-wrap gap-2">
+        <div className="mb-6 flex flex-wrap gap-3">
           {brands.map((brand) => (
             <button
               key={brand.slug}
               onClick={() => setBrand(brand.slug)}
-              className={`rounded-md border px-4 py-2 font-display text-xs font-bold uppercase tracking-wider transition-all ${
+              className={`flex items-center gap-2 rounded-md border px-4 py-2 font-display text-xs font-bold uppercase tracking-wider transition-all ${
                 activeBrand === brand.slug
-                  ? "border-primary bg-primary text-primary-foreground"
+                  ? "border-primary bg-primary/10 text-primary ring-1 ring-primary"
                   : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
               }`}
             >
-              {brand.icon} {brand.name}
+              {brand.logo ? (
+                <img src={brand.logo} alt={brand.name} className="h-6 w-auto object-contain" />
+              ) : (
+                <span>{brand.icon}</span>
+              )}
+              {brand.name}
             </button>
           ))}
         </div>

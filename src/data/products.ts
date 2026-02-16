@@ -17,31 +17,41 @@ export interface BrandData {
   slug: string;
   models: string[];
   icon: string;
+  logo?: string;
 }
+
+import yamahaLogo from "@/assets/brands/yamaha.png";
+import agraleLogo from "@/assets/brands/agrale.png";
+import cagivaLogo from "@/assets/brands/cagiva.png";
+import ktmLogo from "@/assets/brands/ktm.png";
 
 export const brands: BrandData[] = [
   {
     name: "YAMAHA",
     slug: "yamaha",
     icon: "🏍",
+    logo: yamahaLogo,
     models: ["RD 125", "RD 135", "RDZ 125", "RDZ 135", "DT 180", "DT 180 Z", "RD 350", "DT200", "DT200R"],
   },
   {
     name: "AGRALE",
     slug: "agrale",
     icon: "🛵",
+    logo: agraleLogo,
     models: ["Agrale 13.5", "Agrale 16.5", "Agrale 27.5", "Agrale 27.5 E", "Agrale 27.5 EX", "Agrale Dakar 30.0", "Agrale Elefant 16.5", "Agrale Elefant 30.0"],
   },
   {
     name: "CAGIVA",
     slug: "cagiva",
     icon: "🏍",
+    logo: cagivaLogo,
     models: ["Super City 125", "Mito Evo 2", "Mito"],
   },
   {
     name: "KTM",
     slug: "ktm",
     icon: "🏍",
+    logo: ktmLogo,
     models: ["KTM 950cc"],
   },
 ];
