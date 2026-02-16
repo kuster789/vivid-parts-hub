@@ -67,9 +67,6 @@ const ProductDetail = () => {
 
   const variations = Array.isArray(product.variations) ? product.variations : [];
   const hasColorVariation = variations.some((v: any) => v.name?.toLowerCase() === "cor");
-  const colorFilter = selectedColor
-    ? colorOptions.find((c) => c.name === selectedColor)?.filter || ""
-    : "";
 
   const handleColorChange = (color: string) => {
     setSelectedColor(color === selectedColor ? "" : color);
@@ -116,16 +113,26 @@ const ProductDetail = () => {
                         src={product.images[activeImageIdx] || product.images[0]}
                         alt={product.name}
                         className="h-[400px] w-full object-cover transition-all duration-500 hover:scale-110 cursor-zoom-in md:h-[500px]"
-                        style={colorFilter ? { filter: colorFilter } : undefined}
+                        style={selectedColor ? { filter: selectedColor === "Preto" ? "brightness(0.35) saturate(0.1)" : selectedColor === "Branco" ? "brightness(1.15) saturate(0.2)" : "saturate(0.15) brightness(0.95)" } : undefined}
                         loading="lazy"
                       />
-                      {selectedColor && (
+                      {selectedColor && selectedColor !== "Preto" && selectedColor !== "Branco" && (
+                        <div
+                          className="pointer-events-none absolute inset-0 transition-all duration-500"
+                          style={{
+                            backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex,
+                            mixBlendMode: "multiply",
+                            opacity: 0.55,
+                          }}
+                        />
+                      )}
+                      {selectedColor && selectedColor !== "Preto" && selectedColor !== "Branco" && (
                         <div
                           className="pointer-events-none absolute inset-0 transition-all duration-500"
                           style={{
                             backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex,
                             mixBlendMode: "color",
-                            opacity: 0.45,
+                            opacity: 0.7,
                           }}
                         />
                       )}
@@ -152,9 +159,12 @@ const ProductDetail = () => {
                              activeImageIdx === idx ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/40"
                            }`}
                          >
-                           <img src={img} alt={`${product.name} ${idx + 1}`} className="h-full w-full object-cover" style={colorFilter ? { filter: colorFilter } : undefined} />
-                           {selectedColor && (
-                             <div className="pointer-events-none absolute inset-0" style={{ backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex, mixBlendMode: "color", opacity: 0.45 }} />
+                           <img src={img} alt={`${product.name} ${idx + 1}`} className="h-full w-full object-cover" style={selectedColor ? { filter: selectedColor === "Preto" ? "brightness(0.35) saturate(0.1)" : selectedColor === "Branco" ? "brightness(1.15) saturate(0.2)" : "saturate(0.15) brightness(0.95)" } : undefined} />
+                           {selectedColor && selectedColor !== "Preto" && selectedColor !== "Branco" && (
+                             <>
+                               <div className="pointer-events-none absolute inset-0" style={{ backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex, mixBlendMode: "multiply", opacity: 0.55 }} />
+                               <div className="pointer-events-none absolute inset-0" style={{ backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex, mixBlendMode: "color", opacity: 0.7 }} />
+                             </>
                            )}
                          </button>
                       ))}
