@@ -92,6 +92,48 @@ export type Database = {
         }
         Relationships: []
       }
+      manuals: {
+        Row: {
+          brand: string | null
+          category: string
+          cover_image: string | null
+          created_at: string
+          description: string | null
+          file_size: number | null
+          file_url: string
+          id: string
+          models: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          brand?: string | null
+          category?: string
+          cover_image?: string | null
+          created_at?: string
+          description?: string | null
+          file_size?: number | null
+          file_url: string
+          id?: string
+          models?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          brand?: string | null
+          category?: string
+          cover_image?: string | null
+          created_at?: string
+          description?: string | null
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          models?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string

@@ -29,6 +29,7 @@ import Visualizacao3D from "./pages/Visualizacao3D";
 import QualidadeGarantida from "./pages/QualidadeGarantida";
 import EnvioNacional from "./pages/EnvioNacional";
 import SuporteTecnico from "./pages/SuporteTecnico";
+import Manuais from "./pages/Manuais";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -64,6 +65,7 @@ const App = () => (
               <Route path="/qualidade" element={<QualidadeGarantida />} />
               <Route path="/envio" element={<EnvioNacional />} />
               <Route path="/suporte-tecnico" element={<SuporteTecnico />} />
+              <Route path="/manuais" element={<Manuais />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Footer />
