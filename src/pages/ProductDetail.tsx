@@ -183,9 +183,14 @@ const ProductDetail = () => {
           <ScrollReveal direction="right">
             <div className="flex flex-col">
               <div className="mb-2 flex items-center justify-between">
-                <span className="font-display text-[11px] font-bold uppercase tracking-widest text-primary">
-                  {product.brand?.toUpperCase()} · {product.model}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="font-display text-[11px] font-bold uppercase tracking-widest text-primary">
+                    {product.brand?.toUpperCase()} · {product.model}
+                  </span>
+                  {product.condition === "usada" && (
+                    <span className="rounded bg-yellow-500/15 px-2 py-0.5 text-[10px] font-bold uppercase text-yellow-600 dark:text-yellow-400">Usada</span>
+                  )}
+                </div>
                 <div className="flex items-center gap-1">
                   <button onClick={handleShare} className="rounded-md p-2 transition-colors hover:bg-secondary" title="Compartilhar">
                     <Share2 className="h-4 w-4 text-muted-foreground" />

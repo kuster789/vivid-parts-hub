@@ -45,7 +45,7 @@ const AdminProducts = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: "", description: "", price: 0, sku: "", stock: 0,
-    brand: "", model: "", active: true, hasColors: false,
+    brand: "", model: "", active: true, hasColors: false, condition: "nova" as string,
   });
   const [formImages, setFormImages] = useState<string[]>([]);
   const [formModel3D, setFormModel3D] = useState<string | null>(null);
@@ -70,7 +70,7 @@ const AdminProducts = () => {
   };
 
   const resetForm = () => {
-    setForm({ name: "", description: "", price: 0, sku: "", stock: 0, brand: "", model: "", active: true, hasColors: false });
+    setForm({ name: "", description: "", price: 0, sku: "", stock: 0, brand: "", model: "", active: true, hasColors: false, condition: "nova" });
     setFormImages([]);
     setFormModel3D(null);
     setFormHas3D(false);
@@ -88,7 +88,7 @@ const AdminProducts = () => {
     const hasColors = variations.some((v: any) => v.name?.toLowerCase() === "cor");
     setForm({
       name: p.name, description: p.description || "", price: p.price, sku: p.sku || "",
-      stock: p.stock, brand: p.brand, model: p.model, active: p.active ?? true, hasColors,
+      stock: p.stock, brand: p.brand, model: p.model, active: p.active ?? true, hasColors, condition: p.condition || "nova",
     });
     setFormImages(p.images || []);
     setFormModel3D(p.model_3d_url || null);
@@ -184,6 +184,7 @@ const AdminProducts = () => {
       brand: form.brand,
       model: form.model,
       active: form.active,
+      condition: form.condition,
       variations,
       images: formImages,
       model_3d_url: formModel3D,
@@ -313,6 +314,7 @@ const AdminProducts = () => {
                           <span>·</span>
                           <span>{p.model}</span>
                           {p.has_3d && <span className="rounded bg-primary/20 px-1 py-0.5 font-bold text-primary">3D</span>}
+                          {p.condition === "usada" && <span className="rounded bg-yellow-500/15 px-1 py-0.5 font-bold text-yellow-600 dark:text-yellow-400">USADA</span>}
                           {p.images?.length > 0 && <span className="rounded bg-secondary px-1 py-0.5">{p.images.length} foto(s)</span>}
                         </div>
                       </div>
@@ -453,6 +455,13 @@ const AdminProducts = () => {
                         <AlertTriangle className="h-3 w-3" /> Estoque baixo
                       </p>
                     )}
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">Condição *</label>
+                    <select value={form.condition} onChange={(e) => setForm({ ...form, condition: e.target.value })} className={`${inputClass} w-full`}>
+                      <option value="nova">Nova</option>
+                      <option value="usada">Usada</option>
+                    </select>
                   </div>
                   <div className="flex items-center gap-3">
                     <label className="flex items-center gap-2 cursor-pointer">
