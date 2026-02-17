@@ -104,7 +104,7 @@ const ProductDetail = () => {
           <ScrollReveal direction="left">
             <div className="sticky top-24">
               {product.has_3d && product.model_3d_url ? (
-                <ProductViewer3D />
+                <ProductViewer3D modelUrl={product.model_3d_url} />
               ) : product.images && product.images.length > 0 ? (
                 <div className="space-y-3">
                   <div className="relative overflow-hidden rounded-lg border border-border bg-secondary/30">
