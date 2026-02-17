@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Calendar, Loader2, BookOpen } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 
 const BlogPost = () => {
@@ -56,10 +57,8 @@ const BlogPost = () => {
           {post.title}
         </h1>
 
-        <div className="prose prose-invert max-w-none text-sm leading-relaxed text-muted-foreground">
-          {post.content.split("\n").map((p: string, i: number) => (
-            <p key={i} className="mb-4">{p}</p>
-          ))}
+        <div className="prose prose-invert max-w-none text-sm leading-relaxed text-muted-foreground prose-headings:font-display prose-headings:uppercase prose-headings:tracking-wide prose-headings:text-foreground prose-h2:text-xl prose-h3:text-lg prose-strong:text-foreground prose-a:text-primary">
+          <ReactMarkdown>{post.content}</ReactMarkdown>
         </div>
       </div>
     </main>
