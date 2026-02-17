@@ -15,6 +15,7 @@ interface ProductCardProps {
     stock: number;
     has_3d: boolean | null;
     images: string[] | null;
+    condition?: string | null;
   };
 }
 
@@ -71,9 +72,14 @@ const ProductCard = ({ product }: ProductCardProps) => {
       </div>
 
       <div className="flex flex-1 flex-col p-4">
-        <span className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-          {product.brand?.toUpperCase()} · {product.model}
-        </span>
+        <div className="mb-1.5 flex items-center gap-1.5 flex-wrap">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            {product.brand?.toUpperCase()} · {product.model}
+          </span>
+          {product.condition === "usada" && (
+            <span className="rounded bg-yellow-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase text-yellow-600 dark:text-yellow-400">Usada</span>
+          )}
+        </div>
         <Link to={`/produto/${product.id}`} className="mb-2 line-clamp-2 font-body text-sm font-semibold text-foreground transition-colors hover:text-primary">
           {product.name}
         </Link>

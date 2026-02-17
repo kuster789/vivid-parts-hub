@@ -235,6 +235,7 @@ export type Database = {
           active: boolean | null
           brand: string
           compatible_models: Json | null
+          condition: string
           created_at: string
           description: string | null
           has_3d: boolean | null
@@ -253,6 +254,7 @@ export type Database = {
           active?: boolean | null
           brand: string
           compatible_models?: Json | null
+          condition?: string
           created_at?: string
           description?: string | null
           has_3d?: boolean | null
@@ -271,6 +273,7 @@ export type Database = {
           active?: boolean | null
           brand?: string
           compatible_models?: Json | null
+          condition?: string
           created_at?: string
           description?: string | null
           has_3d?: boolean | null
@@ -433,6 +436,7 @@ export type Database = {
           active: boolean | null
           brand: string
           compatible_models: Json | null
+          condition: string
           created_at: string
           description: string | null
           has_3d: boolean | null
