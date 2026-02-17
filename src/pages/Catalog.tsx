@@ -24,6 +24,7 @@ const Catalog = () => {
   const priceMax = Number(searchParams.get("preco_max")) || 0;
   const inStock = searchParams.get("em_estoque") === "1";
   const has3D = searchParams.get("has_3d") === "1";
+  const condition = searchParams.get("condicao") || "";
   
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState<string>("newest");
@@ -59,6 +60,7 @@ const Catalog = () => {
         if (priceMax > 0) filtered = filtered.filter(p => p.price <= priceMax);
         if (inStock) filtered = filtered.filter(p => p.stock > 0);
         if (has3D) filtered = filtered.filter(p => p.has_3d === true);
+        if (condition) filtered = filtered.filter(p => p.condition === condition);
         
 
         // Sort
@@ -76,7 +78,7 @@ const Catalog = () => {
         if (priceMax > 0) countQuery = countQuery.lte("price", priceMax);
         if (inStock) countQuery = countQuery.gt("stock", 0);
         if (has3D) countQuery = countQuery.eq("has_3d", true);
-        
+        if (condition) countQuery = countQuery.eq("condition", condition);
         const { count } = await countQuery;
         setTotalCount(count || 0);
 
@@ -85,7 +87,7 @@ const Catalog = () => {
         if (priceMax > 0) query = query.lte("price", priceMax);
         if (inStock) query = query.gt("stock", 0);
         if (has3D) query = query.eq("has_3d", true);
-        
+        if (condition) query = query.eq("condition", condition);
         
         if (sortBy === "price_asc") query = query.order("price", { ascending: true });
         else if (sortBy === "price_desc") query = query.order("price", { ascending: false });
@@ -101,7 +103,7 @@ const Catalog = () => {
       setLoading(false);
     };
     load();
-  }, [activeBrand, activeModel, sortBy, currentPage, priceMin, priceMax, inStock, has3D]);
+  }, [activeBrand, activeModel, sortBy, currentPage, priceMin, priceMax, inStock, has3D, condition]);
 
   const goToPage = (page: number) => {
     const params = new URLSearchParams(searchParams);
