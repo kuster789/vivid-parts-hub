@@ -158,6 +158,24 @@ const Tracking = () => {
                     </div>
                   )}
 
+                  {/* Customer / shipping details */}
+                  {order.shipping_name && (
+                    <div className="mb-4 rounded-md border border-border bg-secondary/50 p-3 space-y-1">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Detalhes do Pedido</p>
+                      <p className="text-xs text-foreground"><span className="text-muted-foreground">Nome:</span> {order.shipping_name}</p>
+                      {order.shipping_phone && <p className="text-xs text-foreground"><span className="text-muted-foreground">Telefone:</span> {order.shipping_phone}</p>}
+                      {order.shipping_address && (
+                        <p className="text-xs text-foreground">
+                          <span className="text-muted-foreground">Endereço:</span> {order.shipping_address}
+                          {order.shipping_city && `, ${order.shipping_city}`}
+                          {order.shipping_state && ` - ${order.shipping_state}`}
+                          {order.shipping_zip && ` | CEP: ${order.shipping_zip}`}
+                        </p>
+                      )}
+                      {order.notes && <p className="text-xs text-foreground"><span className="text-muted-foreground">Obs:</span> {order.notes}</p>}
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between">
                     <span className={`flex items-center gap-1.5 text-xs font-medium ${cfg.color}`}>
                       <Icon className="h-3.5 w-3.5" /> {cfg.label}
