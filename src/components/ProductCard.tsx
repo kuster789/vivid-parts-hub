@@ -77,7 +77,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
             {product.brand?.toUpperCase()} · {product.model}
           </span>
           {product.condition === "usada" && (
-            <span className="rounded bg-yellow-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase text-yellow-600 dark:text-yellow-400">Usada</span>
+            <span className="rounded bg-yellow-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase text-yellow-600 dark:text-yellow-400">Usado</span>
           )}
         </div>
         <Link to={`/produto/${product.id}`} className="mb-2 line-clamp-2 font-body text-sm font-semibold text-foreground transition-colors hover:text-primary">

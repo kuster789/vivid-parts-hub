@@ -188,7 +188,7 @@ const ProductDetail = () => {
                     {product.brand?.toUpperCase()} · {product.model}
                   </span>
                   {product.condition === "usada" && (
-                    <span className="rounded bg-yellow-500/15 px-2 py-0.5 text-[10px] font-bold uppercase text-yellow-600 dark:text-yellow-400">Usada</span>
+                    <span className="rounded bg-yellow-500/15 px-2 py-0.5 text-[10px] font-bold uppercase text-yellow-600 dark:text-yellow-400">Usado</span>
                   )}
                 </div>
                 <div className="flex items-center gap-1">
