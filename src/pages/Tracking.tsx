@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Package, Truck, CheckCircle, Clock, XCircle, Loader2, Search, Factory, Paintbrush, PackageCheck, Mail } from "lucide-react";
+import { Package, Truck, CheckCircle, Clock, XCircle, Loader2, Search, Factory, Paintbrush, PackageCheck, Mail, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 
@@ -33,7 +33,7 @@ const Tracking = () => {
     const load = async () => {
       const { data } = await supabase
         .from("orders")
-        .select("*")
+        .select("*, order_items(*, products(name, images, sku))")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
       setOrders(data || []);
@@ -173,6 +173,36 @@ const Tracking = () => {
                         </p>
                       )}
                       {order.notes && <p className="text-xs text-foreground"><span className="text-muted-foreground">Obs:</span> {order.notes}</p>}
+                    </div>
+                  )}
+
+                  {/* Order items */}
+                  {order.order_items && order.order_items.length > 0 && (
+                    <div className="mb-4 rounded-md border border-border bg-secondary/50 p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1">
+                        <ShoppingBag className="h-3 w-3" /> Itens do Pedido
+                      </p>
+                      <div className="space-y-2">
+                        {order.order_items.map((item: any) => (
+                          <div key={item.id} className="flex items-center gap-3">
+                            {item.products?.images?.[0] && (
+                              <img
+                                src={item.products.images[0]}
+                                alt={item.products?.name || "Produto"}
+                                className="h-10 w-10 rounded border border-border object-cover"
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-foreground truncate">{item.products?.name || "Produto"}</p>
+                              {item.products?.sku && <p className="text-[10px] text-muted-foreground font-mono">SKU: {item.products.sku}</p>}
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-xs text-muted-foreground">{item.quantity}x</p>
+                              <p className="text-xs font-semibold text-primary">R$ {Number(item.unit_price).toFixed(2).replace(".", ",")}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 
