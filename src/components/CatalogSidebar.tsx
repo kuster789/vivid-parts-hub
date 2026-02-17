@@ -183,7 +183,7 @@ const CatalogSidebar = () => {
               </div>
               <div className="flex items-center gap-2">
                 <RadioGroupItem value="usada" id="cond-usada" />
-                <Label htmlFor="cond-usada" className="text-xs cursor-pointer">Usada</Label>
+                <Label htmlFor="cond-usada" className="text-xs cursor-pointer">Usado</Label>
               </div>
             </RadioGroup>
           </div>

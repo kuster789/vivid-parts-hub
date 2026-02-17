@@ -314,7 +314,7 @@ const AdminProducts = () => {
                           <span>·</span>
                           <span>{p.model}</span>
                           {p.has_3d && <span className="rounded bg-primary/20 px-1 py-0.5 font-bold text-primary">3D</span>}
-                          {p.condition === "usada" && <span className="rounded bg-yellow-500/15 px-1 py-0.5 font-bold text-yellow-600 dark:text-yellow-400">USADA</span>}
+                          {p.condition === "usada" && <span className="rounded bg-yellow-500/15 px-1 py-0.5 font-bold text-yellow-600 dark:text-yellow-400">USADO</span>}
                           {p.images?.length > 0 && <span className="rounded bg-secondary px-1 py-0.5">{p.images.length} foto(s)</span>}
                         </div>
                       </div>
