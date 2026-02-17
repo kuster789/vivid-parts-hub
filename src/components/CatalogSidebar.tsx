@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ChevronDown, ChevronRight, SlidersHorizontal, Box, Package } from "lucide-react";
+import { ChevronDown, ChevronRight, SlidersHorizontal, Box, Package, Wrench } from "lucide-react";
 import { brands } from "@/data/products";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 
 type CountMap = Record<string, number>;
@@ -18,7 +19,7 @@ const CatalogSidebar = () => {
   const priceMax = Number(searchParams.get("preco_max")) || 5000;
   const inStock = searchParams.get("em_estoque") === "1";
   const has3D = searchParams.get("has_3d") === "1";
-  
+  const condition = searchParams.get("condicao") || "";
 
   const [localPriceRange, setLocalPriceRange] = useState<number[]>([priceMin, priceMax]);
   const [brandCounts, setBrandCounts] = useState<CountMap>({});
@@ -73,7 +74,7 @@ const CatalogSidebar = () => {
     setLocalPriceRange([0, 5000]);
   };
 
-  const hasActiveFilters = priceMin > 0 || priceMax < 5000 || inStock || has3D || activeBrand;
+  const hasActiveFilters = priceMin > 0 || priceMax < 5000 || inStock || has3D || activeBrand || condition;
 
   return (
     <aside className="sticky top-4 w-64 shrink-0 hidden lg:block space-y-4">
@@ -159,6 +160,32 @@ const CatalogSidebar = () => {
               checked={has3D}
               onCheckedChange={(checked) => updateFilter("has_3d", checked ? "1" : null)}
             />
+          </div>
+
+          {/* Condition */}
+          <div>
+            <label className="flex items-center gap-2 text-xs font-semibold text-foreground mb-2">
+              <Wrench className="h-3.5 w-3.5 text-muted-foreground" />
+              Condição
+            </label>
+            <RadioGroup
+              value={condition}
+              onValueChange={(val) => updateFilter("condicao", val || null)}
+              className="space-y-1.5"
+            >
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="" id="cond-all" />
+                <Label htmlFor="cond-all" className="text-xs cursor-pointer">Todas</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="nova" id="cond-nova" />
+                <Label htmlFor="cond-nova" className="text-xs cursor-pointer">Nova</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="usada" id="cond-usada" />
+                <Label htmlFor="cond-usada" className="text-xs cursor-pointer">Usada</Label>
+              </div>
+            </RadioGroup>
           </div>
 
         </div>
