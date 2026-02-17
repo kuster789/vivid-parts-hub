@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Wrench, MessageCircle, Phone, Mail, Clock, HelpCircle, Users, BookOpen } from "lucide-react";
+import { ArrowLeft, ArrowRight, Wrench, MessageCircle, Phone, Mail, Clock, HelpCircle, Users, BookOpen, Download } from "lucide-react";
 import { ScrollReveal } from "@/hooks/useScrollReveal";
 
 const SuporteTecnico = () => (
@@ -93,6 +93,9 @@ const SuporteTecnico = () => (
         <div className="mt-10 flex flex-wrap justify-center gap-3">
           <Link to="/suporte" className="btn-primary-glow inline-flex items-center gap-2 rounded-lg px-8 py-3.5 text-sm font-semibold">
             Central de Ajuda <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link to="/manuais" className="inline-flex items-center gap-2 rounded-lg border border-border bg-card/50 px-8 py-3.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary hover:border-primary/30">
+            <Download className="h-4 w-4" /> Manuais Técnicos
           </Link>
           <Link to="/blog" className="inline-flex items-center gap-2 rounded-lg border border-border bg-card/50 px-8 py-3.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary hover:border-primary/30">
             <BookOpen className="h-4 w-4" /> Blog Técnico
