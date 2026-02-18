@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Calendar, Loader2, BookOpen } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
 
@@ -66,8 +67,49 @@ const BlogPost = () => {
           {post.title}
         </h1>
 
-        <div className="prose prose-invert max-w-none text-sm leading-relaxed text-muted-foreground prose-headings:font-display prose-headings:uppercase prose-headings:tracking-wide prose-headings:text-foreground prose-h2:text-xl prose-h3:text-lg prose-strong:text-foreground prose-a:text-primary">
-          <ReactMarkdown>{post.content}</ReactMarkdown>
+        <div className="prose prose-invert max-w-none text-sm leading-relaxed text-muted-foreground prose-headings:font-display prose-headings:uppercase prose-headings:tracking-wide prose-headings:text-foreground prose-h2:text-xl prose-h3:text-lg prose-strong:text-foreground prose-a:text-primary prose-table:text-xs prose-th:text-foreground prose-td:text-muted-foreground prose-blockquote:border-primary prose-blockquote:text-muted-foreground">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              img: ({ src, alt }) => (
+                <figure className="my-6">
+                  <img
+                    src={src}
+                    alt={alt}
+                    className="w-full rounded-lg border border-border object-cover shadow-md"
+                    loading="lazy"
+                  />
+                  {alt && (
+                    <figcaption className="mt-2 text-center text-[11px] italic text-muted-foreground/70">
+                      {alt}
+                    </figcaption>
+                  )}
+                </figure>
+              ),
+              table: ({ children }) => (
+                <div className="my-4 overflow-x-auto rounded-lg border border-border">
+                  <table className="w-full">{children}</table>
+                </div>
+              ),
+              th: ({ children }) => (
+                <th className="bg-secondary px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wider text-foreground">
+                  {children}
+                </th>
+              ),
+              td: ({ children }) => (
+                <td className="border-t border-border px-3 py-2 text-xs text-muted-foreground">
+                  {children}
+                </td>
+              ),
+              blockquote: ({ children }) => (
+                <blockquote className="my-4 rounded-r-lg border-l-4 border-primary bg-primary/5 px-4 py-3 text-xs italic text-muted-foreground">
+                  {children}
+                </blockquote>
+              ),
+            }}
+          >
+            {post.content}
+          </ReactMarkdown>
         </div>
       </div>
     </main>
