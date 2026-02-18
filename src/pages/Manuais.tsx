@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, Download, FileText, BookOpen, Wrench, Settings } from "lucide-react";
 import { ScrollReveal } from "@/hooks/useScrollReveal";
+import { useSEO } from "@/hooks/useSEO";
 
 interface ManualItem {
   title: string;
@@ -103,7 +104,15 @@ const categoryLabels: Record<string, { label: string; color: string }> = {
   revista: { label: "Revista", color: "bg-violet-500/10 text-violet-600 dark:text-violet-400" },
 };
 
-const Manuais = () => (
+const Manuais = () => {
+  useSEO({
+    title: "Manuais Técnicos — Agrale, Yamaha, Cagiva e KTM",
+    description: "Baixe gratuitamente manuais de oficina, catálogos de peças e tutoriais técnicos para Agrale, Yamaha, Cagiva e KTM. Documentação completa para mecânicos.",
+    url: "/manuais",
+    type: "website",
+  });
+
+  return (
   <main className="py-12">
     <div className="container max-w-5xl">
       <Link to="/" className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
@@ -185,6 +194,7 @@ const Manuais = () => (
       </ScrollReveal>
     </div>
   </main>
-);
+  );
+};
 
 export default Manuais;

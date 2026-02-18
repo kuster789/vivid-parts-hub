@@ -1,8 +1,17 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Truck, MapPin, Clock, Package, CheckCircle, Calculator } from "lucide-react";
 import { ScrollReveal } from "@/hooks/useScrollReveal";
+import { useSEO } from "@/hooks/useSEO";
 
-const EnvioNacional = () => (
+const EnvioNacional = () => {
+  useSEO({
+    title: "Envio Nacional — Entrega para Todo o Brasil",
+    description: "Enviamos peças para Agrale, Yamaha, Cagiva e KTM para todo o Brasil com rastreamento em tempo real. Calcule o frete e prazo de entrega.",
+    url: "/envio",
+    type: "website",
+  });
+
+  return (
   <main className="py-12">
     <div className="container max-w-4xl">
       <Link to="/" className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
@@ -92,6 +101,7 @@ const EnvioNacional = () => (
       </ScrollReveal>
     </div>
   </main>
-);
+  );
+};
 
 export default EnvioNacional;

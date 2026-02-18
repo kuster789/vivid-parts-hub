@@ -1,8 +1,17 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Wrench, MessageCircle, Phone, Mail, Clock, HelpCircle, Users, BookOpen, Download } from "lucide-react";
 import { ScrollReveal } from "@/hooks/useScrollReveal";
+import { useSEO } from "@/hooks/useSEO";
 
-const SuporteTecnico = () => (
+const SuporteTecnico = () => {
+  useSEO({
+    title: "Suporte Técnico — Atendimento Especializado",
+    description: "Fale com nossos especialistas em peças para Agrale, Yamaha, Cagiva e KTM. Atendimento via WhatsApp, e-mail e chat. Tire suas dúvidas técnicas.",
+    url: "/suporte-tecnico",
+    type: "website",
+  });
+
+  return (
   <main className="py-12">
     <div className="container max-w-4xl">
       <Link to="/" className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
@@ -104,6 +113,7 @@ const SuporteTecnico = () => (
       </ScrollReveal>
     </div>
   </main>
-);
+  );
+};
 
 export default SuporteTecnico;

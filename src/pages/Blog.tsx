@@ -2,8 +2,15 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Calendar, ArrowRight, Loader2, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSEO } from "@/hooks/useSEO";
 
 const Blog = () => {
+  useSEO({
+    title: "Blog — Dicas e Tutoriais de Motos",
+    description: "Artigos técnicos, dicas de manutenção e tutoriais sobre Agrale, Yamaha, Cagiva e KTM. Aprenda a cuidar melhor da sua moto.",
+    url: "/blog",
+    type: "website",
+  });
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
