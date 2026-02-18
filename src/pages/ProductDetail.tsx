@@ -50,6 +50,21 @@ const ProductDetail = () => {
     load();
   }, [id]);
 
+  // SEO dinâmico — sempre chamado no topo (hooks não podem estar após early returns)
+  useSEO({
+    title: product?.name,
+    description: product
+      ? product.description || `${product.name} — peça para ${product.brand} ${product.model}. Compre com qualidade e envio para todo o Brasil.`
+      : undefined,
+    image: product?.images?.[0] ?? undefined,
+    url: `/produto/${id}`,
+    type: "product",
+    price: product ? Number(product.price) : undefined,
+    availability: product ? (product.stock > 0 ? "InStock" : "OutOfStock") : undefined,
+    brand: product?.brand,
+    sku: product?.sku ?? undefined,
+  });
+
   if (loading) {
     return (
       <div className="container flex min-h-[60vh] items-center justify-center">
