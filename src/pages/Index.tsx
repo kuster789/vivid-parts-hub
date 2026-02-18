@@ -7,6 +7,8 @@ import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import { ScrollReveal } from "@/hooks/useScrollReveal";
 import { brands } from "@/data/products";
 import { supabase } from "@/integrations/supabase/client";
+import { useSEO } from "@/hooks/useSEO";
+
 
 const Counter = ({ end, suffix = "", label }: { end: number; suffix?: string; label: string }) => {
   const [count, setCount] = useState(0);
@@ -30,6 +32,11 @@ const Counter = ({ end, suffix = "", label }: { end: number; suffix?: string; la
 };
 
 const Index = () => {
+  useSEO({
+    title: "Peças para Agrale, Yamaha, Cagiva e KTM",
+    description: "Especialistas em peças para Agrale, Yamaha, Cagiva e KTM. Componentes originais e de qualidade com envio para todo o Brasil. Encontre virabrequins, carburadores, cilindros e muito mais.",
+    url: "/",
+  });
   const [featured, setFeatured] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [productCount, setProductCount] = useState(0);

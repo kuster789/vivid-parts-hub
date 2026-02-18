@@ -3,11 +3,20 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Calendar, Loader2, BookOpen } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
+import { useSEO } from "@/hooks/useSEO";
 
 const BlogPost = () => {
   const { slug } = useParams();
   const [post, setPost] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  useSEO({
+    title: post?.title ?? undefined,
+    description: post?.excerpt ?? undefined,
+    image: post?.cover_image ?? undefined,
+    url: post ? `/blog/${post.slug}` : undefined,
+    type: "article",
+  });
 
   useEffect(() => {
     const load = async () => {
@@ -43,7 +52,7 @@ const BlogPost = () => {
         </Link>
 
         {post.cover_image && (
-          <img src={post.cover_image} alt={post.title} className="mb-6 h-64 w-full rounded-lg object-cover md:h-80" />
+          <img src={post.cover_image} alt={post.title} className="mb-6 h-64 w-full rounded-lg object-cover md:h-80" loading="lazy" />
         )}
 
         <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">
