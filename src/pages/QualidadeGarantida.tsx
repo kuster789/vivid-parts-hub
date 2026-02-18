@@ -1,8 +1,17 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Shield, CheckCircle, Award, BadgeCheck, PackageCheck, RefreshCw } from "lucide-react";
 import { ScrollReveal } from "@/hooks/useScrollReveal";
+import { useSEO } from "@/hooks/useSEO";
 
-const QualidadeGarantida = () => (
+const QualidadeGarantida = () => {
+  useSEO({
+    title: "Qualidade Garantida — Peças Originais e Certificadas",
+    description: "Todas as peças da Auto Peças Agrale passam por rigoroso controle de qualidade. Produtos originais para Agrale, Yamaha, Cagiva e KTM com garantia.",
+    url: "/qualidade",
+    type: "website",
+  });
+
+  return (
   <main className="py-12">
     <div className="container max-w-4xl">
       <Link to="/" className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
@@ -106,6 +115,7 @@ const QualidadeGarantida = () => (
       </ScrollReveal>
     </div>
   </main>
-);
+  );
+};
 
 export default QualidadeGarantida;

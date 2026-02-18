@@ -1,7 +1,16 @@
 import { Link } from "react-router-dom";
 import { Building2, Wrench, Users, Mail, Phone } from "lucide-react";
+import { useSEO } from "@/hooks/useSEO";
 
-const SobreNos = () => (
+const SobreNos = () => {
+  useSEO({
+    title: "Sobre Nós — Especialistas em Peças para Motos",
+    description: "Conheça a Auto Peças Agrale, especialistas em peças para Agrale, Yamaha, Cagiva e KTM. Qualidade, confiança e envio para todo o Brasil.",
+    url: "/sobre",
+    type: "website",
+  });
+
+  return (
   <main className="py-12">
     <div className="container max-w-3xl">
       <h1 className="section-title mb-8">Sobre Nós</h1>
@@ -53,6 +62,7 @@ const SobreNos = () => (
       </div>
     </div>
   </main>
-);
+  );
+};
 
 export default SobreNos;
