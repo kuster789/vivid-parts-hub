@@ -6,6 +6,7 @@ import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import CatalogSidebar from "@/components/CatalogSidebar";
 import { brands } from "@/data/products";
 import { supabase } from "@/integrations/supabase/client";
+import { useSEO } from "@/hooks/useSEO";
 import {
   Pagination,
   PaginationContent,
@@ -25,7 +26,18 @@ const Catalog = () => {
   const inStock = searchParams.get("em_estoque") === "1";
   const has3D = searchParams.get("has_3d") === "1";
   const condition = searchParams.get("condicao") || "";
-  
+
+  const brandLabel = activeBrand ? activeBrand.charAt(0).toUpperCase() + activeBrand.slice(1) : "";
+  useSEO({
+    title: activeBrand
+      ? `Peças para ${brandLabel}${activeModel ? ` ${activeModel}` : ""}`
+      : "Catálogo de Peças",
+    description: activeBrand
+      ? `Encontre peças para ${brandLabel}${activeModel ? ` ${activeModel}` : ""}: cilindros, carburadores, virabrequins e mais. Envio para todo o Brasil.`
+      : "Catálogo completo de peças para motos Agrale, Yamaha, Cagiva e KTM. Filtros por marca, modelo e categoria.",
+    url: "/catalogo",
+  });
+
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState<string>("newest");
   const [products, setProducts] = useState<any[]>([]);
