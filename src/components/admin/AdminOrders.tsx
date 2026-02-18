@@ -1,8 +1,13 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 import {
-  Package, Pencil, Save, X, Loader2, ChevronDown, ChevronUp, Truck, MapPin, MessageSquare, Factory, Paintbrush, PackageCheck, Mail
+  Package, Pencil, Save, X, Loader2, ChevronDown, ChevronUp, Truck, MapPin, MessageSquare, Factory, Paintbrush, PackageCheck, Mail, Trash2
 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const statusLabels: Record<string, string> = {
   pending: "Pendente",
@@ -29,6 +34,7 @@ const productionStages = [
 ];
 
 const AdminOrders = () => {
+  const { isAdmin } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [orderItems, setOrderItems] = useState<Record<string, any[]>>({});
@@ -36,6 +42,8 @@ const AdminOrders = () => {
   const [trackingEditing, setTrackingEditing] = useState<string | null>(null);
   const [trackingCode, setTrackingCode] = useState("");
   const [loading, setLoading] = useState(true);
+  const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -110,6 +118,17 @@ const AdminOrders = () => {
     setTrackingCode("");
   };
 
+  const deleteOrder = async () => {
+    if (!deleteOrderId) return;
+    setDeleting(true);
+    await supabase.from("order_items").delete().eq("order_id", deleteOrderId);
+    await supabase.from("orders").delete().eq("id", deleteOrderId);
+    setOrders(orders.filter((o) => o.id !== deleteOrderId));
+    if (expandedOrder === deleteOrderId) setExpandedOrder(null);
+    setDeleteOrderId(null);
+    setDeleting(false);
+  };
+
   const filteredOrders = orders.filter((o) => !statusFilter || o.status === statusFilter);
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -169,6 +188,15 @@ const AdminOrders = () => {
                 <p className="text-[10px] text-muted-foreground">{new Date(o.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>
               </div>
               {expandedOrder === o.id ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />}
+              {isAdmin && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setDeleteOrderId(o.id); }}
+                  className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
+                  title="Excluir pedido"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )}
             </button>
 
             {/* Expanded */}
@@ -306,6 +334,27 @@ const AdminOrders = () => {
           </div>
         ))}
       </div>
+
+      <AlertDialog open={!!deleteOrderId} onOpenChange={(open) => { if (!open) setDeleteOrderId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir pedido?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação é irreversível. O pedido e todos os seus itens serão permanentemente excluídos do sistema.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deleteOrder}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
