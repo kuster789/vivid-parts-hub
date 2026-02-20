@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Package, Truck, CheckCircle, Clock, XCircle, Loader2, Search, Factory, Paintbrush, PackageCheck, Mail, ShoppingBag } from "lucide-react";
+import { Package, Truck, CheckCircle, Clock, XCircle, Loader2, Search, Factory, Paintbrush, PackageCheck, Mail, ShoppingBag, MapPin, Calendar, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 
@@ -21,6 +21,156 @@ const productionStages = [
 ];
 
 const statusOrder = ["pending", "confirmed", "shipped", "delivered"];
+
+interface TrackingEvent {
+  status: string;
+  date: string;
+  time: string;
+  location: string;
+  origin: string;
+  destination: string;
+}
+
+interface TrackingData {
+  trackingCode: string;
+  type: string;
+  estimatedDelivery?: string;
+  events: TrackingEvent[];
+  error?: string;
+}
+
+const CorreiosTimeline = ({ trackingCode }: { trackingCode: string }) => {
+  const [data, setData] = useState<TrackingData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  const fetchTracking = async () => {
+    setLoading(true);
+    try {
+      const { data: result, error } = await supabase.functions.invoke("correios-tracking", {
+        body: { trackingCode },
+      });
+      if (error) {
+        setData({ trackingCode, type: "", events: [], error: "Erro ao consultar rastreio." });
+      } else if (result?.error) {
+        setData({ trackingCode, type: "", events: [], error: result.error });
+      } else {
+        setData(result);
+      }
+    } catch {
+      setData({ trackingCode, type: "", events: [], error: "Falha na consulta." });
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (expanded && !data && !loading) {
+      fetchTracking();
+    }
+  }, [expanded]);
+
+  return (
+    <div className="mt-3 rounded-md border border-border bg-secondary/30">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex w-full items-center justify-between px-3 py-2 text-xs font-medium text-primary hover:bg-primary/5 transition-colors"
+      >
+        <span className="flex items-center gap-1.5">
+          <Truck className="h-3.5 w-3.5" />
+          Rastreio Correios: {trackingCode}
+        </span>
+        <span className="text-[10px] text-muted-foreground">{expanded ? "▲ Fechar" : "▼ Consultar"}</span>
+      </button>
+
+      {expanded && (
+        <div className="border-t border-border px-3 py-3">
+          {loading ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <span className="ml-2 text-xs text-muted-foreground">Consultando Correios...</span>
+            </div>
+          ) : data?.error ? (
+            <div className="py-3 text-center">
+              <p className="text-xs text-muted-foreground">{data.error}</p>
+              <button onClick={fetchTracking} className="mt-2 text-xs text-primary underline">Tentar novamente</button>
+            </div>
+          ) : data?.events && data.events.length > 0 ? (
+            <div>
+              {/* Header */}
+              <div className="mb-3 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-primary">{data.type}</p>
+                  {data.estimatedDelivery && (
+                    <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      Previsão: {data.estimatedDelivery}
+                    </p>
+                  )}
+                </div>
+                <a
+                  href={`https://rastreamento.correios.com.br/app/index.php`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary"
+                >
+                  <ExternalLink className="h-3 w-3" /> Correios
+                </a>
+              </div>
+
+              {/* Timeline */}
+              <div className="relative space-y-0">
+                {data.events.map((event, i) => (
+                  <div key={i} className="relative flex gap-3 pb-4 last:pb-0">
+                    {/* Line */}
+                    {i < data.events.length - 1 && (
+                      <div className="absolute left-[9px] top-5 h-[calc(100%-8px)] w-px border-l-2 border-dashed border-primary/20" />
+                    )}
+                    {/* Dot */}
+                    <div className={`relative z-10 mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+                      i === 0 ? "bg-primary" : "border-2 border-primary/30 bg-background"
+                    }`}>
+                      {i === 0 ? (
+                        <Truck className="h-3 w-3 text-primary-foreground" />
+                      ) : (
+                        <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+                      )}
+                    </div>
+                    {/* Content */}
+                    <div className="min-w-0 flex-1">
+                      <p className={`text-xs font-semibold ${i === 0 ? "text-foreground" : "text-muted-foreground"}`}>
+                        {event.status}
+                      </p>
+                      {event.location && (
+                        <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                          <MapPin className="h-2.5 w-2.5 shrink-0" />
+                          {event.origin ? `de ${event.location}` : event.location}
+                        </p>
+                      )}
+                      {event.destination && (
+                        <p className="text-[10px] text-muted-foreground">
+                          para {event.destination}
+                        </p>
+                      )}
+                      <p className="mt-0.5 text-[10px] text-muted-foreground/70">
+                        {event.date} {event.time}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button onClick={fetchTracking} className="mt-2 text-[10px] text-primary hover:underline">
+                ↻ Atualizar rastreio
+              </button>
+            </div>
+          ) : (
+            <p className="py-3 text-center text-xs text-muted-foreground">Nenhum evento encontrado.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Tracking = () => {
   const { user } = useAuth();
@@ -217,6 +367,9 @@ const Tracking = () => {
                       </span>
                     )}
                   </div>
+
+                  {/* Correios tracking timeline */}
+                  {order.tracking_code && <CorreiosTimeline trackingCode={order.tracking_code} />}
                 </div>
               );
             })}
