@@ -1,8 +1,29 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Package, Truck, Headphones, ChevronRight, MessageSquare, Phone, Mail } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "@/hooks/use-toast";
 
 const Support = () => {
   const [trackingCode, setTrackingCode] = useState("");
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleTrack = () => {
+    if (!trackingCode.trim()) {
+      toast({ title: "Digite um código de rastreio", variant: "destructive" });
+      return;
+    }
+    navigate(`/rastreamento?busca=${encodeURIComponent(trackingCode.trim())}`);
+  };
+
+  const handleMeusPedidos = () => {
+    if (!user) {
+      toast({ title: "Você ainda não possui pedidos.", description: "Faça login para ver seus pedidos." });
+      return;
+    }
+    navigate("/rastreamento");
+  };
 
   return (
     <main className="py-8">
@@ -21,9 +42,10 @@ const Support = () => {
               placeholder="Digite o código de rastreio"
               value={trackingCode}
               onChange={(e) => setTrackingCode(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleTrack()}
               className="flex-1 rounded-md border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
             />
-            <button className="btn-primary-glow rounded-md px-5 py-2.5 text-sm transition-all">
+            <button onClick={handleTrack} className="btn-primary-glow rounded-md px-5 py-2.5 text-sm transition-all">
               <Search className="h-4 w-4" />
             </button>
           </div>
@@ -67,11 +89,14 @@ const Support = () => {
         {/* Quick links */}
         <div className="grid gap-4 md:grid-cols-3">
           {[
-            { icon: Package, title: "Meus Pedidos", desc: "Consulte seus pedidos" },
-            { icon: Truck, title: "Entregas", desc: "Informações de envio" },
-            { icon: Headphones, title: "Chat IA", desc: "Assistente virtual 24h" },
-          ].map(({ icon: Icon, title, desc }) => (
-            <button key={title} className="card-industrial flex items-center gap-4 p-5 text-left transition-all hover:border-primary/40">
+            { icon: Package, title: "Meus Pedidos", desc: "Consulte seus pedidos", action: handleMeusPedidos },
+            { icon: Truck, title: "Entregas", desc: "Informações de envio", action: () => navigate("/envio") },
+            { icon: Headphones, title: "Chat IA", desc: "Assistente virtual 24h", action: () => {
+              const chatBtn = document.querySelector('[aria-label="Abrir chat"]') as HTMLButtonElement;
+              chatBtn?.click();
+            }},
+          ].map(({ icon: Icon, title, desc, action }) => (
+            <button key={title} onClick={action} className="card-industrial flex items-center gap-4 p-5 text-left transition-all hover:border-primary/40">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10">
                 <Icon className="h-5 w-5 text-primary" />
               </div>

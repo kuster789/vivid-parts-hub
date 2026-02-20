@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Package, Truck, CheckCircle, Clock, XCircle, Loader2, Search, Factory, Paintbrush, PackageCheck, Mail, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -26,7 +26,8 @@ const Tracking = () => {
   const { user } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [searchParams] = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get("busca") || "");
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
@@ -46,7 +47,7 @@ const Tracking = () => {
     return (
       <main className="container flex min-h-[60vh] flex-col items-center justify-center">
         <Truck className="mb-4 h-16 w-16 text-muted-foreground/30" />
-        <p className="mb-4 text-muted-foreground">Faça login para rastrear seus pedidos.</p>
+        <p className="mb-4 text-muted-foreground">Você ainda não possui pedidos. Faça login para rastrear.</p>
         <Link to="/login" className="btn-primary-glow rounded-md px-6 py-3 text-sm">Entrar</Link>
       </main>
     );
