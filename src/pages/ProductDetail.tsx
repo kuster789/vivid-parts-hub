@@ -13,7 +13,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSEO } from "@/hooks/useSEO";
-
+import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 
 const ProductDetail = () => {
@@ -29,14 +30,24 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
 
+  const { addProduct: trackView } = useRecentlyViewed();
+
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase.from("products").select("*").eq("id", id).maybeSingle();
       setProduct(data);
       setLoading(false);
 
-      // Load related products
       if (data) {
+        trackView({
+          id: data.id,
+          name: data.name,
+          brand: data.brand,
+          model: data.model,
+          price: Number(data.price),
+          image: data.images?.[0],
+        });
+
         const { data: related } = await supabase
           .from("products")
           .select("*")
@@ -106,16 +117,11 @@ const ProductDetail = () => {
   return (
     <main className="py-8">
       <div className="container">
-        {/* Breadcrumb */}
-        <nav className="mb-6 flex items-center gap-2 text-xs text-muted-foreground">
-          <Link to="/" className="hover:text-foreground transition-colors">Início</Link>
-          <span>/</span>
-          <Link to="/catalogo" className="hover:text-foreground transition-colors">Catálogo</Link>
-          <span>/</span>
-          <Link to={`/catalogo?marca=${product.brand}`} className="hover:text-foreground transition-colors">{product.brand}</Link>
-          <span>/</span>
-          <span className="text-foreground font-medium truncate max-w-[200px]">{product.name}</span>
-        </nav>
+        <Breadcrumbs items={[
+          { label: "Catálogo", href: "/catalogo" },
+          { label: product.brand, href: `/catalogo?marca=${product.brand}` },
+          { label: product.name },
+        ]} />
 
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Image / 3D viewer */}

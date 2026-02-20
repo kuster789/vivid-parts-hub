@@ -8,6 +8,8 @@ import { AuthProvider } from "@/context/AuthContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ChatBot from "@/components/ChatBot";
+import WhatsAppButton from "@/components/WhatsAppButton";
+import LeadCapturePopup from "@/components/LeadCapturePopup";
 import Index from "./pages/Index";
 import Catalog from "./pages/Catalog";
 import ProductDetail from "./pages/ProductDetail";
@@ -70,6 +72,8 @@ const App = () => (
             </Routes>
             <Footer />
             <ChatBot />
+            <WhatsAppButton />
+            <LeadCapturePopup />
           </BrowserRouter>
         </CartProvider>
       </AuthProvider>

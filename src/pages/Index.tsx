@@ -8,6 +8,8 @@ import { ScrollReveal } from "@/hooks/useScrollReveal";
 import { brands } from "@/data/products";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
+import FAQSection from "@/components/FAQSection";
+import RecentlyViewed from "@/components/RecentlyViewed";
 
 
 const Counter = ({ end, suffix = "", label }: {end: number;suffix?: string;label: string;}) => {
@@ -210,6 +212,12 @@ const Index = () => {
         </div>
         </ScrollReveal>
       </section>
+
+      {/* Recently Viewed */}
+      <RecentlyViewed />
+
+      {/* FAQ */}
+      <FAQSection />
     </main>);
 
 };
