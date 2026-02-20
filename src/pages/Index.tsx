@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
 
 
-const Counter = ({ end, suffix = "", label }: { end: number; suffix?: string; label: string }) => {
+const Counter = ({ end, suffix = "", label }: {end: number;suffix?: string;label: string;}) => {
   const [count, setCount] = useState(0);
   useEffect(() => {
     let start = 0;
@@ -18,8 +18,8 @@ const Counter = ({ end, suffix = "", label }: { end: number; suffix?: string; la
     const step = Math.ceil(end / (duration / 30));
     const timer = setInterval(() => {
       start += step;
-      if (start >= end) { setCount(end); clearInterval(timer); }
-      else setCount(start);
+      if (start >= end) {setCount(end);clearInterval(timer);} else
+      setCount(start);
     }, 30);
     return () => clearInterval(timer);
   }, [end]);
@@ -27,15 +27,15 @@ const Counter = ({ end, suffix = "", label }: { end: number; suffix?: string; la
     <div className="text-center">
       <p className="font-display text-2xl font-black text-primary md:text-3xl">{count.toLocaleString("pt-BR")}{suffix}</p>
       <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
-    </div>
-  );
+    </div>);
+
 };
 
 const Index = () => {
   useSEO({
     title: "Peças para Agrale, Yamaha, Cagiva e KTM",
     description: "Especialistas em peças para Agrale, Yamaha, Cagiva e KTM. Componentes originais e de qualidade com envio para todo o Brasil. Encontre virabrequins, carburadores, cilindros e muito mais.",
-    url: "/",
+    url: "/"
   });
   const [featured, setFeatured] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,9 +44,9 @@ const Index = () => {
   useEffect(() => {
     const load = async () => {
       const [{ data }, { count }] = await Promise.all([
-        supabase.from("products").select("*").eq("active", true).limit(4),
-        supabase.from("products").select("*", { count: "exact", head: true }).eq("active", true),
-      ]);
+      supabase.from("products").select("*").eq("active", true).limit(4),
+      supabase.from("products").select("*", { count: "exact", head: true }).eq("active", true)]
+      );
       setFeatured(data || []);
       setProductCount(count || 0);
       setLoading(false);
@@ -76,7 +76,7 @@ const Index = () => {
               Qualidade profissional com <span className="font-semibold text-foreground">visualização 3D interativa</span>.
             </p>
             <div className="mb-12 flex flex-wrap gap-3">
-              <Link to="/catalogo" className="btn-primary-glow inline-flex items-center gap-2 rounded-lg px-8 py-3.5 text-sm font-semibold transition-all">
+              <Link to="/catalogo" className="btn-primary-glow inline-flex items-center gap-2 rounded-lg px-8 py-3.5 text-sm font-semibold transition-all text-justify">
                 Ver Catálogo <ArrowRight className="h-4 w-4" />
               </Link>
               <Link to="/suporte" className="inline-flex items-center gap-2 rounded-lg border border-border bg-card/50 px-8 py-3.5 text-sm font-medium text-foreground backdrop-blur-sm transition-colors hover:bg-secondary hover:border-primary/30">
@@ -105,19 +105,19 @@ const Index = () => {
             </div>
           </ScrollReveal>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:gap-6">
-            {brands.map((brand, idx) => (
-              <ScrollReveal key={brand.slug} delay={idx * 100}>
+            {brands.map((brand, idx) =>
+            <ScrollReveal key={brand.slug} delay={idx * 100}>
                 <Link
-                  to={`/catalogo?marca=${brand.slug}`}
-                  className="card-industrial group relative flex flex-col items-center gap-4 overflow-hidden p-8 transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5"
-                >
+                to={`/catalogo?marca=${brand.slug}`}
+                className="card-industrial group relative flex flex-col items-center gap-4 overflow-hidden p-8 transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5">
+
                   <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                   <div className="relative flex h-16 w-16 items-center justify-center rounded-xl bg-secondary/80 p-2 transition-transform duration-300 group-hover:scale-110">
-                    {brand.logo ? (
-                      <img src={brand.logo} alt={brand.name} className="h-full w-full object-contain" />
-                    ) : (
-                      <span className="text-3xl">{brand.icon}</span>
-                    )}
+                    {brand.logo ?
+                  <img src={brand.logo} alt={brand.name} className="h-full w-full object-contain" /> :
+
+                  <span className="text-3xl">{brand.icon}</span>
+                  }
                   </div>
                   <div className="relative text-center">
                     <span className="block font-display text-sm font-bold tracking-wider text-foreground">{brand.name}</span>
@@ -126,7 +126,7 @@ const Index = () => {
                   <ArrowRight className="relative h-4 w-4 text-primary opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1" />
                 </Link>
               </ScrollReveal>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -145,17 +145,17 @@ const Index = () => {
             </Link>
           </div>
           </ScrollReveal>
-          {loading ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {loading ?
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {Array.from({ length: 4 }).map((_, i) => <ProductCardSkeleton key={i} />)}
+            </div> :
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {featured.map((product) =>
+            <ProductCard key={product.id} product={product} />
+            )}
             </div>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {featured.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          )}
+          }
         </div>
       </section>
 
@@ -170,12 +170,12 @@ const Index = () => {
           </ScrollReveal>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { icon: Box, title: "Visualização 3D", desc: "Veja peças em 3D interativo antes de comprar. Gire, amplie e inspecione cada detalhe.", color: "from-amber-500/20 to-orange-500/20", link: "/visualizacao-3d" },
-              { icon: Shield, title: "Qualidade Garantida", desc: "Todas as peças com garantia de fábrica. Produtos originais e de alta durabilidade.", color: "from-emerald-500/20 to-green-500/20", link: "/qualidade" },
-              { icon: Truck, title: "Envio Nacional", desc: "Entrega para todo o Brasil com rastreamento em tempo real via Melhor Envio.", color: "from-blue-500/20 to-cyan-500/20", link: "/envio" },
-              { icon: Wrench, title: "Suporte Técnico", desc: "Equipe especializada para auxiliar na escolha da peça certa para sua moto.", color: "from-purple-500/20 to-violet-500/20", link: "/suporte-tecnico" },
-            ].map(({ icon: Icon, title, desc, color, link }, idx) => (
-              <ScrollReveal key={title} delay={idx * 120}>
+            { icon: Box, title: "Visualização 3D", desc: "Veja peças em 3D interativo antes de comprar. Gire, amplie e inspecione cada detalhe.", color: "from-amber-500/20 to-orange-500/20", link: "/visualizacao-3d" },
+            { icon: Shield, title: "Qualidade Garantida", desc: "Todas as peças com garantia de fábrica. Produtos originais e de alta durabilidade.", color: "from-emerald-500/20 to-green-500/20", link: "/qualidade" },
+            { icon: Truck, title: "Envio Nacional", desc: "Entrega para todo o Brasil com rastreamento em tempo real via Melhor Envio.", color: "from-blue-500/20 to-cyan-500/20", link: "/envio" },
+            { icon: Wrench, title: "Suporte Técnico", desc: "Equipe especializada para auxiliar na escolha da peça certa para sua moto.", color: "from-purple-500/20 to-violet-500/20", link: "/suporte-tecnico" }].
+            map(({ icon: Icon, title, desc, color, link }, idx) =>
+            <ScrollReveal key={title} delay={idx * 120}>
               <Link to={link} className="card-industrial group flex flex-col items-center p-8 text-center transition-all duration-300 hover:border-primary/40 cursor-pointer">
                 <div className={`mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br ${color} transition-transform duration-300 group-hover:scale-110`}>
                   <Icon className="h-7 w-7 text-primary" />
@@ -187,7 +187,7 @@ const Index = () => {
                 </span>
               </Link>
               </ScrollReveal>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -210,8 +210,8 @@ const Index = () => {
         </div>
         </ScrollReveal>
       </section>
-    </main>
-  );
+    </main>);
+
 };
 
 export default Index;
