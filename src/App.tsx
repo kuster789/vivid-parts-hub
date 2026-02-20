@@ -32,6 +32,8 @@ import QualidadeGarantida from "./pages/QualidadeGarantida";
 import EnvioNacional from "./pages/EnvioNacional";
 import SuporteTecnico from "./pages/SuporteTecnico";
 import Manuais from "./pages/Manuais";
+import BrandPage from "./pages/BrandPage";
+import KitsRevisao from "./pages/KitsRevisao";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -68,6 +70,8 @@ const App = () => (
               <Route path="/envio" element={<EnvioNacional />} />
               <Route path="/suporte-tecnico" element={<SuporteTecnico />} />
               <Route path="/manuais" element={<Manuais />} />
+              <Route path="/marca/:slug" element={<BrandPage />} />
+              <Route path="/kits-revisao" element={<KitsRevisao />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Footer />
