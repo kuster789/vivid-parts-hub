@@ -183,7 +183,7 @@ const Header = () => {
 
           {user ? (
             <div className="flex items-center gap-1">
-              <Link to="/rastreamento" className="rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-foreground" title="Meus pedidos">
+              <Link to="/minha-conta" className="rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-foreground" title="Minha conta">
                 <User className="h-5 w-5" />
               </Link>
               <button onClick={() => signOut()} className="rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-foreground">

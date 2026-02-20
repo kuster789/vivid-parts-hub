@@ -34,6 +34,7 @@ import SuporteTecnico from "./pages/SuporteTecnico";
 import Manuais from "./pages/Manuais";
 import BrandPage from "./pages/BrandPage";
 import KitsRevisao from "./pages/KitsRevisao";
+import MinhaConta from "./pages/MinhaConta";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -72,6 +73,7 @@ const App = () => (
               <Route path="/manuais" element={<Manuais />} />
               <Route path="/marca/:slug" element={<BrandPage />} />
               <Route path="/kits-revisao" element={<KitsRevisao />} />
+              <Route path="/minha-conta" element={<MinhaConta />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Footer />
