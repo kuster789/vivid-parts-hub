@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Package, ShoppingBag, DollarSign, Calendar, Truck, TrendingUp, Users, Loader2, ArrowUpRight, ArrowDownRight
+  Package, ShoppingBag, DollarSign, Calendar, Truck, TrendingUp, Users, Loader2, ArrowUpRight, ArrowDownRight, Mail
 } from "lucide-react";
 import AdminCharts from "@/components/AdminCharts";
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
-    products: 0, orders: 0, revenue: 0, pending: 0, shipped: 0, delivered: 0, cancelled: 0, customers: 0,
+    products: 0, orders: 0, revenue: 0, pending: 0, shipped: 0, delivered: 0, cancelled: 0, customers: 0, leads: 0,
     recentOrders: [] as any[],
   });
   const [loading, setLoading] = useState(true);
@@ -18,10 +18,12 @@ const AdminDashboard = () => {
         { count: prodCount },
         { data: orders },
         { count: customerCount },
+        { count: leadCount },
       ] = await Promise.all([
         supabase.from("products").select("*", { count: "exact", head: true }),
         supabase.from("orders").select("total, status, created_at, shipping_name, id").order("created_at", { ascending: false }),
         supabase.from("profiles").select("*", { count: "exact", head: true }),
+        supabase.from("leads").select("*", { count: "exact", head: true }),
       ]);
 
       const o = orders || [];
@@ -34,6 +36,7 @@ const AdminDashboard = () => {
         delivered: o.filter((x) => x.status === "delivered").length,
         cancelled: o.filter((x) => x.status === "cancelled").length,
         customers: customerCount || 0,
+        leads: leadCount || 0,
         recentOrders: o.slice(0, 5),
       });
       setLoading(false);
@@ -54,6 +57,7 @@ const AdminDashboard = () => {
     { label: "Pedidos", value: stats.orders, icon: ShoppingBag, trend: `${stats.pending} pendentes`, up: null },
     { label: "Produtos", value: stats.products, icon: Package, trend: "Ativos no catálogo", up: null },
     { label: "Clientes", value: stats.customers, icon: Users, trend: "Registrados", up: null },
+    { label: "Leads", value: stats.leads, icon: Mail, trend: "Emails capturados", up: null },
   ];
 
   const statusCards = [
@@ -82,7 +86,7 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-6">
       {/* Main stat cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {mainCards.map(({ label, value, icon: Icon, trend, up }) => (
           <div key={label} className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
             <div className="flex items-start justify-between">
