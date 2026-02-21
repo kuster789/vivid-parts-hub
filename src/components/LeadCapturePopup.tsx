@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { X, Gift } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_KEY = "lead_popup_dismissed";
 const DELAY_MS = 8000;
@@ -31,13 +32,14 @@ const LeadCapturePopup = () => {
     localStorage.setItem(STORAGE_KEY, "true");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
-    // Store email locally for now; can integrate with email service later
-    const leads = JSON.parse(localStorage.getItem("captured_leads") || "[]");
-    leads.push({ email: email.trim(), date: new Date().toISOString() });
-    localStorage.setItem("captured_leads", JSON.stringify(leads));
+    try {
+      await supabase.from("leads").insert({ email: email.trim(), source: "popup" });
+    } catch {
+      // fallback silently
+    }
     setSubmitted(true);
     setTimeout(dismiss, 3000);
   };
