@@ -208,8 +208,18 @@ const AdminProducts = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Excluir este produto permanentemente?")) return;
-    await supabase.from("products").delete().eq("id", id);
+    if (!confirm("Excluir este produto permanentemente? Registros relacionados (itens de pedido, reviews, wishlist) também serão removidos.")) return;
+    // Remove dependent records first to avoid foreign key constraint errors
+    await Promise.all([
+      supabase.from("order_items").delete().eq("product_id", id),
+      supabase.from("reviews").delete().eq("product_id", id),
+      supabase.from("wishlist").delete().eq("product_id", id),
+    ]);
+    const { error } = await supabase.from("products").delete().eq("id", id);
+    if (error) {
+      toast.error("Erro ao excluir produto: " + error.message);
+      return;
+    }
     toast.success("Produto excluído.");
     loadProducts();
   };
