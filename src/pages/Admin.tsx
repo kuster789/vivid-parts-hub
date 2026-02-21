@@ -2,15 +2,16 @@ import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Navigate } from "react-router-dom";
 import {
-  BarChart3, Package, ShoppingBag, Users, Bell, Loader2, Menu, X, ChevronRight
+  BarChart3, Package, ShoppingBag, Users, Bell, Loader2, Menu, X, ChevronRight, Mail
 } from "lucide-react";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminProducts from "@/components/admin/AdminProducts";
 import AdminOrders from "@/components/admin/AdminOrders";
 import AdminUsers from "@/components/admin/AdminUsers";
 import AdminNotifications from "@/components/admin/AdminNotifications";
+import AdminLeads from "@/components/admin/AdminLeads";
 
-type Tab = "dashboard" | "products" | "orders" | "users" | "notifications";
+type Tab = "dashboard" | "products" | "orders" | "users" | "notifications" | "leads";
 
 const Admin = () => {
   const { user, isAdmin, isEmployee, loading } = useAuth();
@@ -25,7 +26,10 @@ const Admin = () => {
     { id: "products", label: "Produtos", icon: Package },
     { id: "orders", label: "Pedidos", icon: ShoppingBag },
     { id: "notifications", label: "Notificações", icon: Bell },
-    ...(isAdmin ? [{ id: "users" as Tab, label: "Usuários", icon: Users }] : []),
+    ...(isAdmin ? [
+      { id: "leads" as Tab, label: "Leads", icon: Mail },
+      { id: "users" as Tab, label: "Usuários", icon: Users },
+    ] : []),
   ];
 
   const tabTitles: Record<Tab, string> = {
@@ -34,6 +38,7 @@ const Admin = () => {
     orders: "Gerenciar Pedidos",
     users: "Gerenciar Usuários",
     notifications: "Notificações",
+    leads: "Leads Capturados",
   };
 
   return (
@@ -100,6 +105,7 @@ const Admin = () => {
             {tab === "products" && <AdminProducts />}
             {tab === "orders" && <AdminOrders />}
             {tab === "notifications" && <AdminNotifications />}
+            {tab === "leads" && isAdmin && <AdminLeads />}
             {tab === "users" && isAdmin && <AdminUsers />}
           </div>
         </div>
