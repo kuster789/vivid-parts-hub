@@ -1,21 +1,30 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { X, Gift } from "lucide-react";
 
 const STORAGE_KEY = "lead_popup_dismissed";
 const DELAY_MS = 8000;
+const BLOCKED_PATHS = ["/login", "/cadastro", "/checkout", "/reset-password", "/admin"];
 
 const LeadCapturePopup = () => {
   const [visible, setVisible] = useState(false);
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const location = useLocation();
+
+  const isBlockedPage = BLOCKED_PATHS.some((p) => location.pathname.startsWith(p));
 
   useEffect(() => {
+    if (isBlockedPage) {
+      setVisible(false);
+      return;
+    }
     const dismissed = localStorage.getItem(STORAGE_KEY);
     if (dismissed) return;
 
     const timer = setTimeout(() => setVisible(true), DELAY_MS);
     return () => clearTimeout(timer);
-  }, []);
+  }, [isBlockedPage]);
 
   const dismiss = () => {
     setVisible(false);
