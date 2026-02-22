@@ -1,10 +1,14 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Package, ShoppingBag, DollarSign, Calendar, Truck, TrendingUp, Users, Loader2, ArrowUpRight, ArrowDownRight, Mail, Warehouse, Filter, Download, FileText, AlertTriangle
+  Package, ShoppingBag, DollarSign, Calendar, Truck, TrendingUp, Users, Loader2, ArrowUpRight, ArrowDownRight, Mail, Warehouse, Filter, Download, FileText, AlertTriangle, Pencil
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import AdminCharts from "@/components/AdminCharts";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 const CONDITION_COLORS = ["hsl(38, 92%, 50%)", "hsl(200, 70%, 50%)"];
 
@@ -25,7 +29,9 @@ const AdminDashboard = () => {
   const [allProducts, setAllProducts] = useState<ProductRow[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [loading, setLoading] = useState(true);
-
+  const [editProduct, setEditProduct] = useState<ProductRow | null>(null);
+  const [editStock, setEditStock] = useState("");
+  const [saving, setSaving] = useState(false);
   useEffect(() => {
     const load = async () => {
       const [
@@ -158,6 +164,30 @@ const AdminDashboard = () => {
     }
   }, [filteredProducts, selectedBrand, inventoryValue, inventoryCount]);
 
+  const handleSaveStock = useCallback(async () => {
+    if (!editProduct) return;
+    const newStock = parseInt(editStock, 10);
+    if (isNaN(newStock) || newStock < 0) {
+      toast.error("Quantidade inválida");
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase.from("products").update({ stock: newStock }).eq("id", editProduct.id);
+    setSaving(false);
+    if (error) {
+      toast.error("Erro ao atualizar estoque");
+      return;
+    }
+    setAllProducts((prev) => prev.map((p) => (p.id === editProduct.id ? { ...p, stock: newStock } : p)));
+    toast.success(`Estoque de "${editProduct.name}" atualizado para ${newStock}`);
+    setEditProduct(null);
+  }, [editProduct, editStock]);
+
+  const openStockEditor = (product: ProductRow) => {
+    setEditProduct(product);
+    setEditStock(String(product.stock));
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-20">
@@ -251,9 +281,9 @@ const AdminDashboard = () => {
                 <p className="text-sm font-bold text-destructive">Sem Estoque — {outOfStockProducts.length} produto(s)</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {outOfStockProducts.slice(0, 8).map((p) => (
-                    <span key={p.id} className="rounded-md bg-destructive/15 px-2 py-1 text-[11px] font-medium text-destructive">
+                    <button key={p.id} onClick={() => openStockEditor(p)} className="rounded-md bg-destructive/15 px-2 py-1 text-[11px] font-medium text-destructive hover:bg-destructive/25 transition-colors cursor-pointer">
                       {p.name} <span className="opacity-60">({p.brand.toUpperCase()})</span>
-                    </span>
+                    </button>
                   ))}
                   {outOfStockProducts.length > 8 && (
                     <span className="rounded-md bg-destructive/15 px-2 py-1 text-[11px] font-medium text-destructive">
@@ -271,9 +301,9 @@ const AdminDashboard = () => {
                 <p className="text-sm font-bold text-yellow-500">Estoque Baixo (&lt;5 un.) — {lowStockProducts.length} produto(s)</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {lowStockProducts.slice(0, 8).map((p) => (
-                    <span key={p.id} className="rounded-md bg-yellow-500/15 px-2 py-1 text-[11px] font-medium text-yellow-600 dark:text-yellow-400">
+                    <button key={p.id} onClick={() => openStockEditor(p)} className="rounded-md bg-yellow-500/15 px-2 py-1 text-[11px] font-medium text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/25 transition-colors cursor-pointer">
                       {p.name} <span className="opacity-60">({p.stock} un.)</span>
-                    </span>
+                    </button>
                   ))}
                   {lowStockProducts.length > 8 && (
                     <span className="rounded-md bg-yellow-500/15 px-2 py-1 text-[11px] font-medium text-yellow-600 dark:text-yellow-400">
@@ -397,14 +427,17 @@ const AdminDashboard = () => {
             .sort((a, b) => b.totalValue - a.totalValue)
             .slice(0, 5)
             .map((p) => (
-              <div key={p.id} className="flex items-center justify-between px-4 py-2.5">
+              <div key={p.id} className="flex items-center justify-between px-4 py-2.5 group cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => openStockEditor(p)}>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">{p.name}</p>
                   <p className="text-[10px] text-muted-foreground">{p.brand.toUpperCase()} · {p.stock} un. × R$ {Number(p.price).toFixed(2).replace(".", ",")}</p>
                 </div>
-                <span className="font-display text-sm font-bold text-primary">
-                  R$ {p.totalValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                </span>
+                <div className="flex items-center gap-2">
+                  <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="font-display text-sm font-bold text-primary">
+                    R$ {p.totalValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
               </div>
             ))}
           {filteredProducts.length === 0 && (
@@ -444,6 +477,41 @@ const AdminDashboard = () => {
           )}
         </div>
       </div>
+
+      {/* Stock Edit Dialog */}
+      <Dialog open={!!editProduct} onOpenChange={(open) => !open && setEditProduct(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Estoque</DialogTitle>
+          </DialogHeader>
+          {editProduct && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-medium text-foreground">{editProduct.name}</p>
+                <p className="text-xs text-muted-foreground">{editProduct.brand.toUpperCase()} · Estoque atual: {editProduct.stock} un.</p>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Nova quantidade</label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={editStock}
+                  onChange={(e) => setEditStock(e.target.value)}
+                  className="mt-1"
+                  autoFocus
+                  onKeyDown={(e) => e.key === "Enter" && handleSaveStock()}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditProduct(null)}>Cancelar</Button>
+            <Button onClick={handleSaveStock} disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
