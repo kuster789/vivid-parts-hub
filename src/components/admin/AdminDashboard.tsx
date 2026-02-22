@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Package, ShoppingBag, DollarSign, Calendar, Truck, TrendingUp, Users, Loader2, ArrowUpRight, ArrowDownRight, Mail, Warehouse, Filter, Download, FileText
+  Package, ShoppingBag, DollarSign, Calendar, Truck, TrendingUp, Users, Loader2, ArrowUpRight, ArrowDownRight, Mail, Warehouse, Filter, Download, FileText, AlertTriangle
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import AdminCharts from "@/components/AdminCharts";
@@ -166,6 +166,9 @@ const AdminDashboard = () => {
     );
   }
 
+  const lowStockProducts = allProducts.filter((p) => p.stock > 0 && p.stock < 5);
+  const outOfStockProducts = allProducts.filter((p) => p.stock === 0);
+
   const mainCards = [
     { label: "Receita Total", value: `R$ ${stats.revenue.toFixed(2).replace(".", ",")}`, icon: DollarSign, trend: "+12%", up: true },
     { label: "Pedidos", value: stats.orders, icon: ShoppingBag, trend: `${stats.pending} pendentes`, up: null },
@@ -237,6 +240,52 @@ const AdminDashboard = () => {
           </div>
         ))}
       </div>
+
+      {/* Low Stock Alerts */}
+      {(lowStockProducts.length > 0 || outOfStockProducts.length > 0) && (
+        <div className="space-y-3">
+          {outOfStockProducts.length > 0 && (
+            <div className="flex items-start gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+              <div className="flex-1">
+                <p className="text-sm font-bold text-destructive">Sem Estoque — {outOfStockProducts.length} produto(s)</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {outOfStockProducts.slice(0, 8).map((p) => (
+                    <span key={p.id} className="rounded-md bg-destructive/15 px-2 py-1 text-[11px] font-medium text-destructive">
+                      {p.name} <span className="opacity-60">({p.brand.toUpperCase()})</span>
+                    </span>
+                  ))}
+                  {outOfStockProducts.length > 8 && (
+                    <span className="rounded-md bg-destructive/15 px-2 py-1 text-[11px] font-medium text-destructive">
+                      +{outOfStockProducts.length - 8} mais
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          {lowStockProducts.length > 0 && (
+            <div className="flex items-start gap-3 rounded-xl border border-yellow-500/40 bg-yellow-500/10 p-4">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-yellow-500" />
+              <div className="flex-1">
+                <p className="text-sm font-bold text-yellow-500">Estoque Baixo (&lt;5 un.) — {lowStockProducts.length} produto(s)</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {lowStockProducts.slice(0, 8).map((p) => (
+                    <span key={p.id} className="rounded-md bg-yellow-500/15 px-2 py-1 text-[11px] font-medium text-yellow-600 dark:text-yellow-400">
+                      {p.name} <span className="opacity-60">({p.stock} un.)</span>
+                    </span>
+                  ))}
+                  {lowStockProducts.length > 8 && (
+                    <span className="rounded-md bg-yellow-500/15 px-2 py-1 text-[11px] font-medium text-yellow-600 dark:text-yellow-400">
+                      +{lowStockProducts.length - 8} mais
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Inventory Value */}
       <div className="rounded-xl border border-border bg-card p-5 space-y-4">
