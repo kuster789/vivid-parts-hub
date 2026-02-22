@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Package, ShoppingBag, DollarSign, Calendar, Truck, TrendingUp, Users, Loader2, ArrowUpRight, ArrowDownRight, Mail, Warehouse, Filter
+  Package, ShoppingBag, DollarSign, Calendar, Truck, TrendingUp, Users, Loader2, ArrowUpRight, ArrowDownRight, Mail, Warehouse, Filter, Download
 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import AdminCharts from "@/components/AdminCharts";
 
 interface ProductRow {
@@ -73,6 +74,33 @@ const AdminDashboard = () => {
   const inventoryCount = useMemo(() => {
     return filteredProducts.reduce((sum, p) => sum + p.stock, 0);
   }, [filteredProducts]);
+
+  const brandChartData = useMemo(() => {
+    const map: Record<string, { value: number; count: number; units: number }> = {};
+    allProducts.forEach((p) => {
+      if (!map[p.brand]) map[p.brand] = { value: 0, count: 0, units: 0 };
+      map[p.brand].value += Number(p.price) * p.stock;
+      map[p.brand].count += 1;
+      map[p.brand].units += p.stock;
+    });
+    return Object.entries(map)
+      .map(([brand, d]) => ({ brand: brand.charAt(0).toUpperCase() + brand.slice(1), valor: Math.round(d.value * 100) / 100, produtos: d.count, unidades: d.units }))
+      .sort((a, b) => b.valor - a.valor);
+  }, [allProducts]);
+
+  const exportCSV = useCallback(() => {
+    const header = "Marca,Produto,Preço,Estoque,Valor Total\n";
+    const rows = filteredProducts
+      .map((p) => `${p.brand},"${p.name.replace(/"/g, '""')}",${Number(p.price).toFixed(2)},${p.stock},${(Number(p.price) * p.stock).toFixed(2)}`)
+      .join("\n");
+    const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `estoque${selectedBrand ? `-${selectedBrand}` : ""}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [filteredProducts, selectedBrand]);
 
   if (loading) {
     return (
@@ -173,6 +201,12 @@ const AdminDashboard = () => {
                 <option key={b} value={b}>{b.charAt(0).toUpperCase() + b.slice(1)}</option>
               ))}
             </select>
+            <button
+              onClick={exportCSV}
+              className="flex items-center gap-1.5 rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+            >
+              <Download className="h-3.5 w-3.5" /> CSV
+            </button>
           </div>
         </div>
 
@@ -191,6 +225,27 @@ const AdminDashboard = () => {
             <p className="text-xs text-muted-foreground">Unidades em Estoque</p>
             <p className="mt-1 font-display text-2xl font-black text-foreground">{inventoryCount}</p>
           </div>
+        </div>
+
+        {/* Bar chart - inventory by brand */}
+        <div className="rounded-lg border border-border p-4">
+          <p className="mb-3 text-[10px] uppercase tracking-wider text-muted-foreground">Valor do Estoque por Marca</p>
+          {brandChartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={brandChartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 12%, 16%)" />
+                <XAxis dataKey="brand" tick={{ fill: "hsl(215, 10%, 55%)", fontSize: 11 }} />
+                <YAxis tick={{ fill: "hsl(215, 10%, 55%)", fontSize: 11 }} />
+                <Tooltip
+                  contentStyle={{ background: "hsl(220, 18%, 10%)", border: "1px solid hsl(220, 12%, 16%)", borderRadius: 8, fontSize: 12 }}
+                  formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, "Valor"]}
+                />
+                <Bar dataKey="valor" fill="hsl(38, 92%, 50%)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="py-8 text-center text-sm text-muted-foreground">Sem dados</p>
+          )}
         </div>
 
         {/* Top products by value */}
