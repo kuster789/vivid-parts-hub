@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Package, ShoppingBag, DollarSign, Calendar, Truck, TrendingUp, Users, Loader2, ArrowUpRight, ArrowDownRight, Mail, Warehouse, Filter, Download
+  Package, ShoppingBag, DollarSign, Calendar, Truck, TrendingUp, Users, Loader2, ArrowUpRight, ArrowDownRight, Mail, Warehouse, Filter, Download, FileText
 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import AdminCharts from "@/components/AdminCharts";
+
+const CONDITION_COLORS = ["hsl(38, 92%, 50%)", "hsl(200, 70%, 50%)"];
 
 interface ProductRow {
   id: string;
@@ -12,6 +14,7 @@ interface ProductRow {
   brand: string;
   price: number;
   stock: number;
+  condition: string;
 }
 
 const AdminDashboard = () => {
@@ -36,7 +39,7 @@ const AdminDashboard = () => {
         supabase.from("orders").select("total, status, created_at, shipping_name, id").order("created_at", { ascending: false }),
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("leads").select("*", { count: "exact", head: true }),
-        supabase.from("products").select("id, name, brand, price, stock").eq("active", true),
+        supabase.from("products").select("id, name, brand, price, stock, condition").eq("active", true),
       ]);
 
       const o = orders || [];
@@ -88,10 +91,19 @@ const AdminDashboard = () => {
       .sort((a, b) => b.valor - a.valor);
   }, [allProducts]);
 
+  const conditionChartData = useMemo(() => {
+    const novas = filteredProducts.filter((p) => p.condition !== "usada").length;
+    const usadas = filteredProducts.filter((p) => p.condition === "usada").length;
+    return [
+      { name: "Novas", value: novas },
+      { name: "Usadas", value: usadas },
+    ].filter((d) => d.value > 0);
+  }, [filteredProducts]);
+
   const exportCSV = useCallback(() => {
-    const header = "Marca,Produto,Preço,Estoque,Valor Total\n";
+    const header = "Marca,Produto,Preço,Estoque,Condição,Valor Total\n";
     const rows = filteredProducts
-      .map((p) => `${p.brand},"${p.name.replace(/"/g, '""')}",${Number(p.price).toFixed(2)},${p.stock},${(Number(p.price) * p.stock).toFixed(2)}`)
+      .map((p) => `${p.brand},"${p.name.replace(/"/g, '""')}",${Number(p.price).toFixed(2)},${p.stock},${p.condition === "usada" ? "Usada" : "Nova"},${(Number(p.price) * p.stock).toFixed(2)}`)
       .join("\n");
     const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -101,6 +113,50 @@ const AdminDashboard = () => {
     a.click();
     URL.revokeObjectURL(url);
   }, [filteredProducts, selectedBrand]);
+
+  const exportPDF = useCallback(() => {
+    const title = `Relatório de Estoque${selectedBrand ? ` - ${selectedBrand.charAt(0).toUpperCase() + selectedBrand.slice(1)}` : ""}`;
+    const date = new Date().toLocaleDateString("pt-BR");
+    const sorted = [...filteredProducts]
+      .map((p) => ({ ...p, totalValue: Number(p.price) * p.stock }))
+      .sort((a, b) => b.totalValue - a.totalValue);
+
+    const html = `
+      <html><head><meta charset="utf-8"><title>${title}</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 30px; color: #333; }
+        h1 { font-size: 18px; margin-bottom: 4px; }
+        .date { color: #888; font-size: 12px; margin-bottom: 20px; }
+        .summary { display: flex; gap: 20px; margin-bottom: 20px; }
+        .summary-card { background: #f5f5f5; padding: 12px 16px; border-radius: 8px; }
+        .summary-card .label { font-size: 11px; color: #888; }
+        .summary-card .value { font-size: 20px; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background: #f0f0f0; text-align: left; padding: 8px; border-bottom: 2px solid #ddd; }
+        td { padding: 8px; border-bottom: 1px solid #eee; }
+        tr:nth-child(even) { background: #fafafa; }
+        .text-right { text-align: right; }
+      </style></head><body>
+      <h1>${title}</h1>
+      <p class="date">Gerado em ${date}</p>
+      <div class="summary">
+        <div class="summary-card"><div class="label">Valor Total</div><div class="value">R$ ${inventoryValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div></div>
+        <div class="summary-card"><div class="label">Produtos</div><div class="value">${filteredProducts.length}</div></div>
+        <div class="summary-card"><div class="label">Unidades</div><div class="value">${inventoryCount}</div></div>
+      </div>
+      <table>
+        <thead><tr><th>Produto</th><th>Marca</th><th>Condição</th><th class="text-right">Preço</th><th class="text-right">Estoque</th><th class="text-right">Valor Total</th></tr></thead>
+        <tbody>${sorted.map((p) => `<tr><td>${p.name}</td><td>${p.brand.toUpperCase()}</td><td>${p.condition === "usada" ? "Usada" : "Nova"}</td><td class="text-right">R$ ${Number(p.price).toFixed(2).replace(".", ",")}</td><td class="text-right">${p.stock}</td><td class="text-right">R$ ${p.totalValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td></tr>`).join("")}</tbody>
+      </table>
+      </body></html>`;
+
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.onload = () => printWindow.print();
+    }
+  }, [filteredProducts, selectedBrand, inventoryValue, inventoryCount]);
 
   if (loading) {
     return (
@@ -207,6 +263,12 @@ const AdminDashboard = () => {
             >
               <Download className="h-3.5 w-3.5" /> CSV
             </button>
+            <button
+              onClick={exportPDF}
+              className="flex items-center gap-1.5 rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+            >
+              <FileText className="h-3.5 w-3.5" /> PDF
+            </button>
           </div>
         </div>
 
@@ -227,25 +289,53 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Bar chart - inventory by brand */}
-        <div className="rounded-lg border border-border p-4">
-          <p className="mb-3 text-[10px] uppercase tracking-wider text-muted-foreground">Valor do Estoque por Marca</p>
-          {brandChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={brandChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 12%, 16%)" />
-                <XAxis dataKey="brand" tick={{ fill: "hsl(215, 10%, 55%)", fontSize: 11 }} />
-                <YAxis tick={{ fill: "hsl(215, 10%, 55%)", fontSize: 11 }} />
-                <Tooltip
-                  contentStyle={{ background: "hsl(220, 18%, 10%)", border: "1px solid hsl(220, 12%, 16%)", borderRadius: 8, fontSize: 12 }}
-                  formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, "Valor"]}
-                />
-                <Bar dataKey="valor" fill="hsl(38, 92%, 50%)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="py-8 text-center text-sm text-muted-foreground">Sem dados</p>
-          )}
+        {/* Charts row: bar + pie */}
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="rounded-lg border border-border p-4 lg:col-span-2">
+            <p className="mb-3 text-[10px] uppercase tracking-wider text-muted-foreground">Valor do Estoque por Marca</p>
+            {brandChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={brandChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 12%, 16%)" />
+                  <XAxis dataKey="brand" tick={{ fill: "hsl(215, 10%, 55%)", fontSize: 11 }} />
+                  <YAxis tick={{ fill: "hsl(215, 10%, 55%)", fontSize: 11 }} />
+                  <Tooltip
+                    contentStyle={{ background: "hsl(220, 18%, 10%)", border: "1px solid hsl(220, 12%, 16%)", borderRadius: 8, fontSize: 12 }}
+                    formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, "Valor"]}
+                  />
+                  <Bar dataKey="valor" fill="hsl(38, 92%, 50%)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="py-8 text-center text-sm text-muted-foreground">Sem dados</p>
+            )}
+          </div>
+
+          <div className="rounded-lg border border-border p-4">
+            <p className="mb-3 text-[10px] uppercase tracking-wider text-muted-foreground">Condição das Peças</p>
+            {conditionChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie
+                    data={conditionChartData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={70}
+                    innerRadius={40}
+                    dataKey="value"
+                    label={({ name, value }) => `${name}: ${value}`}
+                  >
+                    {conditionChartData.map((_, i) => (
+                      <Cell key={i} fill={CONDITION_COLORS[i % CONDITION_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: "hsl(220, 18%, 10%)", border: "1px solid hsl(220, 12%, 16%)", borderRadius: 8, fontSize: 12 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="py-8 text-center text-sm text-muted-foreground">Sem dados</p>
+            )}
+          </div>
         </div>
 
         {/* Top products by value */}
