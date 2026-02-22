@@ -111,12 +111,18 @@ const AdminNotifications = () => {
         <h4 className="mb-3 font-display text-xs font-bold uppercase tracking-wider text-foreground">Gatilhos Automáticos</h4>
         <div className="grid gap-2 sm:grid-cols-3">
           {[
-            { emoji: "📦", title: "Status do pedido", desc: "Notifica o cliente quando o status muda" },
-            { emoji: "🆕", title: "Novo produto", desc: "Notifica todos quando um produto é adicionado" },
-            { emoji: "🎉", title: "Novo cupom", desc: "Notifica todos quando um cupom é criado" },
+            { emoji: "📦", title: "Status do pedido", desc: "Notifica o cliente quando o status muda", trigger: "on_order_status_change" },
+            { emoji: "🆕", title: "Novo produto", desc: "Notifica todos quando um produto é adicionado", trigger: "on_new_product" },
+            { emoji: "🎉", title: "Novo cupom", desc: "Notifica todos quando um cupom é criado", trigger: "on_new_coupon" },
           ].map(({ emoji, title, desc }) => (
-            <div key={title} className="rounded-lg border border-border bg-secondary/30 p-3">
-              <p className="text-sm font-medium text-foreground">{emoji} {title}</p>
+            <div key={title} className="rounded-lg border border-green-500/30 bg-green-500/5 p-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-foreground">{emoji} {title}</p>
+                <span className="flex items-center gap-1 rounded-full bg-green-500/15 px-2 py-0.5 text-[10px] font-semibold text-green-600 dark:text-green-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                  Ativo
+                </span>
+              </div>
               <p className="text-[10px] text-muted-foreground">{desc}</p>
             </div>
           ))}
