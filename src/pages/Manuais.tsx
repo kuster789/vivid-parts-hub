@@ -115,6 +115,7 @@ const manuals: ManualItem[] = [
     brand: "Agrale",
     models: ["Agrale 13.5", "Agrale 16.5", "Agrale 27.5"],
     icon: FileText,
+    coverImage: "/blog/catalogo-pecas-motor.jpg",
   },
   {
     title: "Tabela de Resistência de Bobinas",
