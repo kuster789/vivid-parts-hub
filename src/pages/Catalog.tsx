@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Filter, Grid3X3, List, Loader2, ArrowUpDown } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import ProductCardSkeleton from "@/components/ProductCardSkeleton";
-import CatalogSidebar from "@/components/CatalogSidebar";
+import CatalogSidebar, { CatalogMobileFilters } from "@/components/CatalogSidebar";
 import { brands } from "@/data/products";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
@@ -150,32 +150,35 @@ const Catalog = () => {
   };
 
   return (
-    <main className="py-8">
+    <main className="py-6 md:py-8">
       <div className="container">
-        <h1 className="section-title mb-6">Catálogo de Peças</h1>
+        <div className="mb-4 flex items-center justify-between md:mb-6">
+          <h1 className="section-title text-lg md:text-2xl">Catálogo de Peças</h1>
+          <CatalogMobileFilters />
+        </div>
 
-        <div className="flex gap-8">
+        <div className="flex gap-6 lg:gap-8">
           {/* Sidebar - visible on large screens */}
           <CatalogSidebar />
 
           {/* Main content */}
           <div className="flex-1 min-w-0">
-            {/* Mobile brand filter */}
-            <div className="mb-6 flex flex-wrap gap-3 lg:hidden">
+            {/* Mobile brand pills - hidden on lg since sidebar handles it */}
+            <div className="mb-4 flex flex-wrap gap-2 lg:hidden">
               {brands.map((brand) => (
                 <button
                   key={brand.slug}
                   onClick={() => setBrand(brand.slug)}
-                  className={`flex items-center gap-2 rounded-md border px-4 py-2 font-display text-xs font-bold uppercase tracking-wider transition-all ${
+                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all ${
                     activeBrand === brand.slug
-                      ? "border-primary bg-primary/10 text-primary ring-1 ring-primary"
-                      : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:border-primary/40"
                   }`}
                 >
                   {brand.logo ? (
-                    <img src={brand.logo} alt={brand.name} className="h-6 w-auto object-contain" />
+                    <img src={brand.logo} alt={brand.name} className="h-4 w-auto object-contain" />
                   ) : (
-                    <span>{brand.icon}</span>
+                    <span className="text-xs">{brand.icon}</span>
                   )}
                   {brand.name}
                 </button>
@@ -184,7 +187,7 @@ const Catalog = () => {
 
             {/* Mobile model filter */}
             {currentBrand && (
-              <div className="mb-6 flex flex-wrap gap-2 lg:hidden">
+              <div className="mb-4 flex flex-wrap gap-1.5 lg:hidden">
                 {currentBrand.models.map((model) => (
                   <button
                     key={model}
@@ -195,7 +198,7 @@ const Catalog = () => {
                         setSearchParams({ marca: activeBrand, modelo: model });
                       }
                     }}
-                    className={`rounded-sm border px-3 py-1.5 text-xs font-medium transition-all ${
+                    className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all ${
                       activeModel === model
                         ? "border-primary/60 bg-primary/10 text-primary"
                         : "border-border text-muted-foreground hover:text-foreground"
@@ -208,28 +211,28 @@ const Catalog = () => {
             )}
 
             {/* Toolbar */}
-            <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
-              <span className="text-sm text-muted-foreground">
+            <div className="mb-4 flex items-center justify-between border-b border-border pb-3 md:mb-6 md:pb-4">
+              <span className="text-xs text-muted-foreground md:text-sm">
                 <span className="font-semibold text-foreground">{totalCount}</span> produto(s)
                 {activeBrand && currentBrand && (
-                  <span> em <span className="font-medium text-foreground">{currentBrand.name}</span></span>
+                  <span className="hidden sm:inline"> em <span className="font-medium text-foreground">{currentBrand.name}</span></span>
                 )}
                 {activeModel && (
-                  <span> · <span className="font-medium text-foreground">{activeModel}</span></span>
+                  <span className="hidden sm:inline"> · <span className="font-medium text-foreground">{activeModel}</span></span>
                 )}
               </span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground focus:border-primary focus:outline-none"
+                  className="rounded-md border border-border bg-secondary px-2 py-1.5 text-[11px] text-foreground focus:border-primary focus:outline-none md:px-3 md:text-xs"
                 >
-                  <option value="newest">Mais recentes</option>
+                  <option value="newest">Recentes</option>
                   <option value="price_asc">Menor preço</option>
                   <option value="price_desc">Maior preço</option>
                   <option value="name">A-Z</option>
                 </select>
-                <div className="flex items-center gap-1">
+                <div className="hidden items-center gap-1 sm:flex">
                   <button onClick={() => setViewMode("grid")} className={`rounded-md p-2 ${viewMode === "grid" ? "bg-secondary text-foreground" : "text-muted-foreground"}`}>
                     <Grid3X3 className="h-4 w-4" />
                   </button>

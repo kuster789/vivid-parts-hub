@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ChevronDown, ChevronRight, SlidersHorizontal, Box, Package, Wrench } from "lucide-react";
+import { ChevronDown, ChevronRight, SlidersHorizontal, Box, Package, Wrench, X } from "lucide-react";
 import { brands } from "@/data/products";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
@@ -8,20 +8,12 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 type CountMap = Record<string, number>;
 
-const CatalogSidebar = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const activeBrand = searchParams.get("marca") || "";
-  const activeModel = searchParams.get("modelo") || "";
-  const priceMin = Number(searchParams.get("preco_min")) || 0;
-  const priceMax = Number(searchParams.get("preco_max")) || 5000;
-  const inStock = searchParams.get("em_estoque") === "1";
-  const has3D = searchParams.get("has_3d") === "1";
-  const condition = searchParams.get("condicao") || "";
-
-  const [localPriceRange, setLocalPriceRange] = useState<number[]>([priceMin, priceMax]);
+const useCatalogCounts = () => {
   const [brandCounts, setBrandCounts] = useState<CountMap>({});
   const [modelCounts, setModelCounts] = useState<CountMap>({});
 
@@ -42,6 +34,21 @@ const CatalogSidebar = () => {
     fetchCounts();
   }, []);
 
+  return { brandCounts, modelCounts };
+};
+
+const FilterContent = ({ brandCounts, modelCounts }: { brandCounts: CountMap; modelCounts: CountMap }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeBrand = searchParams.get("marca") || "";
+  const activeModel = searchParams.get("modelo") || "";
+  const priceMin = Number(searchParams.get("preco_min")) || 0;
+  const priceMax = Number(searchParams.get("preco_max")) || 5000;
+  const inStock = searchParams.get("em_estoque") === "1";
+  const has3D = searchParams.get("has_3d") === "1";
+  const condition = searchParams.get("condicao") || "";
+
+  const [localPriceRange, setLocalPriceRange] = useState<number[]>([priceMin, priceMax]);
+
   const updateFilter = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams);
     if (value === null || value === "" || value === "0") {
@@ -55,16 +62,10 @@ const CatalogSidebar = () => {
 
   const applyPriceRange = () => {
     const params = new URLSearchParams(searchParams);
-    if (localPriceRange[0] > 0) {
-      params.set("preco_min", String(localPriceRange[0]));
-    } else {
-      params.delete("preco_min");
-    }
-    if (localPriceRange[1] < 5000) {
-      params.set("preco_max", String(localPriceRange[1]));
-    } else {
-      params.delete("preco_max");
-    }
+    if (localPriceRange[0] > 0) params.set("preco_min", String(localPriceRange[0]));
+    else params.delete("preco_min");
+    if (localPriceRange[1] < 5000) params.set("preco_max", String(localPriceRange[1]));
+    else params.delete("preco_max");
     params.delete("pagina");
     setSearchParams(params);
   };
@@ -77,7 +78,7 @@ const CatalogSidebar = () => {
   const hasActiveFilters = priceMin > 0 || priceMax < 5000 || inStock || has3D || activeBrand || condition;
 
   return (
-    <aside className="sticky top-4 w-64 shrink-0 hidden lg:block space-y-4">
+    <div className="space-y-4">
       {/* Brands & Models */}
       <div className="card-industrial overflow-hidden">
         <div className="border-b border-border px-4 py-3">
@@ -107,90 +108,94 @@ const CatalogSidebar = () => {
             Filtros
           </h3>
           {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="text-[10px] font-medium text-primary hover:underline"
-            >
+            <button onClick={clearFilters} className="text-[10px] font-medium text-primary hover:underline">
               Limpar
             </button>
           )}
         </div>
         <div className="p-4 space-y-5">
-          {/* Price Range */}
           <div>
-            <label className="text-xs font-semibold text-foreground mb-3 block">
-              Faixa de Preço
-            </label>
-            <Slider
-              min={0}
-              max={5000}
-              step={50}
-              value={localPriceRange}
-              onValueChange={setLocalPriceRange}
-              onValueCommit={applyPriceRange}
-              className="mb-2"
-            />
+            <label className="text-xs font-semibold text-foreground mb-3 block">Faixa de Preço</label>
+            <Slider min={0} max={5000} step={50} value={localPriceRange} onValueChange={setLocalPriceRange} onValueCommit={applyPriceRange} className="mb-2" />
             <div className="flex items-center justify-between text-[11px] text-muted-foreground">
               <span>R$ {localPriceRange[0].toLocaleString("pt-BR")}</span>
               <span>R$ {localPriceRange[1].toLocaleString("pt-BR")}</span>
             </div>
           </div>
-
-          {/* In Stock */}
           <div className="flex items-center justify-between">
             <Label htmlFor="in-stock" className="flex items-center gap-2 text-xs font-medium text-foreground cursor-pointer">
-              <Package className="h-3.5 w-3.5 text-muted-foreground" />
-              Em estoque
+              <Package className="h-3.5 w-3.5 text-muted-foreground" /> Em estoque
             </Label>
-            <Switch
-              id="in-stock"
-              checked={inStock}
-              onCheckedChange={(checked) => updateFilter("em_estoque", checked ? "1" : null)}
-            />
+            <Switch id="in-stock" checked={inStock} onCheckedChange={(checked) => updateFilter("em_estoque", checked ? "1" : null)} />
           </div>
-
-          {/* Has 3D */}
           <div className="flex items-center justify-between">
             <Label htmlFor="has-3d" className="flex items-center gap-2 text-xs font-medium text-foreground cursor-pointer">
-              <Box className="h-3.5 w-3.5 text-muted-foreground" />
-              Visualização 3D
+              <Box className="h-3.5 w-3.5 text-muted-foreground" /> Visualização 3D
             </Label>
-            <Switch
-              id="has-3d"
-              checked={has3D}
-              onCheckedChange={(checked) => updateFilter("has_3d", checked ? "1" : null)}
-            />
+            <Switch id="has-3d" checked={has3D} onCheckedChange={(checked) => updateFilter("has_3d", checked ? "1" : null)} />
           </div>
-
-          {/* Condition */}
           <div>
             <label className="flex items-center gap-2 text-xs font-semibold text-foreground mb-2">
-              <Wrench className="h-3.5 w-3.5 text-muted-foreground" />
-              Condição
+              <Wrench className="h-3.5 w-3.5 text-muted-foreground" /> Condição
             </label>
-            <RadioGroup
-              value={condition}
-              onValueChange={(val) => updateFilter("condicao", val || null)}
-              className="space-y-1.5"
-            >
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="" id="cond-all" />
-                <Label htmlFor="cond-all" className="text-xs cursor-pointer">Todas</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="nova" id="cond-nova" />
-                <Label htmlFor="cond-nova" className="text-xs cursor-pointer">Nova</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="usada" id="cond-usada" />
-                <Label htmlFor="cond-usada" className="text-xs cursor-pointer">Usado</Label>
-              </div>
+            <RadioGroup value={condition} onValueChange={(val) => updateFilter("condicao", val || null)} className="space-y-1.5">
+              <div className="flex items-center gap-2"><RadioGroupItem value="" id="cond-all" /><Label htmlFor="cond-all" className="text-xs cursor-pointer">Todas</Label></div>
+              <div className="flex items-center gap-2"><RadioGroupItem value="nova" id="cond-nova" /><Label htmlFor="cond-nova" className="text-xs cursor-pointer">Nova</Label></div>
+              <div className="flex items-center gap-2"><RadioGroupItem value="usada" id="cond-usada" /><Label htmlFor="cond-usada" className="text-xs cursor-pointer">Usado</Label></div>
             </RadioGroup>
           </div>
-
         </div>
       </div>
+    </div>
+  );
+};
+
+/** Desktop sidebar */
+const CatalogSidebar = () => {
+  const { brandCounts, modelCounts } = useCatalogCounts();
+
+  return (
+    <aside className="sticky top-20 w-64 shrink-0 hidden lg:block space-y-4">
+      <FilterContent brandCounts={brandCounts} modelCounts={modelCounts} />
     </aside>
+  );
+};
+
+/** Mobile filter sheet trigger + drawer */
+export const CatalogMobileFilters = () => {
+  const [open, setOpen] = useState(false);
+  const { brandCounts, modelCounts } = useCatalogCounts();
+  const [searchParams] = useSearchParams();
+
+  const activeCount = [
+    searchParams.get("marca"),
+    searchParams.get("preco_min"),
+    searchParams.get("preco_max"),
+    searchParams.get("em_estoque"),
+    searchParams.get("has_3d"),
+    searchParams.get("condicao"),
+  ].filter(Boolean).length;
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button variant="outline" size="sm" className="lg:hidden flex items-center gap-2 text-xs">
+          <SlidersHorizontal className="h-3.5 w-3.5" />
+          Filtros
+          {activeCount > 0 && (
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+              {activeCount}
+            </span>
+          )}
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="w-[300px] overflow-y-auto p-4 sm:w-[340px]">
+        <SheetHeader className="mb-4">
+          <SheetTitle className="font-display text-sm uppercase tracking-widest">Filtros</SheetTitle>
+        </SheetHeader>
+        <FilterContent brandCounts={brandCounts} modelCounts={modelCounts} />
+      </SheetContent>
+    </Sheet>
   );
 };
 
