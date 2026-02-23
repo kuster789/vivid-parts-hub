@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ShoppingCart, Package, CheckCircle, AlertTriangle, Loader2, Heart, Share2, Truck, Shield, RotateCcw, Bike } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Package, CheckCircle, AlertTriangle, Loader2, Heart, Truck, Shield, RotateCcw, Bike } from "lucide-react";
 import { brands as brandsList } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { useSEO } from "@/hooks/useSEO";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import Breadcrumbs from "@/components/Breadcrumbs";
-
+import ShareButtons from "@/components/ShareButtons";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -100,15 +100,6 @@ const ProductDetail = () => {
   const handleColorChange = (color: string) => {
     setSelectedColor(color === selectedColor ? "" : color);
     setSelectedVariations((prev) => ({ ...prev, Cor: color === selectedColor ? "" : color }));
-  };
-
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      toast.success("Link copiado!");
-    } catch {
-      toast.info("Copie o link da barra de endereços");
-    }
   };
 
   const price = Number(product.price);
@@ -216,9 +207,6 @@ const ProductDetail = () => {
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={handleShare} className="rounded-md p-2 transition-colors hover:bg-secondary" title="Compartilhar">
-                    <Share2 className="h-4 w-4 text-muted-foreground" />
-                  </button>
                   {user && (
                     <button onClick={() => toggle(product.id)} className="rounded-md p-2 transition-colors hover:bg-secondary" title="Favoritar">
                       <Heart className={`h-5 w-5 ${isWished(product.id) ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
@@ -229,6 +217,14 @@ const ProductDetail = () => {
               <h1 className="mb-3 font-display text-2xl font-bold uppercase tracking-wide text-foreground md:text-3xl">
                 {product.name}
               </h1>
+
+              <div className="mb-4">
+                <ShareButtons
+                  title={product.name}
+                  description={product.description || `${product.name} — peça para ${product.brand} ${product.model}`}
+                  url={`https://motopecasagrale.com.br/produto/${product.id}`}
+                />
+              </div>
 
               <div className="mb-4 flex flex-wrap gap-4 text-xs">
                 <span className="text-muted-foreground">SKU: <span className="font-mono text-foreground">{product.sku}</span></span>

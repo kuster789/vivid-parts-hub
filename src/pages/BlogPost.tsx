@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Calendar, Loader2, BookOpen, X, ZoomIn, ZoomOut, Maximize2, RotateCcw } from "lucide-react";
+import ShareButtons from "@/components/ShareButtons";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { supabase } from "@/integrations/supabase/client";
@@ -172,9 +173,16 @@ const BlogPost = () => {
           <span>{post.author_name}</span>
         </div>
 
-        <h1 className="mb-6 font-display text-2xl font-bold uppercase tracking-wide text-foreground md:text-3xl">
+        <h1 className="mb-4 font-display text-2xl font-bold uppercase tracking-wide text-foreground md:text-3xl">
           {post.title}
         </h1>
+
+        <ShareButtons
+          title={post.title}
+          description={post.excerpt || post.title}
+          url={`https://motopecasagrale.com.br/blog/${post.slug}`}
+        />
+
 
         <div className="prose prose-invert max-w-none text-sm leading-relaxed text-muted-foreground prose-headings:font-display prose-headings:uppercase prose-headings:tracking-wide prose-headings:text-foreground prose-h2:text-xl prose-h3:text-lg prose-strong:text-foreground prose-a:text-primary prose-table:text-xs prose-th:text-foreground prose-td:text-muted-foreground prose-blockquote:border-primary prose-blockquote:text-muted-foreground">
           <ReactMarkdown
