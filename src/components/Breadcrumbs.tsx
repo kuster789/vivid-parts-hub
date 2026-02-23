@@ -15,12 +15,12 @@ const Breadcrumbs = ({ items }: BreadcrumbsProps) => {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Início", item: "https://motopecasagrale.com.br/" },
+      { "@type": "ListItem", position: 1, name: "Início", item: "https://www.motopecasagrale.com.br/" },
       ...items.map((item, idx) => ({
         "@type": "ListItem",
         position: idx + 2,
         name: item.label,
-        ...(item.href ? { item: `https://motopecasagrale.com.br${item.href}` } : {}),
+        ...(item.href ? { item: `https://www.motopecasagrale.com.br${item.href}` } : {}),
       })),
     ],
   };
