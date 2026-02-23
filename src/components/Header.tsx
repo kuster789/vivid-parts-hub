@@ -28,9 +28,9 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary">
-            <span className="font-display text-sm font-bold text-primary-foreground">AP</span>
+        <Link to="/" className="flex items-center gap-1.5 sm:gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary sm:h-9 sm:w-9">
+            <span className="font-display text-xs font-bold text-primary-foreground sm:text-sm">AP</span>
           </div>
           <div className="hidden sm:block">
             <span className="font-display text-sm font-bold tracking-widest text-foreground">AUTO PEÇAS</span>
