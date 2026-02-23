@@ -21,6 +21,7 @@ interface ManualItem {
   models: string[];
   icon: typeof FileText;
   year?: string;
+  coverImage?: string;
 }
 
 const manuals: ManualItem[] = [
@@ -33,6 +34,7 @@ const manuals: ManualItem[] = [
     models: ["Agrale 13.5", "Agrale 16.5", "Agrale 27.5"],
     icon: Wrench,
     year: "1991",
+    coverImage: "/blog/manutencao-agrale-cover.jpg",
   },
   {
     title: "Manual do Proprietário — Agrale 27.5 e Dakar 30.0",
@@ -42,6 +44,7 @@ const manuals: ManualItem[] = [
     brand: "Agrale",
     models: ["Agrale 27.5", "Agrale 27.5 E", "Agrale Dakar 30.0"],
     icon: BookOpen,
+    coverImage: "/blog/motor-agrale-2tempos-cover.jpg",
   },
   {
     title: "Limpeza e Regulagem — Carburadores Dellorto PHBL-25",
@@ -51,6 +54,7 @@ const manuals: ManualItem[] = [
     brand: "Agrale",
     models: ["Agrale 27.5 E", "Agrale 27.5 EX", "Agrale Dakar 30.0"],
     icon: Wrench,
+    coverImage: "/blog/carburador-dellorto-cover.jpg",
   },
   {
     title: "Catálogo de Peças Agrale",
@@ -60,6 +64,7 @@ const manuals: ManualItem[] = [
     brand: "Agrale",
     models: ["Agrale 13.5", "Agrale 16.5", "Agrale 27.5", "Agrale Dakar 30.0"],
     icon: FileText,
+    coverImage: "/blog/catalogo-pecas-intro.jpg",
   },
   {
     title: "Esquema Elétrico — Agrale Elefantre",
@@ -69,6 +74,7 @@ const manuals: ManualItem[] = [
     brand: "Agrale",
     models: ["Agrale Elefantre"],
     icon: Settings,
+    coverImage: "/blog/esquema-eletrico-elefantre.png",
   },
   {
     title: "Especificações do Motor Agrale 2 Tempos",
@@ -78,6 +84,7 @@ const manuals: ManualItem[] = [
     brand: "Agrale",
     models: ["Agrale 13.5", "Agrale 16.5", "Agrale 27.5"],
     icon: Wrench,
+    coverImage: "/blog/motor-agrale-2tempos-cover.jpg",
   },
   {
     title: "Manutenção Periódica — Agrale 27.5 e Dakar 30.0",
@@ -87,6 +94,7 @@ const manuals: ManualItem[] = [
     brand: "Agrale",
     models: ["Agrale 27.5", "Agrale Dakar 30.0"],
     icon: Settings,
+    coverImage: "/blog/manutencao-agrale-cover.jpg",
   },
   {
     title: "Revista Moto 4 Rodas Nº 34 — RD 350 LC vs CB 450",
@@ -97,6 +105,7 @@ const manuals: ManualItem[] = [
     models: ["RD 350"],
     icon: BookOpen,
     year: "1984",
+    coverImage: "/blog/rd350-vs-cb450-teste.jpg",
   },
   {
     title: "Guia de Retentores Agrale — Códigos Sabó",
@@ -275,9 +284,20 @@ const Manuais = () => {
                           to={`/blog/${manual.blogSlug}`}
                           className="group flex flex-col gap-3 rounded-lg border border-border/50 bg-secondary/20 p-4 transition-all duration-200 hover:border-primary/30 hover:bg-secondary/40 sm:flex-row sm:items-center"
                         >
-                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-transform group-hover:scale-105">
-                            <Icon className="h-5 w-5 text-primary" />
-                          </div>
+                          {manual.coverImage ? (
+                            <div className="h-16 w-24 flex-shrink-0 overflow-hidden rounded-lg border border-border/30">
+                              <img
+                                src={manual.coverImage}
+                                alt={manual.title}
+                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                loading="lazy"
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex h-16 w-24 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-transform group-hover:scale-105">
+                              <Icon className="h-6 w-6 text-primary" />
+                            </div>
+                          )}
 
                           <div className="flex-1 min-w-0">
                             <h3 className="font-display text-xs font-bold uppercase tracking-wider text-foreground mb-1 group-hover:text-primary transition-colors">
