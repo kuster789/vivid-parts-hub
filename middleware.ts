@@ -1,5 +1,3 @@
-import { next } from "@vercel/edge";
-
 const BOT_UA =
   /facebookexternalhit|Facebot|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Slackbot|Discordbot|vkShare|Pinterest|Embedly|Quora|Showyoubot|outbrain|W3C_Validator|redditbot/i;
 
@@ -13,7 +11,7 @@ export default function middleware(request: Request) {
     return fetch(ogUrl);
   }
 
-  return next();
+  return;
 }
 
 export const config = {
