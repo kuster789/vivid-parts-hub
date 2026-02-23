@@ -2,8 +2,8 @@ import { Link } from "react-router-dom";
 
 const Footer = () => (
   <footer className="border-t border-border bg-card">
-    <div className="container py-12">
-      <div className="grid gap-8 md:grid-cols-4">
+    <div className="container py-8 md:py-12">
+      <div className="grid grid-cols-2 gap-6 md:grid-cols-4 md:gap-8">
         <div>
           <div className="mb-4 flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">

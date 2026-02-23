@@ -28,7 +28,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   return (
     <div className="card-industrial group flex flex-col overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
-      <div className="relative flex h-52 items-center justify-center bg-white dark:bg-muted overflow-hidden">
+      <div className="relative flex h-40 items-center justify-center bg-white dark:bg-muted overflow-hidden sm:h-52">
         {product.images && product.images.length > 0 ? (
           <img src={product.images[0]} alt={`${product.name} - Peça para ${product.brand} ${product.model}`} className="h-full w-full object-contain p-2 transition-transform duration-500 group-hover:scale-110" loading="lazy" />
         ) : (
