@@ -14,7 +14,7 @@ interface SEOProps {
 }
 
 const SITE_NAME = "Auto Peças Agrale";
-const BASE_URL = "https://motopecasagrale.com.br";
+const BASE_URL = "https://www.motopecasagrale.com.br";
 const DEFAULT_IMAGE = `${BASE_URL}/og-default.png`;
 const DEFAULT_DESCRIPTION =
   "Especialistas em peças para Agrale, Yamaha, Cagiva e KTM. Componentes originais e de qualidade, com envio para todo o Brasil.";
@@ -142,7 +142,7 @@ function buildJsonLd({ type, title, description, image, url, price, availability
       publisher: {
         "@type": "Organization",
         name: SITE_NAME,
-        url: "https://motopecasagrale.com.br",
+        url: "https://www.motopecasagrale.com.br",
       },
     };
   }
@@ -152,20 +152,20 @@ function buildJsonLd({ type, title, description, image, url, price, availability
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: SITE_NAME,
-    url: "https://motopecasagrale.com.br",
+    url: "https://www.motopecasagrale.com.br",
     description,
     potentialAction: {
       "@type": "SearchAction",
-      target: "https://motopecasagrale.com.br/catalogo?search={search_term_string}",
+      target: "https://www.motopecasagrale.com.br/catalogo?search={search_term_string}",
       "query-input": "required name=search_term_string",
     },
     publisher: {
       "@type": "Organization",
       name: SITE_NAME,
-      url: "https://motopecasagrale.com.br",
+      url: "https://www.motopecasagrale.com.br",
       logo: {
         "@type": "ImageObject",
-        url: "https://motopecasagrale.com.br/pwa-512x512.png",
+        url: "https://www.motopecasagrale.com.br/pwa-512x512.png",
       },
     },
   };

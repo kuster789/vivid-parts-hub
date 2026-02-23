@@ -180,7 +180,7 @@ const BlogPost = () => {
         <ShareButtons
           title={post.title}
           description={post.excerpt || post.title}
-          url={`https://motopecasagrale.com.br/blog/${post.slug}`}
+          url={`https://www.motopecasagrale.com.br/blog/${post.slug}`}
         />
 
 

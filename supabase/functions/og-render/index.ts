@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SITE_NAME = "Auto Peças Agrale";
-const BASE_URL = "https://motopecasagrale.com.br";
+const BASE_URL = "https://www.motopecasagrale.com.br";
 const DEFAULT_IMAGE = `${BASE_URL}/og-default.png`;
 const DEFAULT_DESCRIPTION =
   "Especialistas em peças para Agrale, Yamaha, Cagiva e KTM. Componentes originais com envio para todo o Brasil.";

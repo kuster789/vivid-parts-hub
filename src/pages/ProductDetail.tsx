@@ -222,7 +222,7 @@ const ProductDetail = () => {
                 <ShareButtons
                   title={product.name}
                   description={product.description || `${product.name} — peça para ${product.brand} ${product.model}`}
-                  url={`https://motopecasagrale.com.br/produto/${product.id}`}
+                  url={`https://www.motopecasagrale.com.br/produto/${product.id}`}
                 />
               </div>
 

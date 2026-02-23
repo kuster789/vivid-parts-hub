@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const BASE_URL = "https://motopecasagrale.com.br";
+const BASE_URL = "https://www.motopecasagrale.com.br";
 
 const staticRoutes = [
   { path: "/", priority: "1.0", changefreq: "weekly" },
