@@ -1,13 +1,39 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Calendar, Loader2, BookOpen } from "lucide-react";
+import { ArrowLeft, Calendar, Loader2, BookOpen, X, ZoomIn, Maximize2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
 
+const ImageLightbox = ({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) => {
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handleKey);
+    document.body.style.overflow = "hidden";
+    return () => { document.removeEventListener("keydown", handleKey); document.body.style.overflow = ""; };
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={onClose}>
+      <button onClick={onClose} className="absolute right-4 top-4 z-10 rounded-full bg-background/20 p-2 text-white backdrop-blur hover:bg-background/40 transition-colors">
+        <X className="h-6 w-6" />
+      </button>
+      <p className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-md bg-background/20 px-4 py-2 text-xs text-white/70 backdrop-blur">
+        Pinça para ampliar · ESC para fechar
+      </p>
+      <div className="max-h-[95vh] max-w-[95vw] overflow-auto" onClick={(e) => e.stopPropagation()}>
+        <img src={src} alt={alt} className="max-w-none" style={{ minWidth: "100%", height: "auto" }} />
+      </div>
+    </div>
+  );
+};
+
 const BlogPost = () => {
   const { slug } = useParams();
+  const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
+  const closeLightbox = useCallback(() => setLightbox(null), []);
+
   const [post, setPost] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -72,16 +98,21 @@ const BlogPost = () => {
             remarkPlugins={[remarkGfm]}
             components={{
               img: ({ src, alt }) => (
-                <figure className="my-6">
-                  <img
-                    src={src}
-                    alt={alt}
-                    className="w-full rounded-lg border border-border object-cover shadow-md"
-                    loading="lazy"
-                  />
+                <figure className="group my-6 cursor-pointer" onClick={() => src && setLightbox({ src, alt: alt || "" })}>
+                  <div className="relative overflow-hidden rounded-lg border border-border shadow-md">
+                    <img
+                      src={src}
+                      alt={alt}
+                      className="w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/20">
+                      <Maximize2 className="h-8 w-8 text-white opacity-0 transition-opacity group-hover:opacity-100 drop-shadow-lg" />
+                    </div>
+                  </div>
                   {alt && (
-                    <figcaption className="mt-2 text-center text-[11px] italic text-muted-foreground/70">
-                      {alt}
+                    <figcaption className="mt-2 flex items-center justify-center gap-1.5 text-center text-[11px] italic text-muted-foreground/70">
+                      <ZoomIn className="h-3 w-3" /> {alt} — clique para ampliar
                     </figcaption>
                   )}
                 </figure>
@@ -112,6 +143,8 @@ const BlogPost = () => {
           </ReactMarkdown>
         </div>
       </div>
+
+      {lightbox && <ImageLightbox src={lightbox.src} alt={lightbox.alt} onClose={closeLightbox} />}
     </main>
   );
 };
