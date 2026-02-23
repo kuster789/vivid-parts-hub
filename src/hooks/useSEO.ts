@@ -15,7 +15,7 @@ interface SEOProps {
 
 const SITE_NAME = "Auto Peças Agrale";
 const BASE_URL = "https://motopecasagrale.com.br";
-const DEFAULT_IMAGE = `${BASE_URL}/pwa-512x512.png`;
+const DEFAULT_IMAGE = `${BASE_URL}/og-default.png`;
 const DEFAULT_DESCRIPTION =
   "Especialistas em peças para Agrale, Yamaha, Cagiva e KTM. Componentes originais e de qualidade, com envio para todo o Brasil.";
 
