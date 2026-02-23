@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Download, FileText, BookOpen, Wrench, Settings, ChevronDown, Search, Filter } from "lucide-react";
+import { ArrowLeft, FileText, BookOpen, Wrench, Settings, Search, ArrowRight } from "lucide-react";
 import { ScrollReveal } from "@/hooks/useScrollReveal";
 import { useSEO } from "@/hooks/useSEO";
 import { Input } from "@/components/ui/input";
@@ -15,12 +15,11 @@ import {
 interface ManualItem {
   title: string;
   description: string;
-  fileName: string;
+  blogSlug: string;
   category: "manual" | "catalogo" | "tutorial" | "revista";
   brand: string;
   models: string[];
   icon: typeof FileText;
-  pages?: string;
   year?: string;
 }
 
@@ -28,7 +27,7 @@ const manuals: ManualItem[] = [
   {
     title: "Manual de Oficina — Motocicletas Agrale",
     description: "Manual técnico completo com especificações, desmontagem/montagem de motor, embreagem, câmbio, sistema elétrico, freios e suspensão.",
-    fileName: "Manual_de_Oficina_Motocicleta_Agrale.pdf",
+    blogSlug: "manual-oficina-motocicletas-agrale",
     category: "manual",
     brand: "Agrale",
     models: ["Agrale 13.5", "Agrale 16.5", "Agrale 27.5"],
@@ -36,54 +35,18 @@ const manuals: ManualItem[] = [
     year: "1991",
   },
   {
-    title: "Manual do Proprietário — Parte I: Introdução e Segurança",
-    description: "Características técnicas, normas de segurança, identificação da moto, controles e instruções para dirigir.",
-    fileName: "Manual_Agrale_30.0_-_Part_I.pdf",
+    title: "Manual do Proprietário — Agrale 27.5 e Dakar 30.0",
+    description: "Guia completo do proprietário cobrindo segurança, comandos, pilotagem, manutenção, carburador, filtros, freios, suspensão e sistema elétrico.",
+    blogSlug: "manual-proprietario-agrale-275-dakar-30",
     category: "manual",
     brand: "Agrale",
     models: ["Agrale 27.5", "Agrale 27.5 E", "Agrale Dakar 30.0"],
     icon: BookOpen,
-  },
-  {
-    title: "Manual do Proprietário — Parte II: Comandos e Pilotagem",
-    description: "Comandos elétricos, acelerador, freio dianteiro, embreagem, câmbio e instruções de pilotagem.",
-    fileName: "Manual_Agrale_30.0_-_Part_II.pdf",
-    category: "manual",
-    brand: "Agrale",
-    models: ["Agrale 27.5", "Agrale 27.5 E", "Agrale Dakar 30.0"],
-    icon: BookOpen,
-  },
-  {
-    title: "Manual do Proprietário — Parte III: Manutenção e Carburador",
-    description: "Manutenção periódica, lubrificação, sistema de arrefecimento e carburador.",
-    fileName: "Manual_Agrale_30.0_-_Part_III.pdf",
-    category: "manual",
-    brand: "Agrale",
-    models: ["Agrale 27.5", "Agrale 27.5 E", "Agrale Dakar 30.0"],
-    icon: BookOpen,
-  },
-  {
-    title: "Manual do Proprietário — Parte IV: Filtros, Freios e Suspensão",
-    description: "Filtros, vela de ignição, corrente de transmissão, freios e suspensão.",
-    fileName: "Manual_Agrale_30.0_-_Part_IV.pdf",
-    category: "manual",
-    brand: "Agrale",
-    models: ["Agrale 27.5", "Agrale 27.5 E", "Agrale Dakar 30.0"],
-    icon: Settings,
-  },
-  {
-    title: "Manual do Proprietário — Parte V: Elétrica e Ferramentas",
-    description: "Rodas, sistema elétrico, bateria, farol e ferramentas.",
-    fileName: "Manual_Agrale_30.0_-_Part_V.pdf",
-    category: "manual",
-    brand: "Agrale",
-    models: ["Agrale 27.5", "Agrale 27.5 E", "Agrale Dakar 30.0"],
-    icon: Settings,
   },
   {
     title: "Limpeza e Regulagem — Carburadores Dellorto PHBL-25",
     description: "Tutorial passo-a-passo com fotos para limpeza e regulagem do carburador Dellorto PHBL-25.",
-    fileName: "Limpeza_e_regulagem_carburadores_Delorto.pdf",
+    blogSlug: "limpeza-regulagem-carburador-dellorto",
     category: "tutorial",
     brand: "Agrale",
     models: ["Agrale 27.5 E", "Agrale 27.5 EX", "Agrale Dakar 30.0"],
@@ -92,21 +55,66 @@ const manuals: ManualItem[] = [
   {
     title: "Catálogo de Peças Agrale",
     description: "Catálogo oficial com referências de peças, códigos e ilustrações explodidas dos conjuntos mecânicos.",
-    fileName: "Catalogo_de_pecas_da_Agrale.pdf",
+    blogSlug: "como-usar-catalogo-pecas-agrale",
     category: "catalogo",
     brand: "Agrale",
     models: ["Agrale 13.5", "Agrale 16.5", "Agrale 27.5", "Agrale Dakar 30.0"],
     icon: FileText,
   },
   {
+    title: "Esquema Elétrico — Agrale Elefantre",
+    description: "Guia prático para leitura e interpretação do esquema elétrico da Agrale Elefantre com mapeamento de componentes.",
+    blogSlug: "esquema-eletrico-agrale-elefantre-guia",
+    category: "tutorial",
+    brand: "Agrale",
+    models: ["Agrale Elefantre"],
+    icon: Settings,
+  },
+  {
+    title: "Especificações do Motor Agrale 2 Tempos",
+    description: "Tudo sobre o motor monocilíndrico 2 tempos que equipa as motocicletas Agrale: especificações técnicas completas.",
+    blogSlug: "especificacoes-motor-agrale-2-tempos",
+    category: "manual",
+    brand: "Agrale",
+    models: ["Agrale 13.5", "Agrale 16.5", "Agrale 27.5"],
+    icon: Wrench,
+  },
+  {
+    title: "Manutenção Periódica — Agrale 27.5 e Dakar 30.0",
+    description: "Tabela de manutenção periódica com intervalos, procedimentos e dicas para manter sua Agrale em perfeito estado.",
+    blogSlug: "manutencao-periodica-agrale-27-5-dakar-30",
+    category: "tutorial",
+    brand: "Agrale",
+    models: ["Agrale 27.5", "Agrale Dakar 30.0"],
+    icon: Settings,
+  },
+  {
     title: "Revista Moto 4 Rodas Nº 34 — RD 350 LC vs CB 450",
     description: "Edição histórica com comparativo Yamaha RD 350 LC vs Honda CB 450 Esporte. Conteúdo clássico do motociclismo brasileiro.",
-    fileName: "1984_Moto_4_Rodas_34.pdf",
+    blogSlug: "yamaha-rd350-lc-vs-honda-cb450-comparativo-1984",
     category: "revista",
     brand: "Yamaha",
     models: ["RD 350"],
     icon: BookOpen,
     year: "1984",
+  },
+  {
+    title: "Guia de Retentores Agrale — Códigos Sabó",
+    description: "Guia completo de retentores com códigos Sabó, dimensões e especificações de materiais para motocicletas Agrale.",
+    blogSlug: "guia-retentores-agrale-sabo",
+    category: "catalogo",
+    brand: "Agrale",
+    models: ["Agrale 13.5", "Agrale 16.5", "Agrale 27.5"],
+    icon: FileText,
+  },
+  {
+    title: "Tabela de Resistência de Bobinas",
+    description: "Guia de diagnóstico elétrico com valores de resistência de bobinas para Agrale, Yamaha e Honda.",
+    blogSlug: "tabela-resistencia-bobinas-motos",
+    category: "tutorial",
+    brand: "Agrale",
+    models: ["Agrale", "Yamaha", "Honda"],
+    icon: Settings,
   },
 ];
 
@@ -140,7 +148,7 @@ const Manuais = () => {
 
   useSEO({
     title: "Manuais Técnicos — Agrale, Yamaha, Cagiva e KTM",
-    description: "Baixe gratuitamente manuais de oficina, catálogos de peças e tutoriais técnicos para Agrale, Yamaha, Cagiva e KTM.",
+    description: "Artigos técnicos baseados nos manuais oficiais de Agrale, Yamaha, Cagiva e KTM. Leia online gratuitamente.",
     url: "/manuais",
     type: "website",
   });
@@ -183,8 +191,8 @@ const Manuais = () => {
             </span>
             <h1 className="section-title mb-4">Manuais e Documentos</h1>
             <p className="mx-auto max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              Acervo completo com {manuals.length} documentos técnicos para download gratuito.
-              Manuais de oficina, catálogos de peças, tutoriais de manutenção e publicações históricas.
+              Acervo com {manuals.length} artigos técnicos baseados nos manuais oficiais.
+              Leia online gratuitamente: manuais de oficina, catálogos de peças, tutoriais de manutenção e publicações históricas.
             </p>
           </div>
         </ScrollReveal>
@@ -251,7 +259,7 @@ const Manuais = () => {
                         {group.label}
                       </span>
                       <span className="text-[11px] text-muted-foreground font-normal normal-case tracking-normal">
-                        {group.description} · {group.items.length} documento{group.items.length !== 1 ? "s" : ""}
+                        {group.description} · {group.items.length} artigo{group.items.length !== 1 ? "s" : ""}
                       </span>
                     </div>
                   </div>
@@ -262,8 +270,9 @@ const Manuais = () => {
                     {group.items.map((manual) => {
                       const Icon = manual.icon;
                       return (
-                        <div
-                          key={manual.fileName}
+                        <Link
+                          key={manual.blogSlug}
+                          to={`/blog/${manual.blogSlug}`}
                           className="group flex flex-col gap-3 rounded-lg border border-border/50 bg-secondary/20 p-4 transition-all duration-200 hover:border-primary/30 hover:bg-secondary/40 sm:flex-row sm:items-center"
                         >
                           <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-transform group-hover:scale-105">
@@ -271,7 +280,7 @@ const Manuais = () => {
                           </div>
 
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-display text-xs font-bold uppercase tracking-wider text-foreground mb-1">
+                            <h3 className="font-display text-xs font-bold uppercase tracking-wider text-foreground mb-1 group-hover:text-primary transition-colors">
                               {manual.title}
                             </h3>
                             <p className="text-[11px] leading-relaxed text-muted-foreground mb-2">
@@ -309,15 +318,11 @@ const Manuais = () => {
                             </div>
                           </div>
 
-                          <a
-                            href={`/manuals/${manual.fileName}`}
-                            download
-                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-secondary/50 px-4 py-2 text-xs font-semibold text-foreground transition-all hover:border-primary/40 hover:bg-primary hover:text-primary-foreground flex-shrink-0"
-                          >
-                            <Download className="h-3.5 w-3.5" />
-                            Baixar PDF
-                          </a>
-                        </div>
+                          <span className="inline-flex items-center gap-2 rounded-lg border border-border bg-secondary/50 px-4 py-2 text-xs font-semibold text-foreground transition-all group-hover:border-primary/40 group-hover:bg-primary group-hover:text-primary-foreground flex-shrink-0">
+                            <ArrowRight className="h-3.5 w-3.5" />
+                            Ler Artigo
+                          </span>
+                        </Link>
                       );
                     })}
                   </div>
