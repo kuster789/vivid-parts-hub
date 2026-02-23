@@ -1,29 +1,112 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Calendar, Loader2, BookOpen, X, ZoomIn, Maximize2 } from "lucide-react";
+import { ArrowLeft, Calendar, Loader2, BookOpen, X, ZoomIn, ZoomOut, Maximize2, RotateCcw } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
 
 const ImageLightbox = ({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) => {
+  const [scale, setScale] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+  const posStart = useRef({ x: 0, y: 0 });
+
+  const MIN_SCALE = 0.5;
+  const MAX_SCALE = 5;
+
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "+" || e.key === "=") setScale((s) => Math.min(s * 1.3, MAX_SCALE));
+      if (e.key === "-") setScale((s) => Math.max(s / 1.3, MIN_SCALE));
+      if (e.key === "0") { setScale(1); setPosition({ x: 0, y: 0 }); }
+    };
     document.addEventListener("keydown", handleKey);
     document.body.style.overflow = "hidden";
     return () => { document.removeEventListener("keydown", handleKey); document.body.style.overflow = ""; };
   }, [onClose]);
 
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setScale((s) => Math.min(Math.max(s * delta, MIN_SCALE), MAX_SCALE));
+  }, []);
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if (scale <= 1) return;
+    setDragging(true);
+    dragStart.current = { x: e.clientX, y: e.clientY };
+    posStart.current = { ...position };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, [scale, position]);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging) return;
+    setPosition({
+      x: posStart.current.x + (e.clientX - dragStart.current.x),
+      y: posStart.current.y + (e.clientY - dragStart.current.y),
+    });
+  }, [dragging]);
+
+  const handlePointerUp = useCallback(() => setDragging(false), []);
+
+  const reset = () => { setScale(1); setPosition({ x: 0, y: 0 }); };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={onClose}>
-      <button onClick={onClose} className="absolute right-4 top-4 z-10 rounded-full bg-background/20 p-2 text-white backdrop-blur hover:bg-background/40 transition-colors">
-        <X className="h-6 w-6" />
-      </button>
-      <p className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-md bg-background/20 px-4 py-2 text-xs text-white/70 backdrop-blur">
-        Pinça para ampliar · ESC para fechar
-      </p>
-      <div className="max-h-[95vh] max-w-[95vw] overflow-auto" onClick={(e) => e.stopPropagation()}>
-        <img src={src} alt={alt} className="max-w-none" style={{ minWidth: "100%", height: "auto" }} />
+    <div className="fixed inset-0 z-50 flex flex-col bg-black/95" onClick={onClose}>
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-4 py-3" onClick={(e) => e.stopPropagation()}>
+        <span className="text-xs text-white/60 truncate max-w-[50%]">{alt}</span>
+        <div className="flex items-center gap-1">
+          <button onClick={() => setScale((s) => Math.max(s / 1.3, MIN_SCALE))} className="rounded-lg p-2 text-white/70 hover:bg-white/10 transition-colors" title="Diminuir zoom (-)">
+            <ZoomOut className="h-5 w-5" />
+          </button>
+          <span className="min-w-[4rem] text-center text-xs font-mono text-white/60">{Math.round(scale * 100)}%</span>
+          <button onClick={() => setScale((s) => Math.min(s * 1.3, MAX_SCALE))} className="rounded-lg p-2 text-white/70 hover:bg-white/10 transition-colors" title="Aumentar zoom (+)">
+            <ZoomIn className="h-5 w-5" />
+          </button>
+          <button onClick={reset} className="rounded-lg p-2 text-white/70 hover:bg-white/10 transition-colors" title="Resetar (0)">
+            <RotateCcw className="h-5 w-5" />
+          </button>
+          <div className="mx-2 h-5 w-px bg-white/20" />
+          <button onClick={onClose} className="rounded-lg p-2 text-white/70 hover:bg-white/10 transition-colors" title="Fechar (ESC)">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Image area */}
+      <div
+        className="flex-1 flex items-center justify-center overflow-hidden"
+        style={{ cursor: scale > 1 ? (dragging ? "grabbing" : "grab") : "zoom-in" }}
+        onClick={(e) => {
+          if (scale <= 1) { e.stopPropagation(); setScale(2); }
+        }}
+        onWheel={handleWheel}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+      >
+        <img
+          src={src}
+          alt={alt}
+          className="max-w-[95vw] max-h-[85vh] object-contain select-none"
+          style={{
+            transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+            transition: dragging ? "none" : "transform 0.2s ease-out",
+          }}
+          draggable={false}
+          onClick={(e) => e.stopPropagation()}
+        />
+      </div>
+
+      {/* Bottom hint */}
+      <div className="flex justify-center py-2" onClick={(e) => e.stopPropagation()}>
+        <p className="rounded-md bg-white/10 px-4 py-1.5 text-[10px] text-white/50 backdrop-blur">
+          Scroll para zoom · Arraste para mover · Clique para ampliar · ESC para fechar
+        </p>
       </div>
     </div>
   );
