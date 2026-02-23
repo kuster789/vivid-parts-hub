@@ -10,6 +10,12 @@ import Footer from "@/components/Footer";
 import ChatBot from "@/components/ChatBot";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import LeadCapturePopup from "@/components/LeadCapturePopup";
+import { usePageTracking } from "@/hooks/usePageTracking";
+
+const PageTracker = () => {
+  usePageTracking();
+  return null;
+};
 import Index from "./pages/Index";
 import Catalog from "./pages/Catalog";
 import ProductDetail from "./pages/ProductDetail";
@@ -48,6 +54,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <PageTracker />
             <Header />
             <Routes>
               <Route path="/" element={<Index />} />

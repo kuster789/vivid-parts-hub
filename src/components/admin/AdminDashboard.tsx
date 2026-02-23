@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import AdminCharts from "@/components/AdminCharts";
+import VisitorStats from "@/components/admin/VisitorStats";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -445,6 +446,9 @@ const AdminDashboard = () => {
           )}
         </div>
       </div>
+
+      {/* Visitor Stats */}
+      <VisitorStats />
 
       {/* Charts */}
       <AdminCharts />
