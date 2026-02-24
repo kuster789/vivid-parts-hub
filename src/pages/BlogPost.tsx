@@ -228,6 +228,29 @@ const BlogPost = () => {
                   {children}
                 </blockquote>
               ),
+              a: ({ href, children }) => {
+                if (href && href.toLowerCase().endsWith(".pdf")) {
+                  return (
+                    <div className="my-6 rounded-lg border border-border overflow-hidden">
+                      <div className="flex items-center justify-between bg-secondary px-4 py-2">
+                        <span className="text-xs font-medium text-foreground">{children}</span>
+                        <a href={href} download className="text-[10px] text-primary hover:underline">Baixar PDF</a>
+                      </div>
+                      <iframe
+                        src={href}
+                        className="w-full border-0"
+                        style={{ height: "80vh" }}
+                        title={typeof children === "string" ? children : "PDF"}
+                      />
+                    </div>
+                  );
+                }
+                return (
+                  <a href={href} className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+                    {children}
+                  </a>
+                );
+              },
             }}
           >
             {post.content}
