@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Package, Plus, Pencil, Trash2, Save, X, Upload, Image, Loader2, FileBox,
   Search, Eye, GripVertical, AlertTriangle, CheckCircle, Clock, Ban, ChevronDown,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, RotateCw
 } from "lucide-react";
 import { uploadProductImage, deleteProductImage, upload3DModel } from "@/lib/storage";
 import { brands } from "@/data/products";
@@ -149,6 +149,32 @@ const AdminProducts = () => {
   const handleRemove3D = () => {
     setFormModel3D(null);
     setFormHas3D(false);
+  };
+
+  // Rotate image 90° clockwise using canvas
+  const handleRotateImage = async (url: string, idx: number) => {
+    try {
+      const img = new window.Image();
+      img.crossOrigin = "anonymous";
+      img.src = url;
+      await new Promise<void>((resolve, reject) => { img.onload = () => resolve(); img.onerror = reject; });
+      const canvas = document.createElement("canvas");
+      canvas.width = img.height;
+      canvas.height = img.width;
+      const ctx = canvas.getContext("2d")!;
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate(Math.PI / 2);
+      ctx.drawImage(img, -img.width / 2, -img.height / 2);
+      const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error("Erro ao gerar imagem")), "image/png"));
+      const file = new File([blob], `rotated-${Date.now()}.png`, { type: "image/png" });
+      const tempId = editingId || "temp-" + Date.now();
+      const newUrl = await uploadProductImage(tempId, file);
+      setFormImages(prev => prev.map((u, i) => i === idx ? newUrl : u));
+      await deleteProductImage(url);
+      toast.success("Imagem rotacionada!");
+    } catch (err: any) {
+      toast.error("Erro ao rotacionar: " + err.message);
+    }
   };
 
   // Drag & drop image reorder
@@ -505,9 +531,12 @@ const AdminProducts = () => {
                       }`}
                     >
                       <img src={img} alt={`Foto ${idx + 1}`} className="h-full w-full object-cover" loading="lazy" />
-                      <div className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 group-hover/img:opacity-100 transition-opacity">
-                        <GripVertical className="h-4 w-4 text-muted-foreground mr-1" />
-                        <button onClick={() => handleRemoveImage(img)} className="rounded bg-destructive/90 p-1 text-destructive-foreground">
+                      <div className="absolute inset-0 flex items-center justify-center gap-1 bg-background/60 opacity-0 group-hover/img:opacity-100 transition-opacity">
+                        <GripVertical className="h-4 w-4 text-muted-foreground" />
+                        <button onClick={() => handleRotateImage(img, idx)} className="rounded bg-secondary p-1 text-foreground hover:bg-primary hover:text-primary-foreground transition-colors" title="Girar 90°">
+                          <RotateCw className="h-3 w-3" />
+                        </button>
+                        <button onClick={() => handleRemoveImage(img)} className="rounded bg-destructive/90 p-1 text-destructive-foreground" title="Remover">
                           <Trash2 className="h-3 w-3" />
                         </button>
                       </div>
