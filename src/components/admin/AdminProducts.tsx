@@ -56,6 +56,7 @@ const AdminProducts = () => {
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [rotatingIdx, setRotatingIdx] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -153,6 +154,7 @@ const AdminProducts = () => {
 
   // Rotate image 90° clockwise using canvas
   const handleRotateImage = async (url: string, idx: number) => {
+    setRotatingIdx(idx);
     try {
       const img = new window.Image();
       img.crossOrigin = "anonymous";
@@ -174,6 +176,8 @@ const AdminProducts = () => {
       toast.success("Imagem rotacionada!");
     } catch (err: any) {
       toast.error("Erro ao rotacionar: " + err.message);
+    } finally {
+      setRotatingIdx(null);
     }
   };
 
@@ -531,9 +535,14 @@ const AdminProducts = () => {
                       }`}
                     >
                       <img src={img} alt={`Foto ${idx + 1}`} className="h-full w-full object-cover" loading="lazy" />
+                      {rotatingIdx === idx && (
+                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80">
+                          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                        </div>
+                      )}
                       <div className="absolute inset-0 flex items-center justify-center gap-1 bg-background/60 opacity-0 group-hover/img:opacity-100 transition-opacity">
                         <GripVertical className="h-4 w-4 text-muted-foreground" />
-                        <button onClick={() => handleRotateImage(img, idx)} className="rounded bg-secondary p-1 text-foreground hover:bg-primary hover:text-primary-foreground transition-colors" title="Girar 90°">
+                        <button onClick={() => handleRotateImage(img, idx)} disabled={rotatingIdx !== null} className="rounded bg-secondary p-1 text-foreground hover:bg-primary hover:text-primary-foreground transition-colors disabled:opacity-50" title="Girar 90°">
                           <RotateCw className="h-3 w-3" />
                         </button>
                         <button onClick={() => handleRemoveImage(img)} className="rounded bg-destructive/90 p-1 text-destructive-foreground" title="Remover">
