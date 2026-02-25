@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { UserPlus, Eye, EyeOff } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
+import { supabase } from "@/integrations/supabase/client";
 
 const Register = () => {
   const { signUp } = useAuth();
@@ -33,15 +34,35 @@ const Register = () => {
     }
   };
 
+  const isLovableDomain = () => {
+    const host = window.location.hostname;
+    return host.includes("lovable.app") || host.includes("lovableproject.com") || host === "localhost";
+  };
+
   const handleGoogleSignIn = async () => {
     setError("");
     setGoogleLoading(true);
-    const { error } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (error) {
-      setError("Erro ao entrar com Google. Tente novamente.");
-      setGoogleLoading(false);
+
+    if (isLovableDomain()) {
+      const { error } = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (error) {
+        setError("Erro ao entrar com Google. Tente novamente.");
+        setGoogleLoading(false);
+      }
+    } else {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.location.origin,
+          skipBrowserRedirect: false,
+        },
+      });
+      if (error) {
+        setError("Erro ao entrar com Google. Tente novamente.");
+        setGoogleLoading(false);
+      }
     }
   };
 
