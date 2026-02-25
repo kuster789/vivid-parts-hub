@@ -1,0 +1,1 @@
+ALTER TABLE public.sales ADD COLUMN sales_channel text NOT NULL DEFAULT 'marketplace';

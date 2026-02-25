@@ -479,6 +479,7 @@ export type Database = {
           platform_cost: number
           product_name: string
           profit_percentage: number | null
+          sales_channel: string
           shipping_cost: number
         }
         Insert: {
@@ -493,6 +494,7 @@ export type Database = {
           platform_cost?: number
           product_name: string
           profit_percentage?: number | null
+          sales_channel?: string
           shipping_cost?: number
         }
         Update: {
@@ -507,6 +509,7 @@ export type Database = {
           platform_cost?: number
           product_name?: string
           profit_percentage?: number | null
+          sales_channel?: string
           shipping_cost?: number
         }
         Relationships: []
