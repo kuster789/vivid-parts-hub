@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Box, Shield, Truck, Headphones, Star, Wrench, Zap } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import heroBanner from "@/assets/hero-banner-agrale.png";
 import ProductCard from "@/components/ProductCard";
 import ProductCardSkeleton from "@/components/ProductCardSkeleton";
@@ -14,23 +14,42 @@ import RecentlyViewed from "@/components/RecentlyViewed";
 
 const Counter = ({ end, suffix = "", label }: {end: number;suffix?: string;label: string;}) => {
   const [count, setCount] = useState(0);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasAnimated) {
+          setHasAnimated(true);
+        }
+      },
+      { threshold: 0.5 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasAnimated]);
+
+  useEffect(() => {
+    if (!hasAnimated || end === 0) return;
     let start = 0;
     const duration = 2000;
     const step = Math.ceil(end / (duration / 30));
     const timer = setInterval(() => {
       start += step;
-      if (start >= end) {setCount(end);clearInterval(timer);} else
+      if (start >= end) { setCount(end); clearInterval(timer); } else
       setCount(start);
     }, 30);
     return () => clearInterval(timer);
-  }, [end]);
+  }, [hasAnimated, end]);
+
   return (
-    <div className="text-center">
+    <div ref={ref} className="text-center">
       <p className="font-display text-lg font-black text-primary sm:text-2xl md:text-3xl">{count.toLocaleString("pt-BR")}{suffix}</p>
       <p className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground sm:text-[11px]">{label}</p>
     </div>);
-
 };
 
 const Index = () => {

@@ -52,16 +52,18 @@ const Register = () => {
         setGoogleLoading(false);
       }
     } else {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: window.location.origin,
-          skipBrowserRedirect: false,
+          skipBrowserRedirect: true,
         },
       });
       if (error) {
         setError("Erro ao entrar com Google. Tente novamente.");
         setGoogleLoading(false);
+      } else if (data?.url) {
+        window.location.href = data.url;
       }
     }
   };
