@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -29,8 +30,18 @@ interface Sale {
   net_value: number;
   profit_percentage: number;
   notes: string | null;
+  sales_channel: string;
   created_at: string;
 }
+
+const CHANNELS = [
+  { value: "marketplace", label: "Marketplace (ML, Shopee)" },
+  { value: "site", label: "Site Próprio" },
+  { value: "whatsapp", label: "WhatsApp" },
+  { value: "fisico", label: "Loja Física" },
+  { value: "instagram", label: "Instagram / Redes Sociais" },
+  { value: "outro", label: "Outro" },
+];
 
 const COLORS = ["hsl(38, 92%, 50%)", "hsl(200, 70%, 50%)", "hsl(142, 71%, 45%)", "hsl(0, 72%, 51%)", "hsl(270, 70%, 50%)"];
 
@@ -49,6 +60,7 @@ const AdminSales = () => {
   const [shippingCost, setShippingCost] = useState("");
   const [manufacturingCost, setManufacturingCost] = useState("");
   const [notes, setNotes] = useState("");
+  const [salesChannel, setSalesChannel] = useState("marketplace");
 
   const loadSales = async () => {
     const { data, error } = await supabase
@@ -90,6 +102,7 @@ const AdminSales = () => {
       shipping_cost: Number(shippingCost) || 0,
       manufacturing_cost: Number(manufacturingCost) || 0,
       notes: notes.trim() || null,
+      sales_channel: salesChannel,
       created_by: user?.id,
     } as any);
     setSaving(false);
@@ -111,6 +124,7 @@ const AdminSales = () => {
     setShippingCost("");
     setManufacturingCost("");
     setNotes("");
+    setSalesChannel("marketplace");
   };
 
   const handleDelete = async (id: string) => {
@@ -266,7 +280,20 @@ const AdminSales = () => {
                   </div>
                 </div>
 
-                {/* Live preview */}
+                <div className="space-y-1.5">
+                  <Label>Canal de Venda</Label>
+                  <Select value={salesChannel} onValueChange={setSalesChannel}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecionar canal" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CHANNELS.map(ch => (
+                        <SelectItem key={ch.value} value={ch.value}>{ch.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="rounded-lg border border-border bg-secondary/30 p-3">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Valor Líquido:</span>
@@ -302,6 +329,7 @@ const AdminSales = () => {
               <tr className="border-b border-border text-left text-xs uppercase text-muted-foreground">
                 <th className="pb-2 pr-4">Data</th>
                 <th className="pb-2 pr-4">Produto</th>
+                <th className="pb-2 pr-4">Canal</th>
                 <th className="pb-2 pr-4 text-right">Valor</th>
                 <th className="pb-2 pr-4 text-right">Plataforma</th>
                 <th className="pb-2 pr-4 text-right">Frete</th>
@@ -316,6 +344,9 @@ const AdminSales = () => {
                 <tr key={s.id} className="border-b border-border/50">
                   <td className="py-2 pr-4 whitespace-nowrap">{format(new Date(s.order_date), "dd/MM/yy")}</td>
                   <td className="py-2 pr-4 max-w-[150px] truncate">{s.product_name}</td>
+                  <td className="py-2 pr-4 text-xs">
+                    <span className="rounded-full bg-secondary px-2 py-0.5">{CHANNELS.find(c => c.value === s.sales_channel)?.label || s.sales_channel}</span>
+                  </td>
                   <td className="py-2 pr-4 text-right">R$ {s.piece_value.toFixed(2)}</td>
                   <td className="py-2 pr-4 text-right text-red-400">-R$ {s.platform_cost.toFixed(2)}</td>
                   <td className="py-2 pr-4 text-right text-red-400">-R$ {s.shipping_cost.toFixed(2)}</td>
@@ -334,7 +365,7 @@ const AdminSales = () => {
                 </tr>
               ))}
               {sales.length === 0 && (
-                <tr><td colSpan={9} className="py-8 text-center text-muted-foreground">Nenhuma venda registrada</td></tr>
+                <tr><td colSpan={10} className="py-8 text-center text-muted-foreground">Nenhuma venda registrada</td></tr>
               )}
             </tbody>
           </table>
