@@ -51,6 +51,7 @@ const Catalog = () => {
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   useEffect(() => {
+    const debounceTimer = setTimeout(() => {
     const load = async () => {
       setLoading(true);
       const from = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -115,6 +116,8 @@ const Catalog = () => {
       setLoading(false);
     };
     load();
+    }, 150);
+    return () => clearTimeout(debounceTimer);
   }, [activeBrand, activeModel, sortBy, currentPage, priceMin, priceMax, inStock, has3D, condition]);
 
   const goToPage = (page: number) => {
