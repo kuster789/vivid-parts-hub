@@ -26,6 +26,8 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({
     products: 0, orders: 0, revenue: 0, pending: 0, shipped: 0, delivered: 0, cancelled: 0, customers: 0, leads: 0,
     recentOrders: [] as any[],
+    // Sales (manual) stats
+    externalRevenue: 0, externalProfit: 0, externalCount: 0,
   });
   const [allProducts, setAllProducts] = useState<ProductRow[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string>("");
@@ -41,20 +43,26 @@ const AdminDashboard = () => {
         { count: customerCount },
         { count: leadCount },
         { data: productsData },
+        { data: salesData },
       ] = await Promise.all([
         supabase.from("products").select("*", { count: "exact", head: true }),
         supabase.from("orders").select("total, status, created_at, shipping_name, id").order("created_at", { ascending: false }),
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("leads").select("*", { count: "exact", head: true }),
         supabase.from("products").select("id, name, brand, price, stock, condition").eq("active", true),
+        supabase.from("sales").select("piece_value, net_value"),
       ]);
 
       const o = orders || [];
+      const s = salesData || [];
+      const externalRevenue = s.reduce((sum, x) => sum + Number(x.piece_value), 0);
+      const externalProfit = s.reduce((sum, x) => sum + Number(x.net_value || 0), 0);
+
       setAllProducts((productsData as ProductRow[]) || []);
       setStats({
         products: prodCount || 0,
         orders: o.length,
-        revenue: o.reduce((s, x) => s + Number(x.total), 0),
+        revenue: o.reduce((sum, x) => sum + Number(x.total), 0),
         pending: o.filter((x) => x.status === "pending").length,
         shipped: o.filter((x) => x.status === "shipped").length,
         delivered: o.filter((x) => x.status === "delivered").length,
@@ -62,6 +70,9 @@ const AdminDashboard = () => {
         customers: customerCount || 0,
         leads: leadCount || 0,
         recentOrders: o.slice(0, 5),
+        externalRevenue,
+        externalProfit,
+        externalCount: s.length,
       });
       setLoading(false);
     };
@@ -200,9 +211,12 @@ const AdminDashboard = () => {
   const lowStockProducts = allProducts.filter((p) => p.stock > 0 && p.stock < 5);
   const outOfStockProducts = allProducts.filter((p) => p.stock === 0);
 
+  const totalRevenue = stats.revenue + stats.externalRevenue;
+
   const mainCards = [
-    { label: "Receita Total", value: `R$ ${stats.revenue.toFixed(2).replace(".", ",")}`, icon: DollarSign, trend: "+12%", up: true },
-    { label: "Pedidos", value: stats.orders, icon: ShoppingBag, trend: `${stats.pending} pendentes`, up: null },
+    { label: "Receita Total", value: `R$ ${totalRevenue.toFixed(2).replace(".", ",")}`, icon: DollarSign, trend: `Site: R$ ${stats.revenue.toFixed(0)} + Externo: R$ ${stats.externalRevenue.toFixed(0)}`, up: true },
+    { label: "Pedidos (Site)", value: stats.orders, icon: ShoppingBag, trend: `${stats.pending} pendentes`, up: null },
+    { label: "Vendas Externas", value: stats.externalCount, icon: TrendingUp, trend: `Lucro: R$ ${stats.externalProfit.toFixed(2).replace(".", ",")}`, up: stats.externalProfit > 0 },
     { label: "Produtos", value: stats.products, icon: Package, trend: "Ativos no catálogo", up: null },
     { label: "Clientes", value: stats.customers, icon: Users, trend: "Registrados", up: null },
     { label: "Leads", value: stats.leads, icon: Mail, trend: "Emails capturados", up: null },
@@ -234,7 +248,7 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-6">
       {/* Main stat cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {mainCards.map(({ label, value, icon: Icon, trend, up }) => (
           <div key={label} className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
             <div className="flex items-start justify-between">
