@@ -466,6 +466,51 @@ export type Database = {
           },
         ]
       }
+      sales: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          manufacturing_cost: number
+          net_value: number | null
+          notes: string | null
+          order_date: string
+          piece_value: number
+          platform_cost: number
+          product_name: string
+          profit_percentage: number | null
+          shipping_cost: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          manufacturing_cost?: number
+          net_value?: number | null
+          notes?: string | null
+          order_date?: string
+          piece_value?: number
+          platform_cost?: number
+          product_name: string
+          profit_percentage?: number | null
+          shipping_cost?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          manufacturing_cost?: number
+          net_value?: number | null
+          notes?: string | null
+          order_date?: string
+          piece_value?: number
+          platform_cost?: number
+          product_name?: string
+          profit_percentage?: number | null
+          shipping_cost?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

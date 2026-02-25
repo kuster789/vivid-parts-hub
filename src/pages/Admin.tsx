@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Navigate } from "react-router-dom";
 import {
-  BarChart3, Package, ShoppingBag, Users, Bell, Loader2, Menu, X, ChevronRight, Mail
+  BarChart3, Package, ShoppingBag, Users, Bell, Loader2, Menu, X, ChevronRight, Mail, DollarSign
 } from "lucide-react";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminProducts from "@/components/admin/AdminProducts";
@@ -10,8 +10,9 @@ import AdminOrders from "@/components/admin/AdminOrders";
 import AdminUsers from "@/components/admin/AdminUsers";
 import AdminNotifications from "@/components/admin/AdminNotifications";
 import AdminLeads from "@/components/admin/AdminLeads";
+import AdminSales from "@/components/admin/AdminSales";
 
-type Tab = "dashboard" | "products" | "orders" | "users" | "notifications" | "leads";
+type Tab = "dashboard" | "products" | "orders" | "users" | "notifications" | "leads" | "sales";
 
 const Admin = () => {
   const { user, isAdmin, isEmployee, loading } = useAuth();
@@ -27,6 +28,7 @@ const Admin = () => {
     { id: "orders", label: "Pedidos", icon: ShoppingBag },
     { id: "notifications", label: "Notificações", icon: Bell },
     ...(isAdmin ? [
+      { id: "sales" as Tab, label: "Vendas", icon: DollarSign },
       { id: "leads" as Tab, label: "Leads", icon: Mail },
       { id: "users" as Tab, label: "Usuários", icon: Users },
     ] : []),
@@ -39,6 +41,7 @@ const Admin = () => {
     users: "Gerenciar Usuários",
     notifications: "Notificações",
     leads: "Leads Capturados",
+    sales: "Controle de Vendas",
   };
 
   return (
@@ -106,6 +109,7 @@ const Admin = () => {
             {tab === "orders" && <AdminOrders />}
             {tab === "notifications" && <AdminNotifications />}
             {tab === "leads" && isAdmin && <AdminLeads />}
+            {tab === "sales" && isAdmin && <AdminSales />}
             {tab === "users" && isAdmin && <AdminUsers />}
           </div>
         </div>
