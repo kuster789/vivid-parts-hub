@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Package, ShoppingBag, DollarSign, Calendar, Truck, TrendingUp, Users, Loader2, ArrowUpRight, ArrowDownRight, Mail, Warehouse, Filter, Download, FileText, AlertTriangle, Pencil
 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import AdminCharts from "@/components/AdminCharts";
 import VisitorStats from "@/components/admin/VisitorStats";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -26,9 +28,10 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({
     products: 0, orders: 0, revenue: 0, pending: 0, shipped: 0, delivered: 0, cancelled: 0, customers: 0, leads: 0,
     recentOrders: [] as any[],
-    // Sales (manual) stats
     externalRevenue: 0, externalProfit: 0, externalCount: 0,
   });
+  const [ordersRaw, setOrdersRaw] = useState<any[]>([]);
+  const [salesRaw, setSalesRaw] = useState<any[]>([]);
   const [allProducts, setAllProducts] = useState<ProductRow[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -50,7 +53,7 @@ const AdminDashboard = () => {
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("leads").select("*", { count: "exact", head: true }),
         supabase.from("products").select("id, name, brand, price, stock, condition").eq("active", true),
-        supabase.from("sales").select("piece_value, net_value"),
+        supabase.from("sales").select("piece_value, net_value, order_date"),
       ]);
 
       const o = orders || [];
@@ -59,6 +62,8 @@ const AdminDashboard = () => {
       const externalProfit = s.reduce((sum, x) => sum + Number(x.net_value || 0), 0);
 
       setAllProducts((productsData as ProductRow[]) || []);
+      setOrdersRaw(o);
+      setSalesRaw(s);
       setStats({
         products: prodCount || 0,
         orders: o.length,
@@ -117,6 +122,22 @@ const AdminDashboard = () => {
       { name: "Usadas", value: usadas },
     ].filter((d) => d.value > 0);
   }, [filteredProducts]);
+
+  // Monthly comparison: Site vs External
+  const monthlyComparison = useMemo(() => {
+    const map: Record<string, { site: number; externo: number }> = {};
+    ordersRaw.forEach((o) => {
+      const key = format(new Date(o.created_at), "MMM/yy", { locale: ptBR });
+      if (!map[key]) map[key] = { site: 0, externo: 0 };
+      map[key].site += Number(o.total);
+    });
+    salesRaw.forEach((s) => {
+      const key = format(new Date(s.order_date), "MMM/yy", { locale: ptBR });
+      if (!map[key]) map[key] = { site: 0, externo: 0 };
+      map[key].externo += Number(s.piece_value);
+    });
+    return Object.entries(map).map(([name, v]) => ({ name, ...v }));
+  }, [ordersRaw, salesRaw]);
 
   const exportCSV = useCallback(() => {
     const header = "Marca,Produto,Preço,Estoque,Condição,Valor Total\n";
@@ -461,7 +482,29 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Visitor Stats */}
+      {/* Monthly Comparison: Site vs External */}
+      <div className="rounded-xl border border-border bg-card p-5">
+        <h3 className="mb-4 font-display text-xs font-bold uppercase tracking-wider text-foreground">Receita Mensal — Site vs Vendas Externas</h3>
+        {monthlyComparison.length > 0 ? (
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={monthlyComparison}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 12%, 16%)" />
+              <XAxis dataKey="name" tick={{ fill: "hsl(215, 10%, 55%)", fontSize: 11 }} />
+              <YAxis tick={{ fill: "hsl(215, 10%, 55%)", fontSize: 11 }} />
+              <Tooltip
+                contentStyle={{ background: "hsl(220, 18%, 10%)", border: "1px solid hsl(220, 12%, 16%)", borderRadius: 8, fontSize: 12 }}
+                formatter={(value: number) => [`R$ ${value.toFixed(2)}`, ""]}
+              />
+              <Legend />
+              <Bar dataKey="site" name="Site" fill="hsl(200, 70%, 50%)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="externo" name="Externo" fill="hsl(38, 92%, 50%)" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <p className="py-10 text-center text-sm text-muted-foreground">Sem dados de vendas para comparar</p>
+        )}
+      </div>
+
       <VisitorStats />
 
       {/* Charts */}
