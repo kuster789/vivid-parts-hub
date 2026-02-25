@@ -32,15 +32,37 @@ const Login = () => {
     }
   };
 
+  const isLovableDomain = () => {
+    const host = window.location.hostname;
+    return host.includes("lovable.app") || host.includes("lovableproject.com") || host === "localhost";
+  };
+
   const handleGoogleSignIn = async () => {
     setError("");
     setGoogleLoading(true);
-    const { error } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (error) {
-      setError("Erro ao entrar com Google. Tente novamente.");
-      setGoogleLoading(false);
+
+    if (isLovableDomain()) {
+      // Use Lovable auth-bridge (works on Lovable preview domains)
+      const { error } = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (error) {
+        setError("Erro ao entrar com Google. Tente novamente.");
+        setGoogleLoading(false);
+      }
+    } else {
+      // Custom domain (e.g. Vercel) — use Supabase OAuth directly
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.location.origin,
+          skipBrowserRedirect: false,
+        },
+      });
+      if (error) {
+        setError("Erro ao entrar com Google. Tente novamente.");
+        setGoogleLoading(false);
+      }
     }
   };
 
