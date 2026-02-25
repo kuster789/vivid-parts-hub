@@ -42,7 +42,6 @@ const Login = () => {
     setGoogleLoading(true);
 
     if (isLovableDomain()) {
-      // Use Lovable auth-bridge (works on Lovable preview domains)
       const { error } = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
@@ -51,17 +50,19 @@ const Login = () => {
         setGoogleLoading(false);
       }
     } else {
-      // Custom domain (e.g. Vercel) — use Supabase OAuth directly
-      const { error } = await supabase.auth.signInWithOAuth({
+      // Custom domain — bypass auth-bridge with skipBrowserRedirect
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: window.location.origin,
-          skipBrowserRedirect: false,
+          skipBrowserRedirect: true,
         },
       });
       if (error) {
         setError("Erro ao entrar com Google. Tente novamente.");
         setGoogleLoading(false);
+      } else if (data?.url) {
+        window.location.href = data.url;
       }
     }
   };
