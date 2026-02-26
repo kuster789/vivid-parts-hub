@@ -1,5 +1,5 @@
 const BOT_UA =
-  /facebookexternalhit|Facebot|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Slackbot|Discordbot|vkShare|Pinterest|Embedly|Quora|Showyoubot|outbrain|W3C_Validator|redditbot/i;
+  /facebookexternalhit|Facebot|Twitterbot|LinkedInBot|WhatsApp|WhatsAppBot|WABusinessBot|TelegramBot|Slackbot|Discordbot|vkShare|Pinterest|Embedly|Quora|Showyoubot|outbrain|W3C_Validator|redditbot|Googlebot|bingbot/i;
 
 export default function middleware(request: Request) {
   const ua = request.headers.get("user-agent") || "";
