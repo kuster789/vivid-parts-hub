@@ -1,4 +1,5 @@
 import { useParams, Link } from "react-router-dom";
+import type { Tables } from "@/integrations/supabase/types";
 import { ArrowLeft, ShoppingCart, Package, CheckCircle, AlertTriangle, Loader2, Heart, Truck, Shield, RotateCcw, Bike } from "lucide-react";
 import { brands as brandsList } from "@/data/products";
 import { useCart } from "@/context/CartContext";
@@ -22,13 +23,13 @@ const ProductDetail = () => {
   const { addItem } = useCart();
   const { user } = useAuth();
   const { isWished, toggle } = useWishlist();
-  const [product, setProduct] = useState<any>(null);
+  const [product, setProduct] = useState<Tables<"products"> | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedVariations, setSelectedVariations] = useState<Record<string, string>>({});
   const [selectedColor, setSelectedColor] = useState("");
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+  const [relatedProducts, setRelatedProducts] = useState<Tables<"products">[]>([]);
 
   const { addProduct: trackView } = useRecentlyViewed();
 
@@ -203,7 +204,7 @@ const ProductDetail = () => {
                     {product.brand?.toUpperCase()} · {product.model}
                   </span>
                   {product.condition === "usada" && (
-                    <span className="rounded bg-yellow-500/15 px-2 py-0.5 text-[10px] font-bold uppercase text-yellow-600 dark:text-yellow-400">Usado</span>
+                    <span className="rounded bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-600 dark:text-amber-400">Usado</span>
                   )}
                 </div>
                 <div className="flex items-center gap-1">

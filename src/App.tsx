@@ -10,6 +10,8 @@ import Footer from "@/components/Footer";
 import ChatBot from "@/components/ChatBot";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import LeadCapturePopup from "@/components/LeadCapturePopup";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { usePageTracking } from "@/hooks/usePageTracking";
 import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
@@ -19,7 +21,7 @@ const PageTracker = () => {
   return null;
 };
 
-// Lazy-loaded routes for better initial load performance
+// Lazy-loaded routes
 const Index = lazy(() => import("./pages/Index"));
 const Catalog = lazy(() => import("./pages/Catalog"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
@@ -66,37 +68,39 @@ const App = () => (
           <BrowserRouter>
             <PageTracker />
             <Header />
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/catalogo" element={<Catalog />} />
-                <Route path="/produto/:id" element={<ProductDetail />} />
-                <Route path="/carrinho" element={<Cart />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/suporte" element={<Support />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/cadastro" element={<Register />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/sobre" element={<SobreNos />} />
-                <Route path="/privacidade" element={<PoliticaPrivacidade />} />
-                <Route path="/termos" element={<TermosUso />} />
-                <Route path="/devolucao" element={<PoliticaDevolucao />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/blog/:slug" element={<BlogPost />} />
-                <Route path="/favoritos" element={<Wishlist />} />
-                <Route path="/rastreamento" element={<Tracking />} />
-                <Route path="/visualizacao-3d" element={<Visualizacao3D />} />
-                <Route path="/qualidade" element={<QualidadeGarantida />} />
-                <Route path="/envio" element={<EnvioNacional />} />
-                <Route path="/suporte-tecnico" element={<SuporteTecnico />} />
-                <Route path="/manuais" element={<Manuais />} />
-                <Route path="/marca/:slug" element={<BrandPage />} />
-                <Route path="/kits-revisao" element={<KitsRevisao />} />
-                <Route path="/minha-conta" element={<MinhaConta />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
+            <ErrorBoundary>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/catalogo" element={<Catalog />} />
+                  <Route path="/produto/:id" element={<ProductDetail />} />
+                  <Route path="/carrinho" element={<Cart />} />
+                  <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+                  <Route path="/suporte" element={<Support />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/cadastro" element={<Register />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/sobre" element={<SobreNos />} />
+                  <Route path="/privacidade" element={<PoliticaPrivacidade />} />
+                  <Route path="/termos" element={<TermosUso />} />
+                  <Route path="/devolucao" element={<PoliticaDevolucao />} />
+                  <Route path="/blog" element={<Blog />} />
+                  <Route path="/blog/:slug" element={<BlogPost />} />
+                  <Route path="/favoritos" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
+                  <Route path="/rastreamento" element={<ProtectedRoute><Tracking /></ProtectedRoute>} />
+                  <Route path="/visualizacao-3d" element={<Visualizacao3D />} />
+                  <Route path="/qualidade" element={<QualidadeGarantida />} />
+                  <Route path="/envio" element={<EnvioNacional />} />
+                  <Route path="/suporte-tecnico" element={<SuporteTecnico />} />
+                  <Route path="/manuais" element={<Manuais />} />
+                  <Route path="/marca/:slug" element={<BrandPage />} />
+                  <Route path="/kits-revisao" element={<KitsRevisao />} />
+                  <Route path="/minha-conta" element={<ProtectedRoute><MinhaConta /></ProtectedRoute>} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
             <Footer />
             <ChatBot />
             <WhatsAppButton />

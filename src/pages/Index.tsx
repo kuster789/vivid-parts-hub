@@ -10,7 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
 import FAQSection from "@/components/FAQSection";
 import RecentlyViewed from "@/components/RecentlyViewed";
+import type { Tables } from "@/integrations/supabase/types";
 
+type Product = Tables<"products">;
 
 const Counter = ({ end, suffix = "", label }: {end: number;suffix?: string;label: string;}) => {
   const [count, setCount] = useState(0);
@@ -48,7 +50,7 @@ const Counter = ({ end, suffix = "", label }: {end: number;suffix?: string;label
   return (
     <div ref={ref} className="text-center">
       <p className="font-display text-lg font-black text-primary sm:text-2xl md:text-3xl">{count.toLocaleString("pt-BR")}{suffix}</p>
-      <p className="text-[9px] font-medium uppercase tracking-wider text-[hsl(215,10%,55%)] sm:text-[11px]">{label}</p>
+      <p className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground sm:text-[11px]">{label}</p>
     </div>);
 };
 
@@ -56,9 +58,19 @@ const Index = () => {
   useSEO({
     title: "Peças para Agrale, Yamaha, Cagiva e KTM",
     description: "Especialistas em peças para Agrale, Yamaha, Cagiva e KTM. Componentes originais e de qualidade com envio para todo o Brasil. Encontre virabrequins, carburadores, cilindros e muito mais.",
-    url: "/"
+    url: "/",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "Auto Peças Agrale",
+      url: "https://www.motopecasagrale.com.br",
+      logo: "https://www.motopecasagrale.com.br/pwa-512x512.png",
+      description: "Especialistas em peças para Agrale, Yamaha, Cagiva e KTM.",
+      contactPoint: { "@type": "ContactPoint", contactType: "customer service", availableLanguage: "Portuguese" },
+      sameAs: [],
+    },
   });
-  const [featured, setFeatured] = useState<any[]>([]);
+  const [featured, setFeatured] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [productCount, setProductCount] = useState(0);
 
@@ -68,7 +80,7 @@ const Index = () => {
       supabase.from("products").select("*").eq("active", true).limit(4),
       supabase.from("products").select("*", { count: "exact", head: true }).eq("active", true)]
       );
-      setFeatured(data || []);
+      setFeatured((data as Product[]) || []);
       setProductCount(count || 0);
       setLoading(false);
     };
@@ -78,35 +90,35 @@ const Index = () => {
   return (
     <main>
       {/* Hero */}
-      <section className="relative flex min-h-[60vh] items-center overflow-hidden md:min-h-[80vh] text-[hsl(210,15%,92%)]">
+      <section className="relative flex min-h-[60vh] items-center overflow-hidden md:min-h-[80vh] text-foreground">
         <div className="absolute inset-0">
-          <img src={heroBanner} alt="Peças automotivas de alta qualidade" className="h-full w-full object-cover" loading="eager" fetchPriority="high" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[hsl(220,20%,6%)] via-[hsl(220,20%,6%,0.9)] to-[hsl(220,20%,6%,0.3)]" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[hsl(220,20%,6%,0.8)] via-transparent to-transparent" />
+          <img src={heroBanner} alt="Peças automotivas de alta qualidade para motos Agrale, Yamaha, Cagiva e KTM" className="h-full w-full object-cover" loading="eager" fetchPriority="high" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
         </div>
         <div className="container relative z-10 py-10 md:py-20">
           <div className="max-w-2xl animate-fade-in">
             <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-display text-[10px] font-bold uppercase tracking-widest text-primary md:mb-6 md:px-4 md:py-1.5 md:text-[11px]">
-              <Zap className="h-3 w-3" /> Peças de alta performance
+              <Zap className="h-3 w-3" aria-hidden="true" /> Peças de alta performance
             </span>
-            <h1 className="mb-4 font-display text-3xl font-black uppercase leading-[1.1] tracking-wide text-[hsl(210,15%,92%)] sm:text-4xl md:mb-6 md:text-6xl lg:text-7xl">
+            <h1 className="mb-4 font-display text-3xl font-black uppercase leading-[1.1] tracking-wide text-foreground sm:text-4xl md:mb-6 md:text-6xl lg:text-7xl">
               Auto Peças <br /><span className="text-gradient">Agrale</span>
             </h1>
-            <p className="mb-6 max-w-lg font-body text-sm leading-relaxed text-[hsl(215,10%,55%)] md:mb-8 md:text-lg">
+            <p className="mb-6 max-w-lg font-body text-sm leading-relaxed text-muted-foreground md:mb-8 md:text-lg">
               Peças e componentes técnicos para motocicletas clássicas e esportivas.
-              Qualidade profissional com <span className="font-semibold text-[hsl(210,15%,92%)]">visualização 3D interativa</span>.
+              Qualidade profissional com <span className="font-semibold text-foreground">visualização 3D interativa</span>.
             </p>
             <div className="mb-8 flex flex-col gap-3 sm:flex-row md:mb-12">
               <Link to="/catalogo" className="btn-primary-glow inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold transition-all md:px-8 md:py-3.5">
-                Ver Catálogo <ArrowRight className="h-4 w-4" />
+                Ver Catálogo <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
-              <Link to="/suporte" className="inline-flex items-center justify-center gap-2 rounded-lg border border-[hsl(220,12%,16%)] bg-[hsl(220,18%,10%,0.5)] px-6 py-3 text-sm font-medium text-[hsl(210,15%,92%)] backdrop-blur-sm transition-colors hover:bg-[hsl(220,15%,14%)] hover:border-primary/30 md:px-8 md:py-3.5">
-                <Headphones className="h-4 w-4" /> Suporte
+              <Link to="/suporte" className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card/50 px-6 py-3 text-sm font-medium text-foreground backdrop-blur-sm transition-colors hover:bg-secondary hover:border-primary/30 md:px-8 md:py-3.5">
+                <Headphones className="h-4 w-4" aria-hidden="true" /> Suporte
               </Link>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-4 gap-4 border-t border-[hsl(220,12%,16%,0.5)] pt-6 md:flex md:gap-12 md:pt-8">
+            <div className="grid grid-cols-4 gap-4 border-t border-border/50 pt-6 md:flex md:gap-12 md:pt-8">
               <Counter end={productCount} suffix="+" label="Peças" />
               <Counter end={4} label="Marcas" />
               <Counter end={21} suffix="+" label="Modelos" />
@@ -135,8 +147,7 @@ const Index = () => {
                   <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                   <div className="relative flex h-16 w-16 items-center justify-center rounded-xl bg-secondary/80 p-2 transition-transform duration-300 group-hover:scale-110">
                     {brand.logo ?
-                  <img src={brand.logo} alt={brand.name} className="h-full w-full object-contain" /> :
-
+                  <img src={brand.logo} alt={`Logo ${brand.name}`} className="h-full w-full object-contain" /> :
                   <span className="text-3xl">{brand.icon}</span>
                   }
                   </div>
@@ -144,7 +155,7 @@ const Index = () => {
                     <span className="block font-display text-sm font-bold tracking-wider text-foreground">{brand.name}</span>
                     <span className="mt-1 block text-xs text-muted-foreground">{brand.models.length} modelos</span>
                   </div>
-                  <ArrowRight className="relative h-4 w-4 text-primary opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1" />
+                  <ArrowRight className="relative h-4 w-4 text-primary opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1" aria-hidden="true" />
                 </Link>
               </ScrollReveal>
             )}
@@ -162,7 +173,7 @@ const Index = () => {
               <h2 className="section-title text-xl md:text-3xl">Destaques</h2>
             </div>
             <Link to="/catalogo" className="flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:border-primary/40 hover:text-primary md:px-4 md:py-2 md:text-sm">
-              Ver todos <ArrowRight className="h-4 w-4" />
+              Ver todos <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </div>
           </ScrollReveal>
@@ -170,7 +181,6 @@ const Index = () => {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {Array.from({ length: 4 }).map((_, i) => <ProductCardSkeleton key={i} />)}
             </div> :
-
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {featured.map((product) =>
             <ProductCard key={product.id} product={product} />
@@ -191,20 +201,20 @@ const Index = () => {
           </ScrollReveal>
           <div className="grid grid-cols-2 gap-3 md:gap-6 lg:grid-cols-4">
             {[
-            { icon: Box, title: "Visualização 3D", desc: "Veja peças em 3D interativo antes de comprar. Gire, amplie e inspecione cada detalhe.", color: "from-amber-500/20 to-orange-500/20", link: "/visualizacao-3d" },
-            { icon: Shield, title: "Qualidade Garantida", desc: "Todas as peças com garantia de fábrica. Produtos originais e de alta durabilidade.", color: "from-emerald-500/20 to-green-500/20", link: "/qualidade" },
-            { icon: Truck, title: "Envio Nacional", desc: "Entrega para todo o Brasil com rastreamento em tempo real via Melhor Envio.", color: "from-blue-500/20 to-cyan-500/20", link: "/envio" },
-            { icon: Wrench, title: "Suporte Técnico", desc: "Equipe especializada para auxiliar na escolha da peça certa para sua moto.", color: "from-purple-500/20 to-violet-500/20", link: "/suporte-tecnico" }].
+            { icon: Box, title: "Visualização 3D", desc: "Veja peças em 3D interativo antes de comprar. Gire, amplie e inspecione cada detalhe.", color: "from-primary/20 to-primary/10", link: "/visualizacao-3d" },
+            { icon: Shield, title: "Qualidade Garantida", desc: "Todas as peças com garantia de fábrica. Produtos originais e de alta durabilidade.", color: "from-success/20 to-success/10", link: "/qualidade" },
+            { icon: Truck, title: "Envio Nacional", desc: "Entrega para todo o Brasil com rastreamento em tempo real via Melhor Envio.", color: "from-blue-500/20 to-blue-500/10", link: "/envio" },
+            { icon: Wrench, title: "Suporte Técnico", desc: "Equipe especializada para auxiliar na escolha da peça certa para sua moto.", color: "from-purple-500/20 to-purple-500/10", link: "/suporte-tecnico" }].
             map(({ icon: Icon, title, desc, color, link }, idx) =>
             <ScrollReveal key={title} delay={idx * 120}>
               <Link to={link} className="card-industrial group flex flex-col items-center p-4 text-center transition-all duration-300 hover:border-primary/40 cursor-pointer md:p-8">
                 <div className={`mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${color} transition-transform duration-300 group-hover:scale-110 md:mb-5 md:h-14 md:w-14`}>
-                  <Icon className="h-5 w-5 text-primary md:h-7 md:w-7" />
+                  <Icon className="h-5 w-5 text-primary md:h-7 md:w-7" aria-hidden="true" />
                 </div>
                 <h3 className="mb-1 font-display text-[10px] font-bold uppercase tracking-wider text-foreground md:mb-2 md:text-xs">{title}</h3>
                 <p className="hidden text-xs leading-relaxed text-muted-foreground sm:block">{desc}</p>
                 <span className="mt-3 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                  Saiba mais <ArrowRight className="h-3 w-3" />
+                  Saiba mais <ArrowRight className="h-3 w-3" aria-hidden="true" />
                 </span>
               </Link>
               </ScrollReveal>
@@ -226,7 +236,7 @@ const Index = () => {
             </p>
           </div>
           <Link to="/suporte" className="btn-primary-glow inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-8 py-3.5 text-sm font-semibold">
-            Fale Conosco <ArrowRight className="h-4 w-4" />
+            Fale Conosco <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
         </ScrollReveal>
@@ -238,7 +248,6 @@ const Index = () => {
       {/* FAQ */}
       <FAQSection />
     </main>);
-
 };
 
 export default Index;

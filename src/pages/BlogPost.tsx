@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
+import type { Tables } from "@/integrations/supabase/types";
 
 const ImageLightbox = ({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) => {
   const [scale, setScale] = useState(1);
@@ -118,7 +119,7 @@ const BlogPost = () => {
   const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
   const closeLightbox = useCallback(() => setLightbox(null), []);
 
-  const [post, setPost] = useState<any>(null);
+  const [post, setPost] = useState<Tables<"blog_posts"> | null>(null);
   const [loading, setLoading] = useState(true);
 
   useSEO({
