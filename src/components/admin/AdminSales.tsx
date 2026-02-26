@@ -43,7 +43,7 @@ const CHANNELS = [
   { value: "outro", label: "Outro" },
 ];
 
-const COLORS = ["hsl(38, 92%, 50%)", "hsl(200, 70%, 50%)", "hsl(142, 71%, 45%)", "hsl(0, 72%, 51%)", "hsl(270, 70%, 50%)"];
+const COLORS = ["hsl(0, 72%, 51%)", "hsl(200, 70%, 50%)", "hsl(38, 92%, 50%)", "hsl(142, 71%, 45%)", "hsl(270, 70%, 50%)"];
 
 const AdminSales = () => {
   const { user } = useAuth();
