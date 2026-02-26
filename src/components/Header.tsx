@@ -44,9 +44,9 @@ const Header = () => {
           </Link>
 
           {/* Marcas Mega-menu */}
-          <div className="relative" onMouseEnter={() => openMenu("marcas")} onMouseLeave={closeMenu}>
-            <button className="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-              Marcas <ChevronDown className={`h-3.5 w-3.5 transition-transform ${megaMenu === "marcas" ? "rotate-180" : ""}`} />
+          <div className="relative" onMouseEnter={() => openMenu("marcas")} onMouseLeave={closeMenu} role="navigation" aria-label="Menu de marcas">
+            <button className="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" aria-expanded={megaMenu === "marcas"} aria-haspopup="true">
+              Marcas <ChevronDown className={`h-3.5 w-3.5 transition-transform ${megaMenu === "marcas" ? "rotate-180" : ""}`} aria-hidden="true" />
             </button>
             {megaMenu === "marcas" && (
               <div className="absolute left-1/2 top-full z-50 -translate-x-1/2 pt-2" onMouseEnter={() => openMenu("marcas")} onMouseLeave={closeMenu}>
@@ -85,9 +85,9 @@ const Header = () => {
           </div>
 
           {/* Catálogo Mega-menu */}
-          <div className="relative" onMouseEnter={() => openMenu("catalogo")} onMouseLeave={closeMenu}>
-            <button className="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-              Catálogo <ChevronDown className={`h-3.5 w-3.5 transition-transform ${megaMenu === "catalogo" ? "rotate-180" : ""}`} />
+          <div className="relative" onMouseEnter={() => openMenu("catalogo")} onMouseLeave={closeMenu} role="navigation" aria-label="Menu do catálogo">
+            <button className="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" aria-expanded={megaMenu === "catalogo"} aria-haspopup="true">
+              Catálogo <ChevronDown className={`h-3.5 w-3.5 transition-transform ${megaMenu === "catalogo" ? "rotate-180" : ""}`} aria-hidden="true" />
             </button>
             {megaMenu === "catalogo" && (
               <div className="absolute left-1/2 top-full z-50 -translate-x-1/2 pt-2" onMouseEnter={() => openMenu("catalogo")} onMouseLeave={closeMenu}>
@@ -122,9 +122,9 @@ const Header = () => {
           <Link to="/blog" className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">Blog</Link>
 
           {/* Suporte Mega-menu */}
-          <div className="relative" onMouseEnter={() => openMenu("suporte")} onMouseLeave={closeMenu}>
-            <button className="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-              Suporte <ChevronDown className={`h-3.5 w-3.5 transition-transform ${megaMenu === "suporte" ? "rotate-180" : ""}`} />
+          <div className="relative" onMouseEnter={() => openMenu("suporte")} onMouseLeave={closeMenu} role="navigation" aria-label="Menu de suporte">
+            <button className="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" aria-expanded={megaMenu === "suporte"} aria-haspopup="true">
+              Suporte <ChevronDown className={`h-3.5 w-3.5 transition-transform ${megaMenu === "suporte" ? "rotate-180" : ""}`} aria-hidden="true" />
             </button>
             {megaMenu === "suporte" && (
               <div className="absolute right-0 top-full z-50 pt-2" onMouseEnter={() => openMenu("suporte")} onMouseLeave={closeMenu}>
@@ -167,13 +167,13 @@ const Header = () => {
           <NotificationBell />
 
           {user && (
-            <Link to="/favoritos" className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" title="Favoritos">
-              <Heart className="h-5 w-5" />
+            <Link to="/favoritos" className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" title="Favoritos" aria-label="Meus favoritos">
+              <Heart className="h-5 w-5" aria-hidden="true" />
             </Link>
           )}
 
-          <Link to="/carrinho" className="relative rounded-md p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-            <ShoppingCart className="h-5 w-5" />
+          <Link to="/carrinho" className="relative rounded-md p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" aria-label={`Carrinho com ${totalItems} ${totalItems === 1 ? 'item' : 'itens'}`}>
+            <ShoppingCart className="h-5 w-5" aria-hidden="true" />
             {totalItems > 0 && (
               <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
                 {totalItems}
@@ -183,11 +183,11 @@ const Header = () => {
 
           {user ? (
             <div className="flex items-center gap-1">
-              <Link to="/minha-conta" className="rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-foreground" title="Minha conta">
-                <User className="h-5 w-5" />
+              <Link to="/minha-conta" className="rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-foreground" title="Minha conta" aria-label="Minha conta">
+                <User className="h-5 w-5" aria-hidden="true" />
               </Link>
-              <button onClick={() => signOut()} className="rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-foreground">
-                <LogOut className="h-5 w-5" />
+              <button onClick={() => signOut()} className="rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-foreground" aria-label="Sair da conta">
+                <LogOut className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
           ) : (
@@ -196,8 +196,8 @@ const Header = () => {
             </Link>
           )}
 
-          <button className="rounded-md p-2 text-muted-foreground md:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          <button className="rounded-md p-2 text-muted-foreground md:hidden" onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? "Fechar menu" : "Abrir menu"} aria-expanded={mobileOpen}>
+            {mobileOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
           </button>
         </div>
       </div>

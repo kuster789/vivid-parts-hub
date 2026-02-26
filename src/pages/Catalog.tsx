@@ -7,6 +7,7 @@ import CatalogSidebar, { CatalogMobileFilters } from "@/components/CatalogSideba
 import { brands } from "@/data/products";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
+import type { Tables } from "@/integrations/supabase/types";
 import {
   Pagination,
   PaginationContent,
@@ -40,7 +41,7 @@ const Catalog = () => {
 
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState<string>("newest");
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Tables<"products">[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const ITEMS_PER_PAGE = 12;
@@ -66,7 +67,7 @@ const Catalog = () => {
           _model: activeModel || null,
         });
 
-        let filtered = (allFiltered || []) as any[];
+        let filtered = (allFiltered || []) as Tables<"products">[];
 
         // Apply additional client-side filters
         if (priceMin > 0) filtered = filtered.filter(p => p.price >= priceMin);
