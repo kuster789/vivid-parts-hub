@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Package, Plus, Pencil, Trash2, Save, X, Upload, Image, Loader2, FileBox,
   Search, Eye, GripVertical, AlertTriangle, CheckCircle, Clock, Ban, ChevronDown,
-  ChevronLeft, ChevronRight, RotateCw
+  ChevronLeft, ChevronRight, RotateCw, Wand2
 } from "lucide-react";
 import { uploadProductImage, deleteProductImage, upload3DModel } from "@/lib/storage";
 import { brands } from "@/data/products";
@@ -57,6 +57,7 @@ const AdminProducts = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [rotatingIdx, setRotatingIdx] = useState<number | null>(null);
+  const [removingBgIdx, setRemovingBgIdx] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -178,6 +179,35 @@ const AdminProducts = () => {
       toast.error("Erro ao rotacionar: " + err.message);
     } finally {
       setRotatingIdx(null);
+    }
+  };
+
+  // Remove background using AI
+  const handleRemoveBackground = async (url: string, idx: number) => {
+    setRemovingBgIdx(idx);
+    try {
+      const { data, error } = await supabase.functions.invoke("remove-background", {
+        body: { imageUrl: url },
+      });
+      if (error) throw new Error(error.message || "Erro na função");
+      if (data?.error) throw new Error(data.error);
+
+      const base64 = data.image;
+      if (!base64) throw new Error("Nenhuma imagem retornada");
+
+      // Convert base64 to file and upload
+      const res = await fetch(base64);
+      const blob = await res.blob();
+      const file = new File([blob], `nobg-${Date.now()}.png`, { type: "image/png" });
+      const tempId = editingId || "temp-" + Date.now();
+      const newUrl = await uploadProductImage(tempId, file);
+      setFormImages(prev => prev.map((u, i) => i === idx ? newUrl : u));
+      await deleteProductImage(url);
+      toast.success("Fundo removido com sucesso!");
+    } catch (err: any) {
+      toast.error("Erro ao remover fundo: " + err.message);
+    } finally {
+      setRemovingBgIdx(null);
     }
   };
 
@@ -535,14 +565,17 @@ const AdminProducts = () => {
                       }`}
                     >
                       <img src={img} alt={`Foto ${idx + 1}`} className="h-full w-full object-cover" loading="lazy" />
-                      {rotatingIdx === idx && (
+                      {(rotatingIdx === idx || removingBgIdx === idx) && (
                         <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80">
                           <Loader2 className="h-5 w-5 animate-spin text-primary" />
                         </div>
                       )}
                       <div className="absolute inset-0 flex items-center justify-center gap-1 bg-background/60 opacity-0 group-hover/img:opacity-100 transition-opacity">
                         <GripVertical className="h-4 w-4 text-muted-foreground" />
-                        <button onClick={() => handleRotateImage(img, idx)} disabled={rotatingIdx !== null} className="rounded bg-secondary p-1 text-foreground hover:bg-primary hover:text-primary-foreground transition-colors disabled:opacity-50" title="Girar 90°">
+                        <button onClick={() => handleRemoveBackground(img, idx)} disabled={rotatingIdx !== null || removingBgIdx !== null} className="rounded bg-secondary p-1 text-foreground hover:bg-primary hover:text-primary-foreground transition-colors disabled:opacity-50" title="Remover fundo (IA)">
+                          <Wand2 className="h-3 w-3" />
+                        </button>
+                        <button onClick={() => handleRotateImage(img, idx)} disabled={rotatingIdx !== null || removingBgIdx !== null} className="rounded bg-secondary p-1 text-foreground hover:bg-primary hover:text-primary-foreground transition-colors disabled:opacity-50" title="Girar 90°">
                           <RotateCw className="h-3 w-3" />
                         </button>
                         <button onClick={() => handleRemoveImage(img)} className="rounded bg-destructive/90 p-1 text-destructive-foreground" title="Remover">
