@@ -136,15 +136,8 @@ const ProductDetail = () => {
                           className="pointer-events-none absolute inset-0 transition-all duration-500"
                           style={{
                             backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex,
-                            WebkitMaskImage: `url(${product.images[activeImageIdx] || product.images[0]})`,
-                            maskImage: `url(${product.images[activeImageIdx] || product.images[0]})`,
-                            WebkitMaskSize: "contain",
-                            maskSize: "contain",
-                            WebkitMaskPosition: "center",
-                            maskPosition: "center",
-                            WebkitMaskRepeat: "no-repeat",
-                            maskRepeat: "no-repeat",
-                            opacity: selectedColor === "Preto" ? 0.85 : selectedColor === "Branco" ? 0.6 : 0.65,
+                            mixBlendMode: "color",
+                            opacity: selectedColor === "Preto" ? 0.9 : selectedColor === "Branco" ? 0.7 : 0.75,
                           }}
                         />
                       )}
@@ -173,14 +166,11 @@ const ProductDetail = () => {
                          >
                            <img src={img} alt={`${product.name} ${idx + 1}`} className="h-full w-full bg-white object-contain" />
                            {selectedColor && (
-                             <div className="pointer-events-none absolute inset-0" style={{
-                               backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex,
-                               WebkitMaskImage: `url(${img})`, maskImage: `url(${img})`,
-                               WebkitMaskSize: "contain", maskSize: "contain",
-                               WebkitMaskPosition: "center", maskPosition: "center",
-                               WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
-                               opacity: selectedColor === "Preto" ? 0.85 : selectedColor === "Branco" ? 0.6 : 0.65,
-                             }} />
+                            <div className="pointer-events-none absolute inset-0" style={{
+                                backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex,
+                                mixBlendMode: "color",
+                                opacity: selectedColor === "Preto" ? 0.9 : selectedColor === "Branco" ? 0.7 : 0.75,
+                              }} />
                            )}
                          </button>
                       ))}
