@@ -14,10 +14,12 @@ const ThemeToggle = () => {
     if (dark) {
       root.classList.remove("light");
       root.classList.add("dark");
+      root.setAttribute("data-theme", "dark");
       localStorage.setItem("theme", "dark");
     } else {
       root.classList.remove("dark");
       root.classList.add("light");
+      root.setAttribute("data-theme", "light");
       localStorage.setItem("theme", "light");
     }
   }, [dark]);

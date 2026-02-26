@@ -57,6 +57,7 @@
     --success-foreground: 220 20% 6%;
   }
 
+  [data-theme="light"],
   .light {
     --background: 0 0% 98%;
     --foreground: 220 20% 10%;
