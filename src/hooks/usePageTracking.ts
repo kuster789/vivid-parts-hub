@@ -31,18 +31,20 @@ export const usePageTracking = () => {
 
     const sessionId = getSessionId();
     const utm = getUtmParams(location.search);
+    const pageViewId = crypto.randomUUID();
 
     supabase.from("page_views").insert({
+      id: pageViewId,
       session_id: sessionId,
       path,
       referrer: document.referrer || null,
       user_agent: navigator.userAgent || null,
       ...utm,
-    } as any).select("id").single().then(({ data }) => {
-      if (data?.id) {
+    } as any).then(({ error }) => {
+      if (!error) {
         // Fire-and-forget geo resolution via edge function
         supabase.functions.invoke("geo-resolve", {
-          body: { page_view_id: data.id },
+          body: { page_view_id: pageViewId },
         });
       }
     });
