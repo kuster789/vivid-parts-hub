@@ -295,10 +295,13 @@ export type Database = {
       }
       page_views: {
         Row: {
+          city: string | null
+          country: string | null
           created_at: string
           id: string
           path: string
           referrer: string | null
+          region: string | null
           session_id: string
           user_agent: string | null
           utm_campaign: string | null
@@ -306,10 +309,13 @@ export type Database = {
           utm_source: string | null
         }
         Insert: {
+          city?: string | null
+          country?: string | null
           created_at?: string
           id?: string
           path?: string
           referrer?: string | null
+          region?: string | null
           session_id: string
           user_agent?: string | null
           utm_campaign?: string | null
@@ -317,10 +323,13 @@ export type Database = {
           utm_source?: string | null
         }
         Update: {
+          city?: string | null
+          country?: string | null
           created_at?: string
           id?: string
           path?: string
           referrer?: string | null
+          region?: string | null
           session_id?: string
           user_agent?: string | null
           utm_campaign?: string | null

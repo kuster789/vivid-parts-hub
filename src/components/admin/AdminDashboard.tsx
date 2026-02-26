@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import AdminCharts from "@/components/AdminCharts";
 import VisitorStats from "@/components/admin/VisitorStats";
+import GeoStats from "@/components/admin/GeoStats";
 import { toast } from "sonner";
 import DashboardKPIs, { type KPICard } from "./dashboard/DashboardKPIs";
 import StatusPipeline, { type StatusCard } from "./dashboard/StatusPipeline";
@@ -247,6 +248,7 @@ const AdminDashboard = () => {
 
       <MonthlyComparisonChart data={monthlyComparison} />
       <VisitorStats />
+      <GeoStats />
       <AdminCharts />
       <RecentOrdersTable orders={stats.recentOrders} />
 

@@ -38,6 +38,13 @@ export const usePageTracking = () => {
       referrer: document.referrer || null,
       user_agent: navigator.userAgent || null,
       ...utm,
-    } as any).then(() => {});
+    } as any).select("id").single().then(({ data }) => {
+      if (data?.id) {
+        // Fire-and-forget geo resolution via edge function
+        supabase.functions.invoke("geo-resolve", {
+          body: { page_view_id: data.id },
+        });
+      }
+    });
   }, [location.pathname, location.search]);
 };
