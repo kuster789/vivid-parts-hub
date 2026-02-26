@@ -123,7 +123,7 @@ const ProductDetail = () => {
                 <ProductViewer3D modelUrl={product.model_3d_url} />
               ) : product.images && product.images.length > 0 ? (
                 <div className="space-y-3">
-                  <div className="relative overflow-hidden rounded-lg border border-border bg-secondary/30">
+                  <div className="relative overflow-hidden rounded-lg border border-border bg-white">
                     <div className="relative">
                       <img
                         src={product.images[activeImageIdx] || product.images[0]}
@@ -171,7 +171,7 @@ const ProductDetail = () => {
                              activeImageIdx === idx ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/40"
                            }`}
                          >
-                           <img src={img} alt={`${product.name} ${idx + 1}`} className="h-full w-full object-contain" />
+                           <img src={img} alt={`${product.name} ${idx + 1}`} className="h-full w-full bg-white object-contain" />
                            {selectedColor && (
                              <div className="pointer-events-none absolute inset-0" style={{
                                backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex,
