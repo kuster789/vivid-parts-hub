@@ -136,8 +136,8 @@ const ProductDetail = () => {
                           className="pointer-events-none absolute inset-0 transition-all duration-500"
                           style={{
                             backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex,
-                            mixBlendMode: "color",
-                            opacity: selectedColor === "Preto" ? 0.9 : selectedColor === "Branco" ? 0.7 : 0.75,
+                            mixBlendMode: selectedColor === "Preto" ? "multiply" : selectedColor === "Branco" || selectedColor === "Amarelo" ? "darken" : "color",
+                            opacity: selectedColor === "Preto" ? 0.95 : selectedColor === "Branco" ? 0.15 : selectedColor === "Amarelo" ? 0.5 : 0.75,
                           }}
                         />
                       )}
@@ -168,8 +168,8 @@ const ProductDetail = () => {
                            {selectedColor && (
                             <div className="pointer-events-none absolute inset-0" style={{
                                 backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex,
-                                mixBlendMode: "color",
-                                opacity: selectedColor === "Preto" ? 0.9 : selectedColor === "Branco" ? 0.7 : 0.75,
+                                mixBlendMode: selectedColor === "Preto" ? "multiply" : selectedColor === "Branco" || selectedColor === "Amarelo" ? "darken" : "color",
+                                opacity: selectedColor === "Preto" ? 0.95 : selectedColor === "Branco" ? 0.15 : selectedColor === "Amarelo" ? 0.5 : 0.75,
                               }} />
                            )}
                          </button>
