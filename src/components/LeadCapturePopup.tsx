@@ -36,7 +36,8 @@ const LeadCapturePopup = () => {
     e.preventDefault();
     if (!email.trim()) return;
     try {
-      await supabase.from("leads").insert({ email: email.trim(), source: "popup" });
+      const sessionId = sessionStorage.getItem("pv_session") || null;
+      await supabase.from("leads").insert({ email: email.trim(), source: "popup", session_id: sessionId } as any);
     } catch {
       // fallback silently
     }
