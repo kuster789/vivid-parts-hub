@@ -60,6 +60,7 @@ const AdminProducts = () => {
   const [removingBgIdx, setRemovingBgIdx] = useState<number | null>(null);
   const [bgCompare, setBgCompare] = useState<{ originalUrl: string; resultBase64: string; idx: number } | null>(null);
   const [acceptingBg, setAcceptingBg] = useState(false);
+  const [bgWhite, setBgWhite] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -206,14 +207,38 @@ const AdminProducts = () => {
     }
   };
 
-  // Remove background — step 2: accept result
+  // Remove background — step 2: accept result (optionally compositing white bg)
   const handleAcceptBgRemoval = async () => {
     if (!bgCompare) return;
     setAcceptingBg(true);
     try {
-      const res = await fetch(bgCompare.resultBase64);
-      const blob = await res.blob();
-      const file = new File([blob], `nobg-${Date.now()}.png`, { type: "image/png" });
+      let finalBlob: Blob;
+
+      if (bgWhite) {
+        // Composite on white background using canvas
+        const img = new window.Image();
+        img.crossOrigin = "anonymous";
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error("Falha ao carregar imagem"));
+          img.src = bgCompare.resultBase64;
+        });
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d")!;
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        finalBlob = await new Promise<Blob>((resolve, reject) =>
+          canvas.toBlob(b => b ? resolve(b) : reject(new Error("Canvas export failed")), "image/png")
+        );
+      } else {
+        const res = await fetch(bgCompare.resultBase64);
+        finalBlob = await res.blob();
+      }
+
+      const file = new File([finalBlob], `nobg-${Date.now()}.png`, { type: "image/png" });
       const tempId = editingId || "temp-" + Date.now();
       const newUrl = await uploadProductImage(tempId, file);
       setFormImages(prev => prev.map((u, i) => i === bgCompare.idx ? newUrl : u));
@@ -756,10 +781,24 @@ const AdminProducts = () => {
                 </div>
                 <div className="text-center">
                   <p className="mb-2 text-xs font-bold uppercase tracking-wider text-primary">Depois</p>
-                  <div className="relative overflow-hidden rounded-lg border border-primary/30 bg-[repeating-conic-gradient(hsl(var(--muted))_0%_25%,transparent_0%_50%)] bg-[length:16px_16px]">
+                  <div className={`relative overflow-hidden rounded-lg border border-primary/30 ${bgWhite ? "bg-white" : "bg-[repeating-conic-gradient(hsl(var(--muted))_0%_25%,transparent_0%_50%)] bg-[length:16px_16px]"}`}>
                     <img src={bgCompare.resultBase64} alt="Sem fundo" className="h-56 w-full object-contain" />
                   </div>
                 </div>
+              </div>
+
+              {/* White background toggle */}
+              <div className="mt-4 flex items-center gap-3">
+                <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={bgWhite}
+                    onChange={(e) => setBgWhite(e.target.checked)}
+                    className="h-4 w-4 rounded border-border accent-primary"
+                  />
+                  <span className="font-medium text-foreground">Fundo branco</span>
+                  <span className="text-muted-foreground">(recomendado para e-commerce)</span>
+                </label>
               </div>
 
               <div className="mt-6 flex items-center justify-end gap-3">
@@ -768,7 +807,7 @@ const AdminProducts = () => {
                 </button>
                 <button onClick={handleAcceptBgRemoval} disabled={acceptingBg} className="btn-primary-glow flex items-center gap-1.5 rounded-lg px-5 py-2.5 text-xs font-semibold disabled:opacity-50">
                   {acceptingBg ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
-                  Aceitar Resultado
+                  {bgWhite ? "Aceitar com Fundo Branco" : "Aceitar Transparente"}
                 </button>
               </div>
             </div>
