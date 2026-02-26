@@ -58,6 +58,8 @@ const AdminProducts = () => {
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [rotatingIdx, setRotatingIdx] = useState<number | null>(null);
   const [removingBgIdx, setRemovingBgIdx] = useState<number | null>(null);
+  const [bgCompare, setBgCompare] = useState<{ originalUrl: string; resultBase64: string; idx: number } | null>(null);
+  const [acceptingBg, setAcceptingBg] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -182,7 +184,7 @@ const AdminProducts = () => {
     }
   };
 
-  // Remove background using AI
+  // Remove background using AI — step 1: get preview
   const handleRemoveBackground = async (url: string, idx: number) => {
     setRemovingBgIdx(idx);
     try {
@@ -195,19 +197,33 @@ const AdminProducts = () => {
       const base64 = data.image;
       if (!base64) throw new Error("Nenhuma imagem retornada");
 
-      // Convert base64 to file and upload
-      const res = await fetch(base64);
-      const blob = await res.blob();
-      const file = new File([blob], `nobg-${Date.now()}.png`, { type: "image/png" });
-      const tempId = editingId || "temp-" + Date.now();
-      const newUrl = await uploadProductImage(tempId, file);
-      setFormImages(prev => prev.map((u, i) => i === idx ? newUrl : u));
-      await deleteProductImage(url);
-      toast.success("Fundo removido com sucesso!");
+      // Show comparison dialog instead of auto-replacing
+      setBgCompare({ originalUrl: url, resultBase64: base64, idx });
     } catch (err: any) {
       toast.error("Erro ao remover fundo: " + err.message);
     } finally {
       setRemovingBgIdx(null);
+    }
+  };
+
+  // Remove background — step 2: accept result
+  const handleAcceptBgRemoval = async () => {
+    if (!bgCompare) return;
+    setAcceptingBg(true);
+    try {
+      const res = await fetch(bgCompare.resultBase64);
+      const blob = await res.blob();
+      const file = new File([blob], `nobg-${Date.now()}.png`, { type: "image/png" });
+      const tempId = editingId || "temp-" + Date.now();
+      const newUrl = await uploadProductImage(tempId, file);
+      setFormImages(prev => prev.map((u, i) => i === bgCompare.idx ? newUrl : u));
+      await deleteProductImage(bgCompare.originalUrl);
+      toast.success("Fundo removido com sucesso!");
+      setBgCompare(null);
+    } catch (err: any) {
+      toast.error("Erro ao salvar imagem: " + err.message);
+    } finally {
+      setAcceptingBg(false);
     }
   };
 
@@ -710,6 +726,49 @@ const AdminProducts = () => {
                 <button onClick={handleSave} disabled={saving} className="btn-primary-glow flex items-center gap-1.5 rounded-lg px-5 py-2 text-xs font-semibold disabled:opacity-50">
                   {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                   {editingId ? "Salvar Alterações" : "Criar Produto"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Background removal comparison dialog */}
+      {bgCompare && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4" onClick={() => setBgCompare(null)}>
+          <div className="w-full max-w-2xl rounded-xl border border-border bg-card shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border px-6 py-4">
+              <h3 className="flex items-center gap-2 font-display text-sm font-bold uppercase tracking-wider text-foreground">
+                <Wand2 className="h-4 w-4 text-primary" /> Comparação — Remover Fundo
+              </h3>
+              <button onClick={() => setBgCompare(null)} className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Antes</p>
+                  <div className="relative overflow-hidden rounded-lg border border-border bg-[repeating-conic-gradient(hsl(var(--muted))_0%_25%,transparent_0%_50%)] bg-[length:16px_16px]">
+                    <img src={bgCompare.originalUrl} alt="Original" className="h-56 w-full object-contain" />
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wider text-primary">Depois</p>
+                  <div className="relative overflow-hidden rounded-lg border border-primary/30 bg-[repeating-conic-gradient(hsl(var(--muted))_0%_25%,transparent_0%_50%)] bg-[length:16px_16px]">
+                    <img src={bgCompare.resultBase64} alt="Sem fundo" className="h-56 w-full object-contain" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 flex items-center justify-end gap-3">
+                <button onClick={() => setBgCompare(null)} className="rounded-lg border border-border px-5 py-2.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  Descartar
+                </button>
+                <button onClick={handleAcceptBgRemoval} disabled={acceptingBg} className="btn-primary-glow flex items-center gap-1.5 rounded-lg px-5 py-2.5 text-xs font-semibold disabled:opacity-50">
+                  {acceptingBg ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
+                  Aceitar Resultado
                 </button>
               </div>
             </div>
