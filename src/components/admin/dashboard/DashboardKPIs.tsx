@@ -1,4 +1,5 @@
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { LineChart, Line, ResponsiveContainer } from "recharts";
 import type { LucideIcon } from "lucide-react";
 
 export interface KPICard {
@@ -7,6 +8,7 @@ export interface KPICard {
   icon: LucideIcon;
   trend: string;
   up: boolean | null;
+  sparkline?: number[];
 }
 
 interface DashboardKPIsProps {
@@ -15,7 +17,7 @@ interface DashboardKPIsProps {
 
 const DashboardKPIs = ({ cards }: DashboardKPIsProps) => (
   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-    {cards.map(({ label, value, icon: Icon, trend, up }) => (
+    {cards.map(({ label, value, icon: Icon, trend, up, sparkline }) => (
       <div key={label} className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
         <div className="flex items-start justify-between">
           <div>
@@ -26,7 +28,24 @@ const DashboardKPIs = ({ cards }: DashboardKPIsProps) => (
             <Icon className="h-5 w-5 text-primary" />
           </div>
         </div>
-        <div className="mt-3 flex items-center gap-1 text-xs">
+
+        {sparkline && sparkline.length > 1 && (
+          <div className="mt-2 h-8">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={sparkline.map((v, i) => ({ i, v }))}>
+                <Line
+                  type="monotone"
+                  dataKey="v"
+                  stroke={up === false ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
+                  strokeWidth={1.5}
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        <div className={`${sparkline ? "mt-1" : "mt-3"} flex items-center gap-1 text-xs`}>
           {up !== null && (
             up ? <ArrowUpRight className="h-3 w-3 text-success" /> : <ArrowDownRight className="h-3 w-3 text-destructive" />
           )}
