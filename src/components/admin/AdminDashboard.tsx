@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Package, ShoppingBag, DollarSign, Calendar, Truck, TrendingUp, Users, Loader2, Mail } from "lucide-react";
-import { format } from "date-fns";
+import { Package, ShoppingBag, DollarSign, Calendar, Truck, TrendingUp, Users, Loader2, Mail, BarChart3, Globe, Eye } from "lucide-react";
+import { format, subDays, isAfter, startOfDay, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import AdminCharts from "@/components/AdminCharts";
 import VisitorStats from "@/components/admin/VisitorStats";
@@ -14,7 +14,10 @@ import InventorySection from "./dashboard/InventorySection";
 import MonthlyComparisonChart from "./dashboard/MonthlyComparisonChart";
 import RecentOrdersTable from "./dashboard/RecentOrdersTable";
 import StockEditDialog from "./dashboard/StockEditDialog";
-import type { Tables } from "@/integrations/supabase/types";
+import DashboardDateFilter, { type DateRange } from "./dashboard/DashboardDateFilter";
+import QuickActions from "./dashboard/QuickActions";
+import PriorityAlerts from "./dashboard/PriorityAlerts";
+import DashboardSection from "./dashboard/DashboardSection";
 
 interface ProductRow {
   id: string;
@@ -39,28 +42,7 @@ interface SaleRow {
   order_date: string;
 }
 
-interface DashboardStats {
-  products: number;
-  orders: number;
-  revenue: number;
-  pending: number;
-  shipped: number;
-  delivered: number;
-  cancelled: number;
-  customers: number;
-  leads: number;
-  recentOrders: OrderRow[];
-  externalRevenue: number;
-  externalProfit: number;
-  externalCount: number;
-}
-
 const AdminDashboard = () => {
-  const [stats, setStats] = useState<DashboardStats>({
-    products: 0, orders: 0, revenue: 0, pending: 0, shipped: 0, delivered: 0, cancelled: 0, customers: 0, leads: 0,
-    recentOrders: [],
-    externalRevenue: 0, externalProfit: 0, externalCount: 0,
-  });
   const [ordersRaw, setOrdersRaw] = useState<OrderRow[]>([]);
   const [salesRaw, setSalesRaw] = useState<SaleRow[]>([]);
   const [allProducts, setAllProducts] = useState<ProductRow[]>([]);
@@ -69,14 +51,23 @@ const AdminDashboard = () => {
   const [editProduct, setEditProduct] = useState<ProductRow | null>(null);
   const [editStock, setEditStock] = useState("");
   const [saving, setSaving] = useState(false);
+  const [customerCount, setCustomerCount] = useState(0);
+  const [leadCount, setLeadCount] = useState(0);
+  const [prodCount, setProdCount] = useState(0);
+
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: subDays(new Date(), 30),
+    to: new Date(),
+    label: "Últimos 30 dias",
+  });
 
   useEffect(() => {
     const load = async () => {
       const [
-        { count: prodCount },
+        { count: pc },
         { data: orders },
-        { count: customerCount },
-        { count: leadCount },
+        { count: cc },
+        { count: lc },
         { data: productsData },
         { data: salesData },
       ] = await Promise.all([
@@ -88,33 +79,74 @@ const AdminDashboard = () => {
         supabase.from("sales").select("piece_value, net_value, order_date"),
       ]);
 
-      const o = (orders || []) as OrderRow[];
-      const s = (salesData || []) as SaleRow[];
-      const externalRevenue = s.reduce((sum, x) => sum + Number(x.piece_value), 0);
-      const externalProfit = s.reduce((sum, x) => sum + Number(x.net_value || 0), 0);
-
       setAllProducts((productsData as ProductRow[]) || []);
-      setOrdersRaw(o);
-      setSalesRaw(s);
-      setStats({
-        products: prodCount || 0,
-        orders: o.length,
-        revenue: o.reduce((sum, x) => sum + Number(x.total), 0),
-        pending: o.filter((x) => x.status === "pending").length,
-        shipped: o.filter((x) => x.status === "shipped").length,
-        delivered: o.filter((x) => x.status === "delivered").length,
-        cancelled: o.filter((x) => x.status === "cancelled").length,
-        customers: customerCount || 0,
-        leads: leadCount || 0,
-        recentOrders: o.slice(0, 5),
-        externalRevenue,
-        externalProfit,
-        externalCount: s.length,
-      });
+      setOrdersRaw((orders || []) as OrderRow[]);
+      setSalesRaw((salesData || []) as SaleRow[]);
+      setCustomerCount(cc || 0);
+      setLeadCount(lc || 0);
+      setProdCount(pc || 0);
       setLoading(false);
     };
     load();
   }, []);
+
+  // Filter by date range
+  const filteredOrders = useMemo(() =>
+    ordersRaw.filter((o) => {
+      const d = new Date(o.created_at);
+      return isAfter(d, startOfDay(dateRange.from)) && d <= dateRange.to;
+    }),
+    [ordersRaw, dateRange]
+  );
+
+  const filteredSales = useMemo(() =>
+    salesRaw.filter((s) => {
+      const d = new Date(s.order_date);
+      return isAfter(d, startOfDay(dateRange.from)) && d <= dateRange.to;
+    }),
+    [salesRaw, dateRange]
+  );
+
+  // Sparkline data: daily values for last N days
+  const buildSparkline = useCallback((items: { date: Date; value: number }[], days: number) => {
+    const result: number[] = [];
+    const now = new Date();
+    for (let i = days - 1; i >= 0; i--) {
+      const day = startOfDay(subDays(now, i));
+      const nextDay = startOfDay(subDays(now, i - 1));
+      const total = items
+        .filter((it) => it.date >= day && it.date < nextDay)
+        .reduce((sum, it) => sum + it.value, 0);
+      result.push(total);
+    }
+    return result;
+  }, []);
+
+  const sparkDays = Math.min(differenceInDays(dateRange.to, dateRange.from), 30) || 7;
+
+  const revenueSparkline = useMemo(() =>
+    buildSparkline(filteredOrders.map((o) => ({ date: new Date(o.created_at), value: Number(o.total) })), sparkDays),
+    [filteredOrders, sparkDays, buildSparkline]
+  );
+
+  const ordersSparkline = useMemo(() =>
+    buildSparkline(filteredOrders.map((o) => ({ date: new Date(o.created_at), value: 1 })), sparkDays),
+    [filteredOrders, sparkDays, buildSparkline]
+  );
+
+  const salesSparkline = useMemo(() =>
+    buildSparkline(filteredSales.map((s) => ({ date: new Date(s.order_date), value: Number(s.piece_value) })), sparkDays),
+    [filteredSales, sparkDays, buildSparkline]
+  );
+
+  // Stats computed from filtered data
+  const revenue = useMemo(() => filteredOrders.reduce((sum, o) => sum + Number(o.total), 0), [filteredOrders]);
+  const pending = useMemo(() => filteredOrders.filter((o) => o.status === "pending").length, [filteredOrders]);
+  const shipped = useMemo(() => filteredOrders.filter((o) => o.status === "shipped").length, [filteredOrders]);
+  const delivered = useMemo(() => filteredOrders.filter((o) => o.status === "delivered").length, [filteredOrders]);
+  const cancelled = useMemo(() => filteredOrders.filter((o) => o.status === "cancelled").length, [filteredOrders]);
+  const externalRevenue = useMemo(() => filteredSales.reduce((sum, s) => sum + Number(s.piece_value), 0), [filteredSales]);
+  const externalProfit = useMemo(() => filteredSales.reduce((sum, s) => sum + Number(s.net_value || 0), 0), [filteredSales]);
 
   const brands = useMemo(() => Array.from(new Set(allProducts.map((p) => p.brand))).sort(), [allProducts]);
   const filteredProducts = useMemo(() => selectedBrand ? allProducts.filter((p) => p.brand === selectedBrand) : allProducts, [allProducts, selectedBrand]);
@@ -142,18 +174,18 @@ const AdminDashboard = () => {
 
   const monthlyComparison = useMemo(() => {
     const map: Record<string, { site: number; externo: number }> = {};
-    ordersRaw.forEach((o) => {
+    filteredOrders.forEach((o) => {
       const key = format(new Date(o.created_at), "MMM/yy", { locale: ptBR });
       if (!map[key]) map[key] = { site: 0, externo: 0 };
       map[key].site += Number(o.total);
     });
-    salesRaw.forEach((s) => {
+    filteredSales.forEach((s) => {
       const key = format(new Date(s.order_date), "MMM/yy", { locale: ptBR });
       if (!map[key]) map[key] = { site: 0, externo: 0 };
       map[key].externo += Number(s.piece_value);
     });
     return Object.entries(map).map(([name, v]) => ({ name, ...v }));
-  }, [ordersRaw, salesRaw]);
+  }, [filteredOrders, filteredSales]);
 
   const topProducts = useMemo(() =>
     filteredProducts
@@ -207,50 +239,76 @@ const AdminDashboard = () => {
 
   const lowStockProducts = allProducts.filter((p) => p.stock > 0 && p.stock < 5);
   const outOfStockProducts = allProducts.filter((p) => p.stock === 0);
-  const totalRevenue = stats.revenue + stats.externalRevenue;
+  const totalRevenue = revenue + externalRevenue;
 
   const mainCards: KPICard[] = [
-    { label: "Receita Total", value: `R$ ${totalRevenue.toFixed(2).replace(".", ",")}`, icon: DollarSign, trend: `Site: R$ ${stats.revenue.toFixed(0)} + Externo: R$ ${stats.externalRevenue.toFixed(0)}`, up: true },
-    { label: "Pedidos (Site)", value: stats.orders, icon: ShoppingBag, trend: `${stats.pending} pendentes`, up: null },
-    { label: "Vendas Externas", value: stats.externalCount, icon: TrendingUp, trend: `Lucro: R$ ${stats.externalProfit.toFixed(2).replace(".", ",")}`, up: stats.externalProfit > 0 },
-    { label: "Produtos", value: stats.products, icon: Package, trend: "Ativos no catálogo", up: null },
-    { label: "Clientes", value: stats.customers, icon: Users, trend: "Registrados", up: null },
-    { label: "Leads", value: stats.leads, icon: Mail, trend: "Emails capturados", up: null },
+    { label: "Receita Total", value: `R$ ${totalRevenue.toFixed(2).replace(".", ",")}`, icon: DollarSign, trend: `Site: R$ ${revenue.toFixed(0)} + Externo: R$ ${externalRevenue.toFixed(0)}`, up: true, sparkline: revenueSparkline },
+    { label: "Pedidos (Site)", value: filteredOrders.length, icon: ShoppingBag, trend: `${pending} pendentes`, up: null, sparkline: ordersSparkline },
+    { label: "Vendas Externas", value: filteredSales.length, icon: TrendingUp, trend: `Lucro: R$ ${externalProfit.toFixed(2).replace(".", ",")}`, up: externalProfit > 0, sparkline: salesSparkline },
+    { label: "Produtos", value: prodCount, icon: Package, trend: "Ativos no catálogo", up: null },
+    { label: "Clientes", value: customerCount, icon: Users, trend: "Registrados", up: null },
+    { label: "Leads", value: leadCount, icon: Mail, trend: "Emails capturados", up: null },
   ];
 
   const statusCards: StatusCard[] = [
-    { label: "Pendentes", value: stats.pending, variant: "warning", icon: Calendar },
-    { label: "Enviados", value: stats.shipped, variant: "info", icon: Truck },
-    { label: "Entregues", value: stats.delivered, variant: "success", icon: TrendingUp },
-    { label: "Cancelados", value: stats.cancelled, variant: "destructive", icon: Package },
+    { label: "Pendentes", value: pending, variant: "warning", icon: Calendar },
+    { label: "Enviados", value: shipped, variant: "info", icon: Truck },
+    { label: "Entregues", value: delivered, variant: "success", icon: TrendingUp },
+    { label: "Cancelados", value: cancelled, variant: "destructive", icon: Package },
   ];
 
   return (
     <div className="space-y-6">
-      <DashboardKPIs cards={mainCards} />
-      <StatusPipeline cards={statusCards} />
-      <StockAlerts outOfStock={outOfStockProducts} lowStock={lowStockProducts} onEdit={openStockEditor} />
+      {/* Header: Date filter + Quick actions */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <DashboardDateFilter value={dateRange} onChange={setDateRange} />
+        <QuickActions onExportCSV={exportCSV} onExportPDF={exportPDF} />
+      </div>
 
-      <InventorySection
-        brands={brands}
-        selectedBrand={selectedBrand}
-        onBrandChange={setSelectedBrand}
-        inventoryValue={inventoryValue}
-        filteredCount={filteredProducts.length}
-        inventoryCount={inventoryCount}
-        brandChartData={brandChartData}
-        conditionChartData={conditionChartData}
-        topProducts={topProducts}
-        onExportCSV={exportCSV}
-        onExportPDF={exportPDF}
-        onEditProduct={openStockEditor}
-      />
+      {/* Priority Alerts */}
+      <PriorityAlerts orders={ordersRaw} outOfStock={outOfStockProducts} />
 
-      <MonthlyComparisonChart data={monthlyComparison} />
-      <VisitorStats />
-      <GeoStats />
-      <AdminCharts />
-      <RecentOrdersTable orders={stats.recentOrders} />
+      {/* 💰 Financeiro */}
+      <DashboardSection title="Financeiro" icon={DollarSign}>
+        <DashboardKPIs cards={mainCards} />
+      </DashboardSection>
+
+      {/* 📦 Operacional */}
+      <DashboardSection title="Operacional" icon={ShoppingBag}>
+        <StatusPipeline cards={statusCards} />
+        <StockAlerts outOfStock={outOfStockProducts} lowStock={lowStockProducts} onEdit={openStockEditor} />
+        <InventorySection
+          brands={brands}
+          selectedBrand={selectedBrand}
+          onBrandChange={setSelectedBrand}
+          inventoryValue={inventoryValue}
+          filteredCount={filteredProducts.length}
+          inventoryCount={inventoryCount}
+          brandChartData={brandChartData}
+          conditionChartData={conditionChartData}
+          topProducts={topProducts}
+          onExportCSV={exportCSV}
+          onExportPDF={exportPDF}
+          onEditProduct={openStockEditor}
+        />
+      </DashboardSection>
+
+      {/* 📊 Tendências */}
+      <DashboardSection title="Tendências" icon={BarChart3}>
+        <MonthlyComparisonChart data={monthlyComparison} />
+        <AdminCharts />
+      </DashboardSection>
+
+      {/* 🌍 Audiência */}
+      <DashboardSection title="Audiência" icon={Globe}>
+        <VisitorStats />
+        <GeoStats />
+      </DashboardSection>
+
+      {/* Pedidos recentes */}
+      <DashboardSection title="Pedidos Recentes" icon={Eye}>
+        <RecentOrdersTable orders={filteredOrders.slice(0, 5)} />
+      </DashboardSection>
 
       <StockEditDialog
         product={editProduct}
