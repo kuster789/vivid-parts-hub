@@ -201,7 +201,7 @@ const Index = () => {
           </ScrollReveal>
           <div className="grid grid-cols-2 gap-3 md:gap-6 lg:grid-cols-4">
             {[
-            { icon: Box, title: "Visualização 3D", desc: "Veja peças em 3D interativo antes de comprar. Gire, amplie e inspecione cada detalhe.", color: "from-primary/20 to-primary/10", link: "/visualizacao-3d" },
+            { icon: Box, title: "Visualização 3D", desc: "Veja peças em 3D interativo antes de comprar. Gire, amplie e inspecione cada detalhe.", color: "from-primary/20 to-primary/10", link: "/catalogo" },
             { icon: Shield, title: "Qualidade Garantida", desc: "Todas as peças com garantia de fábrica. Produtos originais e de alta durabilidade.", color: "from-success/20 to-success/10", link: "/qualidade" },
             { icon: Truck, title: "Envio Nacional", desc: "Entrega para todo o Brasil com rastreamento em tempo real via Melhor Envio.", color: "from-blue-500/20 to-blue-500/10", link: "/envio" },
             { icon: Wrench, title: "Suporte Técnico", desc: "Equipe especializada para auxiliar na escolha da peça certa para sua moto.", color: "from-purple-500/20 to-purple-500/10", link: "/suporte-tecnico" }].

@@ -96,7 +96,7 @@ const Header = () => {
                   <div className="space-y-1">
                     {[
                       { to: "/catalogo", icon: Box, label: "Todos os Produtos", desc: "Catálogo completo" },
-                      { to: "/visualizacao-3d", icon: Box, label: "Visualização 3D", desc: "Peças em 3D interativo" },
+                      
                       { to: "/kits-revisao", icon: Wrench, label: "Kits de Revisão", desc: "Pacotes por modelo" },
                       { to: "/manuais", icon: BookOpen, label: "Manuais Técnicos", desc: "Documentação oficial" },
                     ].map(({ to, icon: Icon, label, desc }) => (
