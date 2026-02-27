@@ -42,7 +42,11 @@ interface SaleRow {
   order_date: string;
 }
 
-const AdminDashboard = () => {
+interface AdminDashboardProps {
+  onNavigate?: (tab: string) => void;
+}
+
+const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
   const [ordersRaw, setOrdersRaw] = useState<OrderRow[]>([]);
   const [salesRaw, setSalesRaw] = useState<SaleRow[]>([]);
   const [allProducts, setAllProducts] = useState<ProductRow[]>([]);
@@ -262,7 +266,7 @@ const AdminDashboard = () => {
       {/* Header: Date filter + Quick actions */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <DashboardDateFilter value={dateRange} onChange={setDateRange} />
-        <QuickActions onExportCSV={exportCSV} onExportPDF={exportPDF} />
+        <QuickActions onNewSale={() => onNavigate?.("sales")} onExportCSV={exportCSV} onExportPDF={exportPDF} />
       </div>
 
       {/* Priority Alerts */}
