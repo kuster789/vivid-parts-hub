@@ -104,7 +104,7 @@ const Admin = () => {
 
           {/* Content */}
           <div className="p-5 lg:p-8">
-            {tab === "dashboard" && <AdminDashboard />}
+            {tab === "dashboard" && <AdminDashboard onNavigate={(t: string) => setTab(t as Tab)} />}
             {tab === "products" && <AdminProducts />}
             {tab === "orders" && <AdminOrders />}
             {tab === "notifications" && <AdminNotifications />}
