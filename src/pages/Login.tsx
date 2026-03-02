@@ -24,13 +24,33 @@ const Login = () => {
     e.preventDefault();
     setError("");
     setLoading(true);
+
     const { error } = await signIn(email, password);
-    setLoading(false);
     if (error) {
+      setLoading(false);
       setError("Email ou senha incorretos.");
-    } else {
-      navigate("/");
+      return;
     }
+
+    // Confirma que a sessão local foi realmente persistida antes de sair da tela de login
+    let hasSession = false;
+    for (let i = 0; i < 5; i++) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        hasSession = true;
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 120));
+    }
+
+    setLoading(false);
+
+    if (!hasSession) {
+      setError("Login realizado, mas a sessão não foi restaurada no navegador. Atualize a página e tente novamente.");
+      return;
+    }
+
+    navigate("/");
   };
 
   const isLovableDomain = () => {

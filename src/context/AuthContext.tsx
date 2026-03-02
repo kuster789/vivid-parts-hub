@@ -23,7 +23,9 @@ const ROLE_PRIORITY = ["admin_master", "admin", "supervisor", "operator", "emplo
 
 const AUTH_DIAGNOSTICS =
   typeof window !== "undefined" &&
-  (import.meta.env.DEV || new URLSearchParams(window.location.search).get("authDebug") === "1");
+  (import.meta.env.DEV ||
+    new URLSearchParams(window.location.search).get("authDebug") === "1" ||
+    new URLSearchParams(window.location.search).has("__lovable_token"));
 
 const logAuth = (message: string, payload?: unknown) => {
   if (!AUTH_DIAGNOSTICS) return;
@@ -67,6 +69,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     logAuth("Roles applied", { roles, primary });
   }, []);
+
+  const resolveRolesWithRpcFallback = useCallback(async (userId: string) => {
+    const checks = await Promise.all(
+      ROLE_PRIORITY.map(async (role) => {
+        const { data, error } = await supabase.rpc("has_role", {
+          _user_id: userId,
+          _role: role as any,
+        });
+
+        return {
+          role,
+          hasRole: Boolean(data),
+          error: error?.message ?? null,
+        };
+      })
+    );
+
+    logAuth("RPC role checks", checks);
+
+    const resolvedRoles = checks.filter((c) => c.hasRole).map((c) => c.role);
+    if (resolvedRoles.length === 0) {
+      return false;
+    }
+
+    applyRoles(resolvedRoles);
+    return true;
+  }, [applyRoles]);
 
   const resolveRolesWithRetry = useCallback(async (userId: string) => {
     const maxAttempts = 3;
@@ -122,9 +151,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     }
 
+    const resolvedByRpcFallback = await resolveRolesWithRpcFallback(userId);
+    if (resolvedByRpcFallback) {
+      logAuth("Roles resolved by RPC fallback", { userId });
+      return;
+    }
+
     logAuth("Role resolution exhausted, resetting roles", { userId });
     resetRoles();
-  }, [applyRoles, resetRoles]);
+  }, [applyRoles, resetRoles, resolveRolesWithRpcFallback]);
 
   useEffect(() => {
     let mounted = true;
