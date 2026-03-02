@@ -19,6 +19,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const ROLE_PRIORITY = ["admin_master", "admin", "supervisor", "operator", "employee"] as const;
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -39,54 +41,76 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUserRole(null);
   }, []);
 
-  const checkRoles = useCallback(async (userId: string) => {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
-    
-    if (data && data.length > 0) {
-      const roles = data.map((r: any) => r.role as string);
-      const primary = roles[0];
-      setUserRole(primary);
-      setIsAdmin(roles.some(r => r === "admin_master" || r === "admin"));
-      setIsEmployee(roles.some(r => ["supervisor", "operator", "employee"].includes(r)));
-      setIsAdminMaster(roles.includes("admin_master"));
-      setIsSupervisor(roles.includes("supervisor"));
-      setIsOperator(roles.includes("operator"));
-    } else {
-      resetRoles();
+  const resolveRolesWithRetry = useCallback(async (userId: string) => {
+    const maxAttempts = 3;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+
+      if (!error && data && data.length > 0) {
+        const roles = data.map((r: any) => r.role as string);
+        const primary = ROLE_PRIORITY.find((role) => roles.includes(role)) ?? roles[0] ?? null;
+
+        setUserRole(primary);
+        setIsAdmin(roles.some((r) => r === "admin_master" || r === "admin"));
+        setIsEmployee(roles.some((r) => ["supervisor", "operator", "employee"].includes(r)));
+        setIsAdminMaster(roles.includes("admin_master"));
+        setIsSupervisor(roles.includes("supervisor"));
+        setIsOperator(roles.includes("operator"));
+        return;
+      }
+
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, 150 * attempt));
+      }
     }
+
+    resetRoles();
   }, [resetRoles]);
 
   useEffect(() => {
-    // Flag to prevent stale updates after unmount
     let mounted = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const applySession = (nextSession: Session | null) => {
       if (!mounted) return;
-      setSession(session);
-      setUser(session?.user ?? null);
 
-      if (session?.user) {
-        // Use setTimeout to avoid Supabase auth deadlock when making
-        // additional async calls inside onAuthStateChange
-        setTimeout(async () => {
-          if (!mounted) return;
-          await checkRoles(session.user.id);
-          if (mounted) setLoading(false);
-        }, 0);
-      } else {
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+
+      if (!nextSession?.user) {
         resetRoles();
         setLoading(false);
+        return;
       }
+
+      setLoading(true);
+
+      // Fire-and-forget to avoid deadlocks during auth callbacks
+      setTimeout(() => {
+        if (!mounted) return;
+        void resolveRolesWithRetry(nextSession.user.id).finally(() => {
+          if (mounted) setLoading(false);
+        });
+      }, 0);
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      applySession(nextSession);
+    });
+
+    // Bootstrap initial auth state from persisted session
+    void supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      applySession(initialSession);
     });
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [checkRoles, resetRoles]);
+  }, [resetRoles, resolveRolesWithRetry]);
 
   const signUp = async (email: string, password: string, fullName: string) => {
     const { error } = await supabase.auth.signUp({
