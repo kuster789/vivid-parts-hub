@@ -60,29 +60,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [resetRoles]);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    // Flag to prevent stale updates after unmount
+    let mounted = true;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
       setSession(session);
       setUser(session?.user ?? null);
+
       if (session?.user) {
-        await checkRoles(session.user.id);
+        // Use setTimeout to avoid Supabase auth deadlock when making
+        // additional async calls inside onAuthStateChange
+        setTimeout(async () => {
+          if (!mounted) return;
+          await checkRoles(session.user.id);
+          if (mounted) setLoading(false);
+        }, 0);
       } else {
         resetRoles();
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await checkRoles(session.user.id);
-      } else {
-        resetRoles();
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [checkRoles, resetRoles]);
 
   const signUp = async (email: string, password: string, fullName: string) => {
