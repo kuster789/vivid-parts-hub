@@ -39,7 +39,7 @@ const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
 const Tracking = lazy(() => import("./pages/Tracking"));
-
+const Forbidden = lazy(() => import("./pages/Forbidden"));
 const QualidadeGarantida = lazy(() => import("./pages/QualidadeGarantida"));
 const EnvioNacional = lazy(() => import("./pages/EnvioNacional"));
 const SuporteTecnico = lazy(() => import("./pages/SuporteTecnico"));
@@ -88,7 +88,7 @@ const App = () => (
                   <Route path="/blog/:slug" element={<BlogPost />} />
                   <Route path="/favoritos" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
                   <Route path="/rastreamento" element={<ProtectedRoute><Tracking /></ProtectedRoute>} />
-                  
+                  <Route path="/403" element={<Forbidden />} />
                   <Route path="/qualidade" element={<QualidadeGarantida />} />
                   <Route path="/envio" element={<EnvioNacional />} />
                   <Route path="/suporte-tecnico" element={<SuporteTecnico />} />

@@ -8,6 +8,10 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   isEmployee: boolean;
+  isAdminMaster: boolean;
+  isSupervisor: boolean;
+  isOperator: boolean;
+  userRole: string | null;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -21,6 +25,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isEmployee, setIsEmployee] = useState(false);
+  const [isAdminMaster, setIsAdminMaster] = useState(false);
+  const [isSupervisor, setIsSupervisor] = useState(false);
+  const [isOperator, setIsOperator] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  const resetRoles = useCallback(() => {
+    setIsAdmin(false);
+    setIsEmployee(false);
+    setIsAdminMaster(false);
+    setIsSupervisor(false);
+    setIsOperator(false);
+    setUserRole(null);
+  }, []);
 
   const checkRoles = useCallback(async (userId: string) => {
     const { data } = await supabase
@@ -28,11 +45,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .select("role")
       .eq("user_id", userId);
     
-    if (data) {
-      setIsAdmin(data.some((r: any) => r.role === "admin"));
-      setIsEmployee(data.some((r: any) => r.role === "employee"));
+    if (data && data.length > 0) {
+      const roles = data.map((r: any) => r.role as string);
+      const primary = roles[0];
+      setUserRole(primary);
+      setIsAdmin(roles.some(r => r === "admin_master" || r === "admin"));
+      setIsEmployee(roles.some(r => ["supervisor", "operator", "employee"].includes(r)));
+      setIsAdminMaster(roles.includes("admin_master"));
+      setIsSupervisor(roles.includes("supervisor"));
+      setIsOperator(roles.includes("operator"));
+    } else {
+      resetRoles();
     }
-  }, []);
+  }, [resetRoles]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -42,8 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         setTimeout(() => checkRoles(session.user.id), 0);
       } else {
-        setIsAdmin(false);
-        setIsEmployee(false);
+        resetRoles();
       }
     });
 
@@ -57,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     return () => subscription.unsubscribe();
-  }, [checkRoles]);
+  }, [checkRoles, resetRoles]);
 
   const signUp = async (email: string, password: string, fullName: string) => {
     const { error } = await supabase.auth.signUp({
@@ -81,7 +105,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, isEmployee, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{
+      user, session, loading,
+      isAdmin, isEmployee,
+      isAdminMaster, isSupervisor, isOperator,
+      userRole,
+      signUp, signIn, signOut,
+    }}>
       {children}
     </AuthContext.Provider>
   );
