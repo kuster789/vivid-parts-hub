@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Navigate } from "react-router-dom";
 import { usePermissions, Module } from "@/hooks/usePermissions";
@@ -29,8 +29,15 @@ const Admin = () => {
   const { hasPermission, loading: permsLoading } = usePermissions();
   const [tab, setTab] = useState<Tab>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [bootstrapped, setBootstrapped] = useState(false);
 
-  if (loading || permsLoading) {
+  useEffect(() => {
+    if (!loading && !permsLoading && user && (isAdmin || isEmployee)) {
+      setBootstrapped(true);
+    }
+  }, [loading, permsLoading, user, isAdmin, isEmployee]);
+
+  if (!bootstrapped && (loading || permsLoading)) {
     return (
       <div className="flex min-h-[80vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -38,7 +45,7 @@ const Admin = () => {
     );
   }
 
-  if (!user || (!isAdmin && !isEmployee)) return <Navigate to="/login" replace />;
+  if (!loading && !permsLoading && (!user || (!isAdmin && !isEmployee))) return <Navigate to="/login" replace />;
 
   const allNavItems: { id: Tab; label: string; icon: any; module: Module }[] = [
     { id: "dashboard", label: "Dashboard", icon: BarChart3, module: "dashboard" },
@@ -53,7 +60,16 @@ const Admin = () => {
 
   const navItems = allNavItems.filter(item => hasPermission(item.module));
 
-  if (navItems.length === 0) return <Navigate to="/403" replace />;
+  if (navItems.length === 0) {
+    if (!bootstrapped || loading || permsLoading) {
+      return (
+        <div className="flex min-h-[80vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      );
+    }
+    return <Navigate to="/403" replace />;
+  }
 
   // Ensure current tab is accessible
   const effectiveTab = navItems.find(n => n.id === tab) ? tab : (navItems[0]?.id || "dashboard");
