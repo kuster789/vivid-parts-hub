@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ShoppingCart, Menu, X, User, LogOut, Shield, Heart, ChevronDown, BookOpen, Headphones, Wrench, Truck, Box } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { useState, useRef, useEffect } from "react";
 import SearchBar from "@/components/SearchBar";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -13,6 +14,7 @@ const Header = () => {
   const { user, isAdmin, isEmployee, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [megaMenu, setMegaMenu] = useState<string | null>(null);
+  const [hasAdminNavAccess, setHasAdminNavAccess] = useState(false);
   const menuTimeout = useRef<ReturnType<typeof setTimeout>>();
 
   const openMenu = (menu: string) => {
@@ -24,6 +26,47 @@ const Header = () => {
   };
 
   useEffect(() => () => clearTimeout(menuTimeout.current), []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const resolveAdminAccess = async () => {
+      if (!user?.id) {
+        setHasAdminNavAccess(false);
+        return;
+      }
+
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const [{ data: canAdmin }, { data: canEmployee }] = await Promise.all([
+          supabase.rpc("has_role", { _user_id: user.id, _role: "admin" as any }),
+          supabase.rpc("has_role", { _user_id: user.id, _role: "employee" as any }),
+        ]);
+
+        if (cancelled) return;
+
+        if (Boolean(canAdmin) || Boolean(canEmployee)) {
+          setHasAdminNavAccess(true);
+          return;
+        }
+
+        if (attempt < 3) {
+          await new Promise((resolve) => setTimeout(resolve, 200 * attempt));
+        }
+      }
+
+      if (!cancelled) {
+        setHasAdminNavAccess(false);
+      }
+    };
+
+    void resolveAdminAccess();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
+  const canAccessAdmin = isAdmin || isEmployee || hasAdminNavAccess;
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -154,7 +197,7 @@ const Header = () => {
             )}
           </div>
 
-          {(isAdmin || isEmployee) && (
+          {canAccessAdmin && (
             <Link to="/admin" className="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-primary transition-colors hover:text-primary/80">
               <Shield className="h-3.5 w-3.5" /> Admin
             </Link>
@@ -221,7 +264,7 @@ const Header = () => {
             <Link to="/manuais" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary">Manuais</Link>
             <Link to="/rastreamento" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary">Meus Pedidos</Link>
             <Link to="/favoritos" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary">Favoritos</Link>
-            {(isAdmin || isEmployee) && (
+            {canAccessAdmin && (
               <Link to="/admin" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-primary">Admin</Link>
             )}
           </nav>
