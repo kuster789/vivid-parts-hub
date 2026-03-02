@@ -47,6 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isOperator, setIsOperator] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const roleResolutionVersionRef = useRef(0);
+  const initialLoadDoneRef = useRef(false);
 
   const resetRoles = useCallback(() => {
     setIsAdmin(false);
@@ -180,10 +181,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         roleResolutionVersionRef.current += 1;
         resetRoles();
         setLoading(false);
+        initialLoadDoneRef.current = true;
         return;
       }
 
-      setLoading(true);
+      // Only show loading spinner on initial bootstrap, not on token refreshes
+      if (!initialLoadDoneRef.current) {
+        setLoading(true);
+      }
 
       const currentResolutionVersion = ++roleResolutionVersionRef.current;
 
@@ -194,6 +199,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         void resolveRolesWithRetry(nextSession.user.id).finally(() => {
           if (mounted && currentResolutionVersion === roleResolutionVersionRef.current) {
             setLoading(false);
+            initialLoadDoneRef.current = true;
           }
         });
       }, 0);
