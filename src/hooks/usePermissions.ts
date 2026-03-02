@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 
@@ -15,16 +15,27 @@ const NO_ACCESS: ModulePermission = { can_view: false, can_create: false, can_ed
 
 export const usePermissions = () => {
   const { user, userRole } = useAuth();
+  const userId = user?.id ?? null;
+
   const [permissions, setPermissions] = useState<Record<string, ModulePermission>>({});
   const [loading, setLoading] = useState(true);
+  const loadedPrincipalRef = useRef<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!user || !userRole) {
+    const principalKey = userId && userRole ? `${userId}:${userRole}` : null;
+
+    if (!userId || !userRole) {
       setPermissions({});
+      loadedPrincipalRef.current = principalKey;
       setLoading(false);
       return;
     }
-    setLoading(true);
+
+    const isNewPrincipal = loadedPrincipalRef.current !== principalKey;
+    if (isNewPrincipal) {
+      setLoading(true);
+    }
+
     try {
       // Load role baseline
       const { data: rolePerms, error: rpError } = await supabase
@@ -40,7 +51,7 @@ export const usePermissions = () => {
       const { data: overrides, error: ovError } = await supabase
         .from("user_permission_overrides")
         .select("*")
-        .eq("user_id", user.id);
+        .eq("user_id", userId);
 
       if (ovError) {
         console.error("Error loading user_permission_overrides:", ovError);
@@ -56,15 +67,19 @@ export const usePermissions = () => {
           can_delete: ov?.can_delete ?? rp.can_delete,
         };
       });
+
       setPermissions(map);
+      loadedPrincipalRef.current = principalKey;
     } catch (e) {
       console.error("Error loading permissions:", e);
     } finally {
       setLoading(false);
     }
-  }, [user, userRole]);
+  }, [userId, userRole]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const hasPermission = useCallback(
     (module: Module, action: keyof ModulePermission = "can_view") => permissions[module]?.[action] ?? false,
