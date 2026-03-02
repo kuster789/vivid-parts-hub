@@ -1,16 +1,26 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, LogOut, Save, Loader2, MapPin, Phone, Mail } from "lucide-react";
+import { User, LogOut, Save, Loader2, MapPin, Phone, Mail, Package, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import type { Tables } from "@/integrations/supabase/types";
+
+const statusLabels: Record<string, { label: string; color: string }> = {
+  pending: { label: "Pendente", color: "bg-yellow-500/20 text-yellow-400" },
+  confirmed: { label: "Confirmado", color: "bg-blue-500/20 text-blue-400" },
+  shipped: { label: "Enviado", color: "bg-purple-500/20 text-purple-400" },
+  delivered: { label: "Entregue", color: "bg-green-500/20 text-green-400" },
+  cancelled: { label: "Cancelado", color: "bg-red-500/20 text-red-400" },
+};
 
 const MinhaConta = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [orders, setOrders] = useState<Tables<"orders">[]>([]);
   const [form, setForm] = useState({
     full_name: "",
     phone: "",
@@ -23,21 +33,31 @@ const MinhaConta = () => {
   useEffect(() => {
     if (!user) { setLoading(false); return; }
     const load = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("full_name, phone, address, city, state, zip_code")
-        .eq("user_id", user.id)
-        .single();
-      if (data) {
+      const [profileRes, ordersRes] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("full_name, phone, address, city, state, zip_code")
+          .eq("user_id", user.id)
+          .single(),
+        supabase
+          .from("orders")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false }),
+      ]);
+
+      if (profileRes.data) {
         setForm({
-          full_name: data.full_name || "",
-          phone: data.phone || "",
-          address: data.address || "",
-          city: data.city || "",
-          state: data.state || "",
-          zip_code: data.zip_code || "",
+          full_name: profileRes.data.full_name || "",
+          phone: profileRes.data.phone || "",
+          address: profileRes.data.address || "",
+          city: profileRes.data.city || "",
+          state: profileRes.data.state || "",
+          zip_code: profileRes.data.zip_code || "",
         });
       }
+
+      setOrders(ordersRes.data ?? []);
       setLoading(false);
     };
     load();
@@ -227,6 +247,53 @@ const MinhaConta = () => {
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {saving ? "Salvando..." : "Salvar Alterações"}
           </button>
+        </div>
+        {/* Orders Section */}
+        <div className="card-industrial mt-8 p-6">
+          <h2 className="mb-6 flex items-center gap-2 font-display text-sm font-bold uppercase tracking-wider text-foreground">
+            <Package className="h-4 w-4 text-primary" /> Meus Pedidos
+          </h2>
+
+          {orders.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <Package className="mb-3 h-12 w-12 text-muted-foreground/30" />
+              <p className="text-sm text-muted-foreground">Você ainda não tem pedidos.</p>
+              <Link to="/catalogo" className="mt-4 text-sm text-primary hover:underline">
+                Explorar catálogo
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {orders.map((order) => {
+                const st = statusLabels[order.status] ?? { label: order.status, color: "bg-muted text-muted-foreground" };
+                return (
+                  <Link
+                    key={order.id}
+                    to={`/rastreamento?busca=${order.id.slice(0, 8)}`}
+                    className="flex items-center justify-between rounded-md border border-border bg-secondary/50 px-4 py-3 transition-colors hover:bg-secondary"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs text-foreground">#{order.id.slice(0, 8)}</span>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${st.color}`}>
+                          {st.label}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {new Date(order.created_at).toLocaleDateString("pt-BR")} • R$ {Number(order.total).toFixed(2).replace(".", ",")}
+                      </p>
+                      {order.tracking_code && (
+                        <p className="mt-0.5 text-[10px] text-muted-foreground">
+                          Rastreio: {order.tracking_code}
+                        </p>
+                      )}
+                    </div>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </main>
