@@ -24,18 +24,27 @@ export const usePermissions = () => {
       setLoading(false);
       return;
     }
+    setLoading(true);
     try {
       // Load role baseline
-      const { data: rolePerms } = await (supabase as any)
+      const { data: rolePerms, error: rpError } = await supabase
         .from("role_permissions")
         .select("*")
-        .eq("role", userRole);
+        .eq("role", userRole as any);
+
+      if (rpError) {
+        console.error("Error loading role_permissions:", rpError);
+      }
 
       // Load user overrides
-      const { data: overrides } = await (supabase as any)
+      const { data: overrides, error: ovError } = await supabase
         .from("user_permission_overrides")
         .select("*")
         .eq("user_id", user.id);
+
+      if (ovError) {
+        console.error("Error loading user_permission_overrides:", ovError);
+      }
 
       const map: Record<string, ModulePermission> = {};
       (rolePerms || []).forEach((rp: any) => {
