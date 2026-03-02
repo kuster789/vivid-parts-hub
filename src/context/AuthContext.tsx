@@ -158,9 +158,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
+    if (userRole) {
+      logAuth("Role resolution exhausted, preserving previous role", { userId, userRole });
+      return;
+    }
+
     logAuth("Role resolution exhausted, resetting roles", { userId });
     resetRoles();
-  }, [applyRoles, resetRoles, resolveRolesWithRpcFallback]);
+  }, [applyRoles, resetRoles, resolveRolesWithRpcFallback, userRole]);
 
   const lastResolvedUserIdRef = useRef<string | null>(null);
 

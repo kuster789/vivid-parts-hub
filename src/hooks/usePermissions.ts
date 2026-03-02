@@ -24,9 +24,15 @@ export const usePermissions = () => {
   const load = useCallback(async () => {
     const principalKey = userId && userRole ? `${userId}:${userRole}` : null;
 
-    if (!userId || !userRole) {
+    if (!userId) {
       setPermissions({});
-      loadedPrincipalRef.current = principalKey;
+      loadedPrincipalRef.current = null;
+      setLoading(false);
+      return;
+    }
+
+    // During transient role hydration keep previous permissions to avoid UI teardown
+    if (!userRole) {
       setLoading(false);
       return;
     }
