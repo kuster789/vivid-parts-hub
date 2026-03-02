@@ -48,6 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRole, setUserRole] = useState<string | null>(null);
   const roleResolutionVersionRef = useRef(0);
   const initialLoadDoneRef = useRef(false);
+  const userRoleRef = useRef<string | null>(null);
 
   const resetRoles = useCallback(() => {
     setIsAdmin(false);
@@ -56,12 +57,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsSupervisor(false);
     setIsOperator(false);
     setUserRole(null);
+    userRoleRef.current = null;
   }, []);
 
   const applyRoles = useCallback((roles: string[]) => {
     const primary = ROLE_PRIORITY.find((role) => roles.includes(role)) ?? roles[0] ?? null;
 
     setUserRole(primary);
+    userRoleRef.current = primary;
     setIsAdmin(roles.some((r) => r === "admin_master" || r === "admin"));
     setIsEmployee(roles.some((r) => ["supervisor", "operator", "employee"].includes(r)));
     setIsAdminMaster(roles.includes("admin_master"));
@@ -158,14 +161,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    if (userRole) {
-      logAuth("Role resolution exhausted, preserving previous role", { userId, userRole });
+    // Use ref to check current role without adding to deps (avoids useEffect re-subscription)
+    if (userRoleRef.current) {
+      logAuth("Role resolution exhausted, preserving previous role", { userId, userRole: userRoleRef.current });
       return;
     }
 
     logAuth("Role resolution exhausted, resetting roles", { userId });
     resetRoles();
-  }, [applyRoles, resetRoles, resolveRolesWithRpcFallback, userRole]);
+  }, [applyRoles, resetRoles, resolveRolesWithRpcFallback]);
 
   const lastResolvedUserIdRef = useRef<string | null>(null);
 
