@@ -162,6 +162,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     resetRoles();
   }, [applyRoles, resetRoles, resolveRolesWithRpcFallback]);
 
+  const lastResolvedUserIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     let mounted = true;
 
@@ -179,9 +181,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!nextSession?.user) {
         roleResolutionVersionRef.current += 1;
+        lastResolvedUserIdRef.current = null;
         resetRoles();
         setLoading(false);
         initialLoadDoneRef.current = true;
+        return;
+      }
+
+      const userId = nextSession.user.id;
+
+      // Skip role re-resolution if same user and roles already resolved (e.g. token refresh on tab focus)
+      if (initialLoadDoneRef.current && lastResolvedUserIdRef.current === userId) {
+        logAuth("Skipping role re-resolution (same user, already resolved)", { source, userId });
         return;
       }
 
@@ -196,8 +207,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setTimeout(() => {
         if (!mounted || currentResolutionVersion !== roleResolutionVersionRef.current) return;
 
-        void resolveRolesWithRetry(nextSession.user.id).finally(() => {
+        void resolveRolesWithRetry(userId).finally(() => {
           if (mounted && currentResolutionVersion === roleResolutionVersionRef.current) {
+            lastResolvedUserIdRef.current = userId;
             setLoading(false);
             initialLoadDoneRef.current = true;
           }
