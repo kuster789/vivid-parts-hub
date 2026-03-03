@@ -119,7 +119,7 @@ const ProductDetail = () => {
           {/* Image / 3D viewer */}
           <ScrollReveal direction="left">
             <div className="sticky top-24">
-              {product.has_3d && product.model_3d_url ? (
+              {product.has_3d ? (
                 <ProductViewer3D modelUrl={product.model_3d_url} />
               ) : product.images && product.images.length > 0 ? (
                 <div className="space-y-3">
