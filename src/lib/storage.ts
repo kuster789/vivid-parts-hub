@@ -27,7 +27,7 @@ export const deleteProductImage = async (url: string) => {
 
 export const upload3DModel = async (productId: string, file: File) => {
   const ext = file.name.split(".").pop()?.toLowerCase();
-  const allowedExts = ["glb", "gltf", "obj", "stl", "usdz"];
+  const allowedExts = ["glb", "gltf", "obj", "stl", "3mf", "step", "stp", "usdz"];
   if (!ext || !allowedExts.includes(ext)) {
     throw new Error(`Formato não suportado. Use: ${allowedExts.join(", ")}`);
   }
