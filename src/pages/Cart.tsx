@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from "lucide-react";
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, LogIn } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 
 const Cart = () => {
   const { items, removeItem, updateQuantity, totalPrice, clearCart } = useCart();
+  const { user } = useAuth();
 
   if (items.length === 0) {
     return (
@@ -79,9 +81,15 @@ const Cart = () => {
                 </span>
               </div>
             </div>
-            <Link to="/checkout" className="btn-primary-glow mb-3 block w-full rounded-md py-3 text-center text-sm transition-all">
-              Finalizar Compra
-            </Link>
+            {user ? (
+              <Link to="/checkout" className="btn-primary-glow mb-3 block w-full rounded-md py-3 text-center text-sm transition-all">
+                Finalizar Compra
+              </Link>
+            ) : (
+              <Link to="/login" state={{ from: { pathname: "/carrinho" } }} className="btn-primary-glow mb-3 flex w-full items-center justify-center gap-2 rounded-md py-3 text-center text-sm transition-all">
+                <LogIn className="h-4 w-4" /> Faça login para finalizar
+              </Link>
+            )}
             <button onClick={clearCart} className="w-full rounded-md border border-border py-2 text-xs text-muted-foreground transition-colors hover:text-destructive">
               Limpar carrinho
             </button>
