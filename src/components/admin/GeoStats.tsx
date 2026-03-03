@@ -27,8 +27,14 @@ const GeoStats = () => {
       const cityMap: Record<string, number> = {};
 
       (data || []).forEach((r: any) => {
-        if (r.region) stateMap[r.region] = (stateMap[r.region] || 0) + 1;
-        if (r.city) cityMap[r.city] = (cityMap[r.city] || 0) + 1;
+        const isBrazil = !r.country || r.country === "Brazil" || r.country === "Brasil";
+        if (r.region) {
+          const stateLabel = isBrazil ? r.region : `${r.region} (${r.country || "?"})`;
+          stateMap[stateLabel] = (stateMap[stateLabel] || 0) + 1;
+        }
+        if (r.city && isBrazil) {
+          cityMap[r.city] = (cityMap[r.city] || 0) + 1;
+        }
       });
 
       setStateData(
