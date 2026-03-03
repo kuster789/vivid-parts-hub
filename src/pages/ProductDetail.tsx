@@ -130,18 +130,14 @@ const ProductDetail = () => {
                         alt={product.name}
                         className="h-[400px] w-full object-contain transition-all duration-500 hover:scale-110 cursor-zoom-in md:h-[500px]"
                         loading="lazy"
-                        style={{
-                          filter: selectedColor && selectedColor !== "Preto" ? "grayscale(1)" : undefined,
-                          transition: "filter 0.5s ease",
-                        }}
                       />
-                      {selectedColor && selectedColor !== "Branco" && (
+                      {selectedColor && (
                         <div
                           className="pointer-events-none absolute inset-0 transition-all duration-500"
                           style={{
                             backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex,
-                            mixBlendMode: "multiply",
-                            opacity: selectedColor === "Preto" ? 0.95 : 0.7,
+                            mixBlendMode: selectedColor === "Preto" ? "multiply" : selectedColor === "Branco" ? "soft-light" : "color",
+                            opacity: selectedColor === "Preto" ? 0.9 : selectedColor === "Branco" ? 0.6 : 0.8,
                           }}
                         />
                       )}
@@ -168,21 +164,14 @@ const ProductDetail = () => {
                              activeImageIdx === idx ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/40"
                            }`}
                          >
-                           <img
-                             src={img}
-                             alt={`${product.name} ${idx + 1}`}
-                             className="h-full w-full bg-white object-contain"
-                             style={{
-                               filter: selectedColor && selectedColor !== "Preto" ? "grayscale(1)" : undefined,
-                             }}
-                           />
-                           {selectedColor && selectedColor !== "Branco" && (
-                             <div className="pointer-events-none absolute inset-0" style={{
-                                 backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex,
-                                 mixBlendMode: "multiply",
-                                 opacity: selectedColor === "Preto" ? 0.95 : 0.7,
-                               }} />
-                            )}
+                           <img src={img} alt={`${product.name} ${idx + 1}`} className="h-full w-full bg-white object-contain" />
+                           {selectedColor && (
+                            <div className="pointer-events-none absolute inset-0" style={{
+                                backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex,
+                                mixBlendMode: selectedColor === "Preto" ? "multiply" : selectedColor === "Branco" ? "soft-light" : "color",
+                                opacity: selectedColor === "Preto" ? 0.9 : selectedColor === "Branco" ? 0.6 : 0.8,
+                              }} />
+                           )}
                          </button>
                       ))}
                     </div>
