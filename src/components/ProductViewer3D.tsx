@@ -60,16 +60,10 @@ const ProductViewer3D = ({ modelUrl, poster }: ProductViewer3DProps) => {
     return () => document.removeEventListener("fullscreenchange", handler);
   }, []);
 
-  if (!modelUrl) {
-    return (
-      <div className="flex h-[400px] w-full items-center justify-center rounded-lg border border-border bg-secondary md:h-[500px]">
-        <div className="text-center text-muted-foreground">
-          <AlertCircle className="mx-auto mb-2 h-8 w-8" />
-          <p className="text-sm">Modelo 3D não disponível</p>
-        </div>
-      </div>
-    );
-  }
+  // Fallback: use a sample GLB when no URL is provided
+  const FALLBACK_MODEL = "https://modelviewer.dev/shared-assets/models/NeilArmstrong.glb";
+  const effectiveUrl = modelUrl || FALLBACK_MODEL;
+  const isFallback = !modelUrl;
 
   return (
     <div
@@ -115,7 +109,7 @@ const ProductViewer3D = ({ modelUrl, poster }: ProductViewer3DProps) => {
       {/* Model Viewer */}
       <model-viewer
         ref={viewerRef}
-        src={modelUrl}
+        src={effectiveUrl}
         alt="Modelo 3D do produto"
         poster={poster}
         auto-rotate
@@ -132,7 +126,14 @@ const ProductViewer3D = ({ modelUrl, poster }: ProductViewer3DProps) => {
       />
 
       {/* Footer hint */}
-      <div className="absolute bottom-3 left-3 right-3 flex justify-center">
+      <div className="absolute bottom-3 left-3 right-3 flex flex-col items-center gap-1">
+        {isFallback && (
+          <div className="rounded-md bg-primary/10 px-3 py-1 backdrop-blur">
+            <span className="text-[10px] font-medium text-primary">
+              Modelo demonstrativo — modelo real em breve
+            </span>
+          </div>
+        )}
         <div className="rounded-md bg-background/80 px-3 py-1.5 backdrop-blur">
           <span className="text-[10px] text-muted-foreground">
             Arraste para girar · Scroll para zoom · Pinça para aproximar
