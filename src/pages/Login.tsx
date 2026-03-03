@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Eye, EyeOff, LogIn, ArrowLeft, Mail } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
@@ -9,6 +9,8 @@ import { toast } from "@/hooks/use-toast";
 const Login = () => {
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as any)?.from?.pathname || "/";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -50,7 +52,7 @@ const Login = () => {
       return;
     }
 
-    navigate("/");
+    navigate(from);
   };
 
   const isLovableDomain = () => {
