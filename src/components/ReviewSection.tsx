@@ -86,11 +86,15 @@ const ReviewSection = ({ productId }: ReviewSectionProps) => {
           <Stars value={rating} interactive />
           <textarea
             value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Deixe um comentário (opcional)..."
+            onChange={(e) => {
+              if (e.target.value.length <= 500) setComment(e.target.value);
+            }}
+            maxLength={500}
+            placeholder="Deixe um comentário (opcional, máx. 500 caracteres)..."
             className="mt-3 w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
             rows={2}
           />
+          <p className="mt-1 text-right text-[10px] text-muted-foreground">{comment.length}/500</p>
           <button
             onClick={handleSubmit}
             disabled={rating === 0 || submitting}
