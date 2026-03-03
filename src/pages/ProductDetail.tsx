@@ -10,7 +10,7 @@ import ReviewSection from "@/components/ReviewSection";
 import { useWishlist } from "@/hooks/useWishlist";
 import { ScrollReveal } from "@/hooks/useScrollReveal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState, useEffect } from "react";
+import { useState, useEffect, type CSSProperties } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSEO } from "@/hooks/useSEO";
@@ -106,6 +106,28 @@ const ProductDetail = () => {
   const price = Number(product.price);
   const installment = (price / 12).toFixed(2).replace(".", ",");
 
+  const getColorOverlayStyle = (colorName: string, imageUrl?: string): CSSProperties | undefined => {
+    const selected = colorOptions.find((c) => c.name === colorName);
+    if (!selected) return undefined;
+
+    const mixBlendMode = colorName === "Preto" ? "multiply" : colorName === "Branco" ? "screen" : "color";
+    const opacity = colorName === "Preto" ? 0.92 : colorName === "Branco" ? 0.9 : 0.8;
+
+    return {
+      backgroundColor: selected.hex,
+      mixBlendMode,
+      opacity,
+      WebkitMaskImage: imageUrl ? `url("${imageUrl}")` : undefined,
+      maskImage: imageUrl ? `url("${imageUrl}")` : undefined,
+      WebkitMaskRepeat: "no-repeat",
+      maskRepeat: "no-repeat",
+      WebkitMaskPosition: "center",
+      maskPosition: "center",
+      WebkitMaskSize: "contain",
+      maskSize: "contain",
+    };
+  };
+
   return (
     <main className="py-8">
       <div className="container">
@@ -134,11 +156,10 @@ const ProductDetail = () => {
                       {selectedColor && (
                         <div
                           className="pointer-events-none absolute inset-0 transition-all duration-500"
-                          style={{
-                            backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex,
-                            mixBlendMode: selectedColor === "Preto" ? "multiply" : selectedColor === "Branco" ? "soft-light" : "color",
-                            opacity: selectedColor === "Preto" ? 0.9 : selectedColor === "Branco" ? 0.6 : 0.8,
-                          }}
+                           style={getColorOverlayStyle(
+                             selectedColor,
+                             product.images[activeImageIdx] || product.images[0],
+                           )}
                         />
                       )}
                     </div>
@@ -166,11 +187,10 @@ const ProductDetail = () => {
                          >
                            <img src={img} alt={`${product.name} ${idx + 1}`} className="h-full w-full bg-white object-contain" />
                            {selectedColor && (
-                            <div className="pointer-events-none absolute inset-0" style={{
-                                backgroundColor: colorOptions.find((c) => c.name === selectedColor)?.hex,
-                                mixBlendMode: selectedColor === "Preto" ? "multiply" : selectedColor === "Branco" ? "soft-light" : "color",
-                                opacity: selectedColor === "Preto" ? 0.9 : selectedColor === "Branco" ? 0.6 : 0.8,
-                              }} />
+                             <div
+                               className="pointer-events-none absolute inset-0"
+                               style={getColorOverlayStyle(selectedColor, img)}
+                             />
                            )}
                          </button>
                       ))}
