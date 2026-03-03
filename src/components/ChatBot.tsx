@@ -6,6 +6,8 @@ type Msg = { role: "user" | "assistant"; content: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
+const MAX_MSGS_PER_MIN = 6;
+
 const ChatBot = () => {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([
@@ -14,6 +16,7 @@ const ChatBot = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const msgTimestamps = useRef<number[]>([]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -21,6 +24,15 @@ const ChatBot = () => {
 
   const send = async () => {
     if (!input.trim() || loading) return;
+
+    // Rate limiting
+    const now = Date.now();
+    msgTimestamps.current = msgTimestamps.current.filter((t) => now - t < 60000);
+    if (msgTimestamps.current.length >= MAX_MSGS_PER_MIN) {
+      setMessages((prev) => [...prev, { role: "assistant", content: "⏳ Você está enviando mensagens rápido demais. Aguarde um momento." }]);
+      return;
+    }
+    msgTimestamps.current.push(now);
     const userMsg: Msg = { role: "user", content: input.trim() };
     setInput("");
     setMessages((prev) => [...prev, userMsg]);
