@@ -114,8 +114,9 @@ const AdminProducts = () => {
     const tempId = editingId || "temp-" + Date.now();
     try {
       for (const file of files) {
-        if (file.type !== "image/png") {
-          toast.error(`Use apenas PNG com fundo transparente: ${file.name}`);
+        const allowedTypes = ["image/png", "image/jpeg", "image/webp", "image/avif", "image/svg+xml"];
+        if (!allowedTypes.includes(file.type)) {
+          toast.error(`Formato não suportado: ${file.name}. Use PNG, JPG, WEBP, AVIF ou SVG.`);
           continue;
         }
         const url = await uploadProductImage(tempId, file);
@@ -629,7 +630,7 @@ const AdminProducts = () => {
                     </div>
                   ))}
                   {/* Upload button */}
-                  <input ref={imageInputRef} type="file" accept=".png" multiple className="hidden" onChange={handleImageUpload} />
+                  <input ref={imageInputRef} type="file" accept=".png,.jpg,.jpeg,.webp,.avif,.svg" multiple className="hidden" onChange={handleImageUpload} />
                   <button
                     onClick={() => imageInputRef.current?.click()}
                     disabled={uploading}
@@ -639,7 +640,7 @@ const AdminProducts = () => {
                     <span className="text-[10px]">{uploading ? "Enviando..." : "Adicionar"}</span>
                   </button>
                 </div>
-                <p className="mt-2 text-[10px] text-muted-foreground">⚠️ Use apenas <strong>PNG com fundo transparente</strong> para melhor resultado no seletor de cores.</p>
+                <p className="mt-2 text-[10px] text-muted-foreground">Formatos: PNG, JPG, WEBP, AVIF, SVG. 💡 <strong>PNG com fundo transparente</strong> oferece melhor resultado no seletor de cores.</p>
               </section>
 
               {/* 3D Model */}
