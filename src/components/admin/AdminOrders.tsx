@@ -44,12 +44,28 @@ const AdminOrders = () => {
   const [loading, setLoading] = useState(true);
   const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [customerEmails, setCustomerEmails] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       const { data } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
       setOrders(data || []);
+
+      // Load customer emails from profiles
+      if (data && data.length > 0) {
+        const userIds = [...new Set(data.map((o: any) => o.user_id))];
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, email")
+          .in("user_id", userIds);
+        if (profiles) {
+          const emailMap: Record<string, string> = {};
+          profiles.forEach((p: any) => { if (p.email) emailMap[p.user_id] = p.email; });
+          setCustomerEmails(emailMap);
+        }
+      }
+
       setLoading(false);
     };
     load();
@@ -179,6 +195,8 @@ const AdminOrders = () => {
                 </div>
                 <p className="text-sm font-medium text-foreground">{o.shipping_name || "Sem nome"}</p>
                 <p className="text-[10px] text-muted-foreground">
+                  {customerEmails[o.user_id] && <span className="text-primary">{customerEmails[o.user_id]}</span>}
+                  {customerEmails[o.user_id] && (o.shipping_city || o.shipping_phone) && " · "}
                   {o.shipping_city && `${o.shipping_city}, ${o.shipping_state}`}
                   {o.shipping_phone && ` · ${o.shipping_phone}`}
                 </p>

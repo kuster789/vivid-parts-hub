@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.geo-resolve]
 verify_jwt = false
+
+[functions.mercadopago-webhook]
+verify_jwt = false
