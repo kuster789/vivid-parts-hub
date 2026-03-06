@@ -275,6 +275,14 @@ const AdminProducts = () => {
       toast.error("Preencha nome, marca e modelo.");
       return;
     }
+    if (!form.shipping_weight || form.shipping_weight <= 0) {
+      toast.error("Informe o peso do produto para cálculo de frete.");
+      return;
+    }
+    if (!form.shipping_width || form.shipping_width <= 0 || !form.shipping_height || form.shipping_height <= 0 || !form.shipping_length || form.shipping_length <= 0) {
+      toast.error("Informe as dimensões da caixa (largura, altura e comprimento) para cálculo de frete.");
+      return;
+    }
     setSaving(true);
     const variations = form.hasColors
       ? [{ name: "Cor", options: ["Preto", "Branco", "Azul", "Amarelo", "Verde", "Vermelho", "Roxo"] }]
