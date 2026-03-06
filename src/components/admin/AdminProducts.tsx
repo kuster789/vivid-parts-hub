@@ -46,6 +46,7 @@ const AdminProducts = () => {
   const [form, setForm] = useState({
     name: "", description: "", price: 0, sku: "", stock: 0,
     brand: "", model: "", active: true, hasColors: false, condition: "nova" as string,
+    shipping_weight: 1, shipping_width: 15, shipping_height: 10, shipping_length: 20,
   });
   const [formImages, setFormImages] = useState<string[]>([]);
   const [formModel3D, setFormModel3D] = useState<string | null>(null);
@@ -75,7 +76,7 @@ const AdminProducts = () => {
   };
 
   const resetForm = () => {
-    setForm({ name: "", description: "", price: 0, sku: "", stock: 0, brand: "", model: "", active: true, hasColors: false, condition: "nova" });
+    setForm({ name: "", description: "", price: 0, sku: "", stock: 0, brand: "", model: "", active: true, hasColors: false, condition: "nova", shipping_weight: 1, shipping_width: 15, shipping_height: 10, shipping_length: 20 });
     setFormImages([]);
     setFormModel3D(null);
     setFormHas3D(false);
@@ -94,6 +95,7 @@ const AdminProducts = () => {
     setForm({
       name: p.name, description: p.description || "", price: p.price, sku: p.sku || "",
       stock: p.stock, brand: p.brand, model: p.model, active: p.active ?? true, hasColors, condition: p.condition || "nova",
+      shipping_weight: p.shipping_weight ?? 1, shipping_width: p.shipping_width ?? 15, shipping_height: p.shipping_height ?? 10, shipping_length: p.shipping_length ?? 20,
     });
     setFormImages(p.images || []);
     setFormModel3D(p.model_3d_url || null);
@@ -292,6 +294,10 @@ const AdminProducts = () => {
       model_3d_url: formModel3D,
       has_3d: formHas3D,
       compatible_models: compatModels as any,
+      shipping_weight: form.shipping_weight,
+      shipping_width: form.shipping_width,
+      shipping_height: form.shipping_height,
+      shipping_length: form.shipping_length,
     };
 
     if (editingId) {
@@ -587,6 +593,30 @@ const AdminProducts = () => {
                   <label className="mb-1 block text-xs text-muted-foreground">Descrição</label>
                   <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
                     placeholder="Descrição detalhada do produto..." className={`${inputClass} w-full`} rows={4} />
+                </div>
+              </section>
+
+              {/* Shipping Dimensions */}
+              <section>
+                <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">📐 Dimensões para Frete</h4>
+                <p className="mb-3 text-[11px] text-muted-foreground">Informe as dimensões da caixa de envio e o peso para cálculo correto do frete.</p>
+                <div className="grid gap-3 sm:grid-cols-4">
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">Peso (kg) *</label>
+                    <input type="number" step="0.1" min="0.1" value={form.shipping_weight || ""} onChange={(e) => setForm({ ...form, shipping_weight: Number(e.target.value) })} placeholder="1.0" className={`${inputClass} w-full`} />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">Largura (cm) *</label>
+                    <input type="number" min="1" value={form.shipping_width || ""} onChange={(e) => setForm({ ...form, shipping_width: Number(e.target.value) })} placeholder="15" className={`${inputClass} w-full`} />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">Altura (cm) *</label>
+                    <input type="number" min="1" value={form.shipping_height || ""} onChange={(e) => setForm({ ...form, shipping_height: Number(e.target.value) })} placeholder="10" className={`${inputClass} w-full`} />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">Comprimento (cm) *</label>
+                    <input type="number" min="1" value={form.shipping_length || ""} onChange={(e) => setForm({ ...form, shipping_length: Number(e.target.value) })} placeholder="20" className={`${inputClass} w-full`} />
+                  </div>
                 </div>
               </section>
 

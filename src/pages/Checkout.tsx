@@ -147,11 +147,39 @@ const Checkout = () => {
     setSelectedShipping(null);
 
     try {
+      // Fetch product shipping dimensions from DB
+      const productIds = items.map(i => i.product.id);
+      const { data: productsData } = await supabase
+        .from("products")
+        .select("id, shipping_weight, shipping_width, shipping_height, shipping_length")
+        .in("id", productIds);
+
+      // Calculate combined dimensions: sum weights, use max dimensions
+      let totalWeight = 0;
+      let maxWidth = 11;
+      let maxHeight = 2;
+      let maxLength = 16;
+
+      for (const item of items) {
+        const pd = productsData?.find(p => p.id === item.product.id);
+        const w = pd?.shipping_weight ?? 1;
+        const width = pd?.shipping_width ?? 15;
+        const height = pd?.shipping_height ?? 10;
+        const length = pd?.shipping_length ?? 20;
+        totalWeight += Number(w) * item.quantity;
+        maxWidth = Math.max(maxWidth, width);
+        maxHeight = Math.max(maxHeight, height);
+        maxLength = Math.max(maxLength, length);
+      }
+
       const { data, error } = await supabase.functions.invoke("shipping-calculate", {
         body: {
           postal_code_from: "86010000",
           postal_code_to: form.zip.replace(/\D/g, ""),
-          weight: 1,
+          weight: totalWeight,
+          width: maxWidth,
+          height: maxHeight,
+          length: maxLength,
           insurance_value: totalPrice,
         },
       });
