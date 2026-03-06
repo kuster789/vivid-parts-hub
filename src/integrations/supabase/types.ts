@@ -383,6 +383,10 @@ export type Database = {
           model_3d_url: string | null
           name: string
           price: number
+          shipping_height: number | null
+          shipping_length: number | null
+          shipping_weight: number | null
+          shipping_width: number | null
           sku: string | null
           stock: number
           updated_at: string
@@ -402,6 +406,10 @@ export type Database = {
           model_3d_url?: string | null
           name: string
           price?: number
+          shipping_height?: number | null
+          shipping_length?: number | null
+          shipping_weight?: number | null
+          shipping_width?: number | null
           sku?: string | null
           stock?: number
           updated_at?: string
@@ -421,6 +429,10 @@ export type Database = {
           model_3d_url?: string | null
           name?: string
           price?: number
+          shipping_height?: number | null
+          shipping_length?: number | null
+          shipping_weight?: number | null
+          shipping_width?: number | null
           sku?: string | null
           stock?: number
           updated_at?: string
@@ -701,6 +713,10 @@ export type Database = {
           model_3d_url: string | null
           name: string
           price: number
+          shipping_height: number | null
+          shipping_length: number | null
+          shipping_weight: number | null
+          shipping_width: number | null
           sku: string | null
           stock: number
           updated_at: string
