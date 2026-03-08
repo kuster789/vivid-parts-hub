@@ -525,7 +525,7 @@ const AdminProducts = () => {
 
       {/* Full product form modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-background/80 backdrop-blur-sm p-4" onClick={() => { setShowForm(false); resetForm(); }}>
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-background/80 backdrop-blur-sm p-4" onClick={(e) => { if (e.target === e.currentTarget) { setShowForm(false); resetForm(); } }}>
           <div className="my-8 w-full max-w-3xl rounded-xl border border-border bg-card shadow-2xl" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border px-6 py-4">
