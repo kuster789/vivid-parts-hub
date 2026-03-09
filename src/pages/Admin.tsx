@@ -52,6 +52,7 @@ const Admin = () => {
   const allNavItems: { id: Tab; label: string; icon: any; module: Module }[] = [
     { id: "dashboard", label: "Dashboard", icon: BarChart3, module: "dashboard" },
     { id: "products", label: "Produtos", icon: Package, module: "products" },
+    { id: "stock", label: "Estoque", icon: Warehouse, module: "stock" },
     { id: "orders", label: "Pedidos", icon: ShoppingBag, module: "orders" },
     { id: "notifications", label: "Notificações", icon: Bell, module: "notifications" },
     { id: "sales", label: "Vendas", icon: DollarSign, module: "sales" },
