@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 
-export type Module = "dashboard" | "products" | "orders" | "sales" | "leads" | "users" | "notifications" | "audit_logs";
+export type Module = "dashboard" | "products" | "orders" | "sales" | "leads" | "users" | "notifications" | "audit_logs" | "coupons";
 
 export interface ModulePermission {
   can_view: boolean;

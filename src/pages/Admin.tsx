@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Navigate } from "react-router-dom";
 import { usePermissions, Module } from "@/hooks/usePermissions";
 import {
-  BarChart3, Package, ShoppingBag, Users, Bell, Loader2, Menu, X, ChevronRight, Mail, DollarSign, FileText
+  BarChart3, Package, ShoppingBag, Users, Bell, Loader2, Menu, X, ChevronRight, Mail, DollarSign, FileText, Tag
 } from "lucide-react";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminProducts from "@/components/admin/AdminProducts";
