@@ -33,6 +33,8 @@ const productionStages = [
   { key: "postagem", label: "Postagem", icon: Mail },
 ];
 
+const LOW_STOCK_THRESHOLD = 5;
+
 const AdminOrders = () => {
   const { isAdmin } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
@@ -45,6 +47,8 @@ const AdminOrders = () => {
   const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [customerEmails, setCustomerEmails] = useState<Record<string, string>>({});
+  const [outOfStockCount, setOutOfStockCount] = useState(0);
+  const [lowStockCount, setLowStockCount] = useState(0);
 
   useEffect(() => {
     const load = async () => {
