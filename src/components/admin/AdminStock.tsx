@@ -234,8 +234,8 @@ const AdminStock = () => {
       {editProduct && (
         <StockEditDialog
           product={editProduct}
-          editStock={editStock}
-          setEditStock={setEditStock}
+          stockValue={editStock}
+          onStockChange={setEditStock}
           saving={saving}
           onSave={saveStock}
           onClose={() => setEditProduct(null)}
