@@ -269,8 +269,8 @@ const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
         <QuickActions onNewSale={() => onNavigate?.("sales")} onExportCSV={exportCSV} onExportPDF={exportPDF} />
       </div>
 
-      {/* Priority Alerts */}
-      <PriorityAlerts orders={ordersRaw} outOfStock={outOfStockProducts} />
+      {/* Priority Alerts — only pending orders >48h, stock alerts moved to Orders tab */}
+      <PriorityAlerts orders={ordersRaw} outOfStock={[]} />
 
       {/* 💰 Financeiro */}
       <DashboardSection title="Financeiro" icon={DollarSign}>
@@ -280,7 +280,6 @@ const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
       {/* 📦 Operacional */}
       <DashboardSection title="Operacional" icon={ShoppingBag}>
         <StatusPipeline cards={statusCards} />
-        <StockAlerts outOfStock={outOfStockProducts} lowStock={lowStockProducts} onEdit={openStockEditor} />
         <InventorySection
           brands={brands}
           selectedBrand={selectedBrand}

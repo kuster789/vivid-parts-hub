@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import {
-  Package, Pencil, Save, X, Loader2, ChevronDown, ChevronUp, Truck, MapPin, MessageSquare, Factory, Paintbrush, PackageCheck, Mail, Trash2
+  Package, Pencil, Save, X, Loader2, ChevronDown, ChevronUp, Truck, MapPin, MessageSquare, Factory, Paintbrush, PackageCheck, Mail, Trash2, AlertTriangle, Ban
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -33,6 +33,8 @@ const productionStages = [
   { key: "postagem", label: "Postagem", icon: Mail },
 ];
 
+const LOW_STOCK_THRESHOLD = 5;
+
 const AdminOrders = () => {
   const { isAdmin } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
@@ -45,12 +47,21 @@ const AdminOrders = () => {
   const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [customerEmails, setCustomerEmails] = useState<Record<string, string>>({});
+  const [outOfStockCount, setOutOfStockCount] = useState(0);
+  const [lowStockCount, setLowStockCount] = useState(0);
 
   useEffect(() => {
     const load = async () => {
-      setLoading(true);
-      const { data } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
+      const [{ data }, { data: products }] = await Promise.all([
+        supabase.from("orders").select("*").order("created_at", { ascending: false }),
+        supabase.from("products").select("id, stock").eq("active", true),
+      ]);
       setOrders(data || []);
+
+      // Stock counts
+      const prods = products || [];
+      setOutOfStockCount(prods.filter((p: any) => p.stock === 0).length);
+      setLowStockCount(prods.filter((p: any) => p.stock > 0 && p.stock <= LOW_STOCK_THRESHOLD).length);
 
       // Load customer emails from profiles
       if (data && data.length > 0) {
@@ -151,6 +162,23 @@ const AdminOrders = () => {
 
   return (
     <div>
+      {/* Stock alerts */}
+      {(outOfStockCount > 0 || lowStockCount > 0) && (
+        <div className="mb-5 flex flex-wrap gap-3">
+          {outOfStockCount > 0 && (
+            <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-2">
+              <Ban className="h-4 w-4 text-destructive" />
+              <span className="text-xs font-medium text-destructive">📦 {outOfStockCount} produto(s) sem estoque</span>
+            </div>
+          )}
+          {lowStockCount > 0 && (
+            <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-2">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <span className="text-xs font-medium text-amber-500">Estoque Baixo (&lt;{LOW_STOCK_THRESHOLD} un.) — {lowStockCount} produto(s)</span>
+            </div>
+          )}
+        </div>
+      )}
       {/* Status filter pills */}
       <div className="mb-5 flex flex-wrap gap-2">
         <button onClick={() => setStatusFilter("")}
