@@ -1,59 +1,41 @@
 
-## Aba de Cupons no Painel Admin
+# Plano: Corrigir Build + Gerar Capas para os 4 Novos Posts
 
-### O que será construído
+## Problema de Build
+O arquivo `public/blog/esquema-eletrico-elefantre.png` tem 3.17 MB, ultrapassando o limite de 3 MB do cache PWA (Workbox). Isso causa falha no build.
 
-Uma nova aba **"Cupons"** no painel administrativo com:
-- **Listagem completa** de todos os cupons (automáticos do popup + manuais)
-- **Toggle ativar/desativar** por cupom diretamente na tabela
-- **Criar cupom manualmente** via dialog com formulário completo
-- **Excluir cupom** com confirmação
-- **Indicadores visuais**: tipo de desconto, validade, uso (X/máximo), status
+**Solucao:** Aumentar o `maximumFileSizeToCacheInBytes` de 3 MB para 4 MB no `vite.config.ts` (linha 25).
 
 ---
 
-### Arquivos a criar/modificar
+## Geracao de Imagens de Capa
 
-```
-src/components/admin/AdminCoupons.tsx   ← NOVO componente completo
-src/hooks/usePermissions.ts             ← adicionar "coupons" ao tipo Module
-src/pages/Admin.tsx                     ← adicionar aba "coupons" na navegação
-```
+Criar uma edge function temporaria que usa a API de geracao de imagens do Lovable AI para gerar 4 capas tematicas, salvar no Storage e atualizar o campo `cover_image` de cada post no banco.
 
-### Database (sem migração de schema)
+### Capas planejadas:
 
-A tabela `coupons` já existe com todas as colunas necessárias:
-- `code`, `active`, `discount_percent`, `discount_amount`, `min_order_value`, `max_uses`, `used_count`, `expires_at`
+| Post | Tema da Capa |
+|------|-------------|
+| Tabela de Resistencia de Bobinas | Multimetro digital medindo bobina de ignicao de moto, tons escuros com destaque em laranja |
+| Guia de Retentores Agrale | Retentores de motor dispostos em fundo escuro, estilo catalogo tecnico |
+| Agrale WXT 125 - Motocross 1985 | Moto de motocross estilo anos 80 em pista de terra, visual vintage |
+| Esquema Eletrico Elefantre | Diagrama eletrico estilizado com fios coloridos em fundo escuro |
 
-Só precisa inserir as permissões do módulo `coupons` na tabela `role_permissions` para os cargos existentes (admin_master, supervisor, operator) via insert de dados.
+### Passos de implementacao:
 
-### Lógica do componente AdminCoupons
+1. **Corrigir build** -- aumentar limite PWA de 3 MB para 4 MB no `vite.config.ts`
+2. **Criar edge function `generate-blog-cover`** que:
+   - Recebe o slug do post e o prompt da imagem
+   - Chama a API Lovable AI (modelo `google/gemini-2.5-flash-image`) com o prompt
+   - Faz upload da imagem base64 gerada para o bucket `product-images` (ou um bucket dedicado)
+   - Atualiza o campo `cover_image` do post no banco de dados
+3. **Chamar a edge function** 4 vezes para gerar as capas
+4. **Verificar** que as capas aparecem corretamente na listagem `/blog` e nos posts individuais
 
-**Listagem:**
-- Busca `SELECT * FROM coupons ORDER BY created_at DESC`
-- Exibe: código, tipo de desconto (% ou R$), uso (`used_count / max_uses`), validade, status (badge verde/cinza)
-- Toggle de `active` via `UPDATE coupons SET active = !active WHERE id = ?`
+### Detalhes tecnicos
 
-**Formulário de criação (Dialog):**
-- Campos: Código (uppercase automático), Tipo de desconto (% ou valor fixo R$), Valor do desconto, Pedido mínimo (opcional), Limite de usos (opcional), Data de expiração (opcional)
-- Validação: código único, pelo menos um tipo de desconto > 0
-
-**Permissões RBAC:**
-- `admin_master` e `supervisor`: can_view + can_create + can_edit + can_delete
-- `operator`: apenas can_view
-
-### Integração com Admin.tsx
-
-Adicionar ao `allNavItems`:
-```tsx
-{ id: "coupons", label: "Cupons", icon: Tag, module: "coupons" }
-```
-
-E renderizar `{effectiveTab === "coupons" && <AdminCoupons />}` no conteúdo.
-
-### Ordem de implementação
-
-1. Inserir permissões do módulo `coupons` na `role_permissions`
-2. Criar `src/components/admin/AdminCoupons.tsx`
-3. Atualizar `usePermissions.ts` (tipo Module)
-4. Atualizar `src/pages/Admin.tsx` (nav + render)
+- Modelo: `google/gemini-2.5-flash-image` via `https://ai.gateway.lovable.dev/v1/chat/completions`
+- Formato de saida: base64 PNG
+- Armazenamento: bucket Supabase Storage
+- Atualizacao: SQL UPDATE no campo `cover_image` da tabela `blog_posts`
+- A edge function sera chamada via `supabase--curl_edge_functions` para testar
