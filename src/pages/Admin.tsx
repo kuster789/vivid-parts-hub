@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Navigate } from "react-router-dom";
 import { usePermissions, Module } from "@/hooks/usePermissions";
 import {
-  BarChart3, Package, ShoppingBag, Users, Bell, Loader2, Menu, X, ChevronRight, Mail, DollarSign, FileText, Tag
+  BarChart3, Package, ShoppingBag, Users, Bell, Loader2, Menu, X, ChevronRight, Mail, DollarSign, FileText, Tag, Warehouse
 } from "lucide-react";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminProducts from "@/components/admin/AdminProducts";
@@ -14,8 +14,9 @@ import AdminLeads from "@/components/admin/AdminLeads";
 import AdminSales from "@/components/admin/AdminSales";
 import AdminAuditLogs from "@/components/admin/AdminAuditLogs";
 import AdminCoupons from "@/components/admin/AdminCoupons";
+import AdminStock from "@/components/admin/AdminStock";
 
-type Tab = "dashboard" | "products" | "orders" | "users" | "notifications" | "leads" | "sales" | "audit_logs" | "coupons";
+type Tab = "dashboard" | "products" | "orders" | "users" | "notifications" | "leads" | "sales" | "audit_logs" | "coupons" | "stock";
 
 const ROLE_LABELS: Record<string, string> = {
   admin_master: "Admin Master",
@@ -51,6 +52,7 @@ const Admin = () => {
   const allNavItems: { id: Tab; label: string; icon: any; module: Module }[] = [
     { id: "dashboard", label: "Dashboard", icon: BarChart3, module: "dashboard" },
     { id: "products", label: "Produtos", icon: Package, module: "products" },
+    { id: "stock", label: "Estoque", icon: Warehouse, module: "stock" },
     { id: "orders", label: "Pedidos", icon: ShoppingBag, module: "orders" },
     { id: "notifications", label: "Notificações", icon: Bell, module: "notifications" },
     { id: "sales", label: "Vendas", icon: DollarSign, module: "sales" },
@@ -85,6 +87,7 @@ const Admin = () => {
     leads: "Leads Capturados",
     sales: "Controle de Vendas",
     coupons: "Gerenciar Cupons",
+    stock: "Controle de Estoque",
     audit_logs: "Logs de Auditoria",
   };
 
@@ -146,6 +149,7 @@ const Admin = () => {
             {effectiveTab === "dashboard" && <AdminDashboard onNavigate={(t: string) => setTab(t as Tab)} />}
             {effectiveTab === "products" && <AdminProducts />}
             {effectiveTab === "orders" && <AdminOrders />}
+            {effectiveTab === "stock" && <AdminStock />}
             {effectiveTab === "notifications" && <AdminNotifications />}
             {effectiveTab === "leads" && <AdminLeads />}
             {effectiveTab === "sales" && <AdminSales />}
