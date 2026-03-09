@@ -37,12 +37,31 @@ const LeadCapturePopup = () => {
     if (!email.trim()) return;
     try {
       const sessionId = sessionStorage.getItem("pv_session") || null;
-      await supabase.from("leads").insert({ email: email.trim(), source: "popup", session_id: sessionId } as any);
+      const { data: leadData } = await supabase
+        .from("leads")
+        .insert({ email: email.trim(), source: "popup", session_id: sessionId } as any)
+        .select("id")
+        .single();
+
+      // Auto-generate and email the 10% coupon
+      if (leadData?.id) {
+        const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+        const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        fetch(`${SUPABASE_URL}/functions/v1/send-coupon-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": SUPABASE_KEY,
+            "Authorization": `Bearer ${SUPABASE_KEY}`,
+          },
+          body: JSON.stringify({ email: email.trim(), lead_id: leadData.id }),
+        }).catch(() => {/* silently ignore email errors */});
+      }
     } catch {
       // fallback silently
     }
     setSubmitted(true);
-    setTimeout(dismiss, 3000);
+    setTimeout(dismiss, 4000);
   };
 
   if (!visible) return null;
@@ -61,7 +80,9 @@ const LeadCapturePopup = () => {
           <div className="text-center">
             <Gift className="mx-auto mb-4 h-12 w-12 text-primary" />
             <h3 className="mb-2 font-display text-lg font-bold text-foreground">Obrigado! 🎉</h3>
-            <p className="text-sm text-muted-foreground">Seu cupom de desconto será enviado para o email informado.</p>
+            <p className="text-sm text-muted-foreground">
+              Seu cupom de <strong>10% de desconto</strong> foi enviado para o email informado. Verifique sua caixa de entrada!
+            </p>
           </div>
         ) : (
           <>

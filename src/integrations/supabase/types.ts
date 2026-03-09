@@ -121,6 +121,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          coupon_code: string | null
           created_at: string
           email: string
           id: string
@@ -128,6 +129,7 @@ export type Database = {
           source: string | null
         }
         Insert: {
+          coupon_code?: string | null
           created_at?: string
           email: string
           id?: string
@@ -135,6 +137,7 @@ export type Database = {
           source?: string | null
         }
         Update: {
+          coupon_code?: string | null
           created_at?: string
           email?: string
           id?: string
