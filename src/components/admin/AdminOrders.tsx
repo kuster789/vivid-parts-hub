@@ -162,6 +162,23 @@ const AdminOrders = () => {
 
   return (
     <div>
+      {/* Stock alerts */}
+      {(outOfStockCount > 0 || lowStockCount > 0) && (
+        <div className="mb-5 flex flex-wrap gap-3">
+          {outOfStockCount > 0 && (
+            <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-2">
+              <Ban className="h-4 w-4 text-destructive" />
+              <span className="text-xs font-medium text-destructive">📦 {outOfStockCount} produto(s) sem estoque</span>
+            </div>
+          )}
+          {lowStockCount > 0 && (
+            <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-2">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <span className="text-xs font-medium text-amber-500">Estoque Baixo (&lt;{LOW_STOCK_THRESHOLD} un.) — {lowStockCount} produto(s)</span>
+            </div>
+          )}
+        </div>
+      )}
       {/* Status filter pills */}
       <div className="mb-5 flex flex-wrap gap-2">
         <button onClick={() => setStatusFilter("")}
