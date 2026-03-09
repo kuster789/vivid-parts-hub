@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import {
-  Package, Pencil, Save, X, Loader2, ChevronDown, ChevronUp, Truck, MapPin, MessageSquare, Factory, Paintbrush, PackageCheck, Mail, Trash2
+  Package, Pencil, Save, X, Loader2, ChevronDown, ChevronUp, Truck, MapPin, MessageSquare, Factory, Paintbrush, PackageCheck, Mail, Trash2, AlertTriangle, Ban
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
