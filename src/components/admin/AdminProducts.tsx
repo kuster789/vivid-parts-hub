@@ -56,6 +56,7 @@ const AdminProducts = () => {
   const [uploading3D, setUploading3D] = useState(false);
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterBrand, setFilterBrand] = useState("");
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [rotatingIdx, setRotatingIdx] = useState<number | null>(null);
   const [removingBgIdx, setRemovingBgIdx] = useState<number | null>(null);
