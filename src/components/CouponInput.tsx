@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Tag, Loader2, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 
 interface CouponInputProps {
   orderTotal: number;
@@ -13,6 +14,7 @@ const CouponInput = ({ orderTotal, onApply, onRemove, appliedCode }: CouponInput
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { user } = useAuth();
 
   const apply = async () => {
     if (!code.trim()) return;
@@ -22,7 +24,8 @@ const CouponInput = ({ orderTotal, onApply, onRemove, appliedCode }: CouponInput
     const { data, error: rpcError } = await supabase.rpc("validate_coupon", {
       _code: code.trim(),
       _order_total: orderTotal,
-    });
+      _user_id: user?.id ?? null,
+    } as any);
 
     if (rpcError) {
       setError("Erro ao validar cupom");
