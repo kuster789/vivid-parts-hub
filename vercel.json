@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/((?!api|manuals|products|blog).*)", "destination": "/index.html" }
+  ]
+}
