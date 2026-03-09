@@ -98,14 +98,12 @@ Deno.serve(async (req) => {
     const result = await res.json();
 
     if (!res.ok) {
-      console.error("Resend error:", result);
-      return new Response(JSON.stringify({ error: "Email send failed", details: result }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // Log the email error but don't fail — coupon was already created
+      console.error("Resend error (email not sent, coupon still valid):", result);
     }
 
-    return new Response(JSON.stringify({ success: true, coupon_code: couponCode }), {
+    // Always return success with the coupon code so the UI can display it
+    return new Response(JSON.stringify({ success: true, coupon_code: couponCode, email_sent: res.ok }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
