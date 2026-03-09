@@ -52,9 +52,16 @@ const AdminOrders = () => {
 
   useEffect(() => {
     const load = async () => {
-      setLoading(true);
-      const { data } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
+      const [{ data }, { data: products }] = await Promise.all([
+        supabase.from("orders").select("*").order("created_at", { ascending: false }),
+        supabase.from("products").select("id, stock").eq("active", true),
+      ]);
       setOrders(data || []);
+
+      // Stock counts
+      const prods = products || [];
+      setOutOfStockCount(prods.filter((p: any) => p.stock === 0).length);
+      setLowStockCount(prods.filter((p: any) => p.stock > 0 && p.stock <= LOW_STOCK_THRESHOLD).length);
 
       // Load customer emails from profiles
       if (data && data.length > 0) {
