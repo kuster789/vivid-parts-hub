@@ -54,6 +54,7 @@ const Admin = () => {
     { id: "orders", label: "Pedidos", icon: ShoppingBag, module: "orders" },
     { id: "notifications", label: "Notificações", icon: Bell, module: "notifications" },
     { id: "sales", label: "Vendas", icon: DollarSign, module: "sales" },
+    { id: "coupons", label: "Cupons", icon: Tag, module: "coupons" },
     { id: "leads", label: "Leads", icon: Mail, module: "leads" },
     { id: "users", label: "Usuários", icon: Users, module: "users" },
     { id: "audit_logs", label: "Auditoria", icon: FileText, module: "audit_logs" },
