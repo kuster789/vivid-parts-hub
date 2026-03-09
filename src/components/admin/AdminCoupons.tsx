@@ -118,7 +118,7 @@ export default function AdminCoupons() {
     }
 
     setSaving(true);
-    const payload: Record<string, unknown> = {
+    const payload = {
       code: form.code.trim().toUpperCase(),
       active: true,
       discount_percent: form.discount_type === "percent" ? val : 0,
@@ -128,7 +128,7 @@ export default function AdminCoupons() {
       expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null,
     };
 
-    const { error } = await supabase.from("coupons").insert(payload);
+    const { error } = await supabase.from("coupons").insert([payload]);
     if (error) {
       if (error.code === "23505") toast.error("Já existe um cupom com esse código");
       else toast.error("Erro ao criar cupom");
