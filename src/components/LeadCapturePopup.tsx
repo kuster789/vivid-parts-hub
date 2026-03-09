@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { X, Gift } from "lucide-react";
+import { X, Gift, Copy, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_KEY = "lead_popup_dismissed";
@@ -11,6 +11,8 @@ const LeadCapturePopup = () => {
   const [visible, setVisible] = useState(false);
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [couponCode, setCouponCode] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const location = useLocation();
 
   const isBlockedPage = BLOCKED_PATHS.some((p) => location.pathname.startsWith(p));
@@ -32,6 +34,13 @@ const LeadCapturePopup = () => {
     localStorage.setItem(STORAGE_KEY, "true");
   };
 
+  const handleCopy = () => {
+    if (!couponCode) return;
+    navigator.clipboard.writeText(couponCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
@@ -43,11 +52,10 @@ const LeadCapturePopup = () => {
         .select("id")
         .single();
 
-      // Auto-generate and email the 10% coupon
       if (leadData?.id) {
         const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
         const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-        fetch(`${SUPABASE_URL}/functions/v1/send-coupon-email`, {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/send-coupon-email`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -55,13 +63,15 @@ const LeadCapturePopup = () => {
             "Authorization": `Bearer ${SUPABASE_KEY}`,
           },
           body: JSON.stringify({ email: email.trim(), lead_id: leadData.id }),
-        }).catch(() => {/* silently ignore email errors */});
+        });
+        const data = await res.json();
+        if (data?.coupon_code) setCouponCode(data.coupon_code);
       }
     } catch {
       // fallback silently
     }
     setSubmitted(true);
-    setTimeout(dismiss, 4000);
+    setTimeout(dismiss, 8000);
   };
 
   if (!visible) return null;
@@ -79,10 +89,30 @@ const LeadCapturePopup = () => {
         {submitted ? (
           <div className="text-center">
             <Gift className="mx-auto mb-4 h-12 w-12 text-primary" />
-            <h3 className="mb-2 font-display text-lg font-bold text-foreground">Obrigado! 🎉</h3>
-            <p className="text-sm text-muted-foreground">
-              Seu cupom de <strong>10% de desconto</strong> foi enviado para o email informado. Verifique sua caixa de entrada!
-            </p>
+            <h3 className="mb-2 font-display text-lg font-bold text-foreground">Seu cupom chegou! 🎉</h3>
+            {couponCode ? (
+              <>
+                <p className="mb-4 text-sm text-muted-foreground">
+                  Use o código abaixo na finalização do pedido para ganhar <strong>10% de desconto</strong>:
+                </p>
+                <div className="mb-4 rounded-lg border-2 border-dashed border-primary bg-primary/5 px-6 py-4">
+                  <p className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground">Código do cupom</p>
+                  <p className="font-mono text-2xl font-bold tracking-wider text-primary">{couponCode}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">10% de desconto · Uso único · Primeira compra</p>
+                </div>
+                <button
+                  onClick={handleCopy}
+                  className="mx-auto flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+                >
+                  {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+                  {copied ? "Copiado!" : "Copiar código"}
+                </button>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Seu cupom de <strong>10% de desconto</strong> foi gerado. Confira na sua caixa de entrada!
+              </p>
+            )}
           </div>
         ) : (
           <>
