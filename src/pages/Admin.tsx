@@ -84,6 +84,7 @@ const Admin = () => {
     notifications: "Notificações",
     leads: "Leads Capturados",
     sales: "Controle de Vendas",
+    coupons: "Gerenciar Cupons",
     audit_logs: "Logs de Auditoria",
   };
 
