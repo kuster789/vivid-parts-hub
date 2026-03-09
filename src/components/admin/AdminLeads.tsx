@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Trash2, Download, Mail, Eye, Tag, Copy, Check, Sparkles } from "lucide-react";
+import { Loader2, Trash2, Download, Mail, Eye, Tag, Copy, Check, Sparkles, RefreshCw } from "lucide-react";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -12,18 +12,13 @@ interface Lead {
   email: string;
   source: string | null;
   created_at: string;
+  coupon_code?: string | null;
   session_id?: string | null;
   visit_count?: number;
   pages_visited?: string[];
 }
 
 type FilterType = "all" | "returning" | "new";
-
-const generateCouponCode = () => {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  const suffix = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-  return `BEMVINDO10-${suffix}`;
-};
 
 const AdminLeads = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -83,28 +78,34 @@ const AdminLeads = () => {
 
   const handleGenerateCoupon = async (lead: Lead) => {
     setGeneratingFor(lead.id);
-    const code = generateCouponCode();
-    const { error } = await supabase.from("coupons").insert({
-      code,
-      discount_percent: 10,
-      discount_amount: 0,
-      max_uses: 1,
-      active: true,
-      min_order_value: 0,
-    });
+    try {
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-coupon-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_KEY,
+          "Authorization": `Bearer ${SUPABASE_KEY}`,
+        },
+        body: JSON.stringify({ email: lead.email, lead_id: lead.id }),
+      });
 
-    setGeneratingFor(null);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao gerar cupom");
 
-    if (error) {
-      toast({ title: "Erro ao gerar cupom", description: error.message, variant: "destructive" });
-      return;
+      const code = data.coupon_code;
+      setLeads((prev) => prev.map((l) => l.id === lead.id ? { ...l, coupon_code: code } : l));
+      setCouponDialog({ open: true, code, email: lead.email });
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally {
+      setGeneratingFor(null);
     }
-
-    setCouponDialog({ open: true, code, email: lead.email });
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(couponDialog.code);
+  const handleCopy = (code: string) => {
+    navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -120,9 +121,9 @@ const AdminLeads = () => {
 
   const handleExportCSV = () => {
     if (!filteredLeads.length) return;
-    const header = "Email,Fonte,Data,Visitas,Páginas Visitadas\n";
+    const header = "Email,Fonte,Data,Visitas,Cupom,Páginas Visitadas\n";
     const rows = filteredLeads.map((l) =>
-      `"${l.email}","${l.source || ""}","${new Date(l.created_at).toLocaleDateString("pt-BR")}",${l.visit_count || 0},"${(l.pages_visited || []).join("; ")}"`
+      `"${l.email}","${l.source || ""}","${new Date(l.created_at).toLocaleDateString("pt-BR")}",${l.visit_count || 0},"${l.coupon_code || ""}","${(l.pages_visited || []).join("; ")}"`
     ).join("\n");
     const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -173,7 +174,7 @@ const AdminLeads = () => {
           <p className="text-sm">Nenhum lead encontrado.</p>
         </div>
       ) : (
-        <div className="rounded-lg border border-border">
+        <div className="rounded-lg border border-border overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -182,7 +183,7 @@ const AdminLeads = () => {
                 <TableHead>Visitas</TableHead>
                 <TableHead>Páginas</TableHead>
                 <TableHead>Data</TableHead>
-                <TableHead className="text-center">Cupom 10%</TableHead>
+                <TableHead>Cupom 10%</TableHead>
                 <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
@@ -215,20 +216,46 @@ const AdminLeads = () => {
                     </div>
                   </TableCell>
                   <TableCell>{new Date(lead.created_at).toLocaleDateString("pt-BR")}</TableCell>
-                  <TableCell className="text-center">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleGenerateCoupon(lead)}
-                      disabled={generatingFor === lead.id}
-                      className="h-8 gap-1.5 text-xs border-primary/30 text-primary hover:bg-primary/10 hover:text-primary"
-                    >
-                      {generatingFor === lead.id
-                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        : <Tag className="h-3.5 w-3.5" />
-                      }
-                      Gerar
-                    </Button>
+                  <TableCell>
+                    {lead.coupon_code ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono text-xs font-semibold text-primary bg-primary/10 rounded px-2 py-1">
+                          {lead.coupon_code}
+                        </span>
+                        <button
+                          onClick={() => handleCopy(lead.coupon_code!)}
+                          className="text-muted-foreground hover:text-foreground"
+                          title="Copiar"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleGenerateCoupon(lead)}
+                          disabled={generatingFor === lead.id}
+                          className="text-muted-foreground hover:text-foreground"
+                          title="Gerar novo cupom e reenviar"
+                        >
+                          {generatingFor === lead.id
+                            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            : <RefreshCw className="h-3.5 w-3.5" />
+                          }
+                        </button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleGenerateCoupon(lead)}
+                        disabled={generatingFor === lead.id}
+                        className="h-8 gap-1.5 text-xs border-primary/30 text-primary hover:bg-primary/10 hover:text-primary"
+                      >
+                        {generatingFor === lead.id
+                          ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          : <Tag className="h-3.5 w-3.5" />
+                        }
+                        Enviar cupom
+                      </Button>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(lead.id)} className="h-8 w-8 text-destructive hover:text-destructive">
@@ -250,20 +277,20 @@ const AdminLeads = () => {
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
                 <Sparkles className="h-5 w-5 text-primary" />
               </div>
-              <DialogTitle>Cupom gerado!</DialogTitle>
+              <DialogTitle>Cupom gerado e enviado!</DialogTitle>
             </div>
             <DialogDescription>
-              Cupom de 10% para a primeira compra de <span className="font-medium text-foreground">{couponDialog.email}</span>
+              E-mail enviado para <span className="font-medium text-foreground">{couponDialog.email}</span>
             </DialogDescription>
           </DialogHeader>
 
           <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center">
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Código do cupom</p>
             <p className="font-mono text-xl font-bold tracking-wider text-primary">{couponDialog.code}</p>
-            <p className="mt-1 text-xs text-muted-foreground">10% de desconto · Uso único</p>
+            <p className="mt-1 text-xs text-muted-foreground">10% de desconto · Uso único · Primeira compra</p>
           </div>
 
-          <Button onClick={handleCopy} variant="outline" className="w-full gap-2">
+          <Button onClick={() => handleCopy(couponDialog.code)} variant="outline" className="w-full gap-2">
             {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
             {copied ? "Copiado!" : "Copiar código"}
           </Button>
