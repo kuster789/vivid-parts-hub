@@ -341,9 +341,11 @@ const AdminProducts = () => {
     loadProducts();
   };
 
-  const filteredProducts = products.filter((p) =>
-    !searchTerm || p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || p.sku?.toLowerCase().includes(searchTerm.toLowerCase()) || p.brand?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = products.filter((p) => {
+    const matchesSearch = !searchTerm || p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || p.sku?.toLowerCase().includes(searchTerm.toLowerCase()) || p.brand?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesBrand = !filterBrand || p.brand?.toLowerCase() === filterBrand.toLowerCase();
+    return matchesSearch && matchesBrand;
+  });
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
