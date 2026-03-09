@@ -149,6 +149,7 @@ const Admin = () => {
             {effectiveTab === "dashboard" && <AdminDashboard onNavigate={(t: string) => setTab(t as Tab)} />}
             {effectiveTab === "products" && <AdminProducts />}
             {effectiveTab === "orders" && <AdminOrders />}
+            {effectiveTab === "stock" && <AdminStock />}
             {effectiveTab === "notifications" && <AdminNotifications />}
             {effectiveTab === "leads" && <AdminLeads />}
             {effectiveTab === "sales" && <AdminSales />}
