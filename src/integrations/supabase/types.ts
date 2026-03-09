@@ -739,10 +739,12 @@ export type Database = {
         }
         Returns: boolean
       }
-      validate_coupon: {
-        Args: { _code: string; _order_total: number }
-        Returns: Json
-      }
+      validate_coupon:
+        | { Args: { _code: string; _order_total: number }; Returns: Json }
+        | {
+            Args: { _code: string; _order_total: number; _user_id?: string }
+            Returns: Json
+          }
     }
     Enums: {
       app_role:
