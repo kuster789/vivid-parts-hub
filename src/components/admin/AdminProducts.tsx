@@ -394,10 +394,22 @@ const AdminProducts = () => {
 
       {/* Toolbar */}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Buscar por nome, SKU ou marca..."
-            className={`${inputClass} w-full pl-9`} />
+        <div className="flex flex-1 items-center gap-3 min-w-0">
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Buscar por nome, SKU ou marca..."
+              className={`${inputClass} w-full pl-9`} />
+          </div>
+          <select
+            value={filterBrand}
+            onChange={(e) => { setFilterBrand(e.target.value); setCurrentPage(1); }}
+            className={`${inputClass} min-w-[140px]`}
+          >
+            <option value="">Todas as marcas</option>
+            {brands.map((b) => (
+              <option key={b.slug} value={b.slug}>{b.name}</option>
+            ))}
+          </select>
         </div>
         <div className="flex items-center gap-3">
           <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground">{filteredProducts.length} produto(s)</span>
