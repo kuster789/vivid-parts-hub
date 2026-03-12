@@ -58,6 +58,15 @@ const SobreNos = () => {
         <div className="flex flex-col gap-2 text-sm text-muted-foreground">
           <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-primary" /> WhatsApp: +55 43 9643-8823</p>
           <p className="flex items-center gap-2"><Mail className="h-4 w-4 text-primary" /> autopecaagralecagiva@outlook.com</p>
+          <a
+            href="https://g.page/r/CXLTbcNYPugJEBM/review"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-flex w-fit items-center gap-2 rounded-md border border-border bg-secondary/50 px-4 py-2.5 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            ⭐ Avaliar no Google
+          </a>
         </div>
       </div>
     </div>
