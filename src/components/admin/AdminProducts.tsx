@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Package, Plus, Pencil, Trash2, Save, X, Upload, Image, Loader2, FileBox,
   Search, Eye, GripVertical, AlertTriangle, CheckCircle, Clock, Ban, ChevronDown,
-  ChevronLeft, ChevronRight, RotateCw, Wand2
+  ChevronLeft, ChevronRight, RotateCw, Wand2, Copy
 } from "lucide-react";
 import { uploadProductImage, deleteProductImage, upload3DModel } from "@/lib/storage";
 import { brands } from "@/data/products";
