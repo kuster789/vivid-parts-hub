@@ -326,7 +326,6 @@ const AdminProducts = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Excluir este produto permanentemente? Registros relacionados (itens de pedido, reviews, wishlist) também serão removidos.")) return;
-    // Remove dependent records first to avoid foreign key constraint errors
     await Promise.all([
       supabase.from("order_items").delete().eq("product_id", id),
       supabase.from("reviews").delete().eq("product_id", id),
@@ -339,6 +338,18 @@ const AdminProducts = () => {
     }
     toast.success("Produto excluído.");
     loadProducts();
+  };
+
+  const handleDuplicate = async (p: any) => {
+    const { id, created_at, updated_at, ...rest } = p;
+    const payload = {
+      ...rest,
+      name: `${p.name} (Cópia)`,
+      sku: generateSKU(p.brand, p.model, p.name),
+    };
+    const { error } = await supabase.from("products").insert([payload]);
+    if (error) toast.error("Erro ao duplicar: " + error.message);
+    else { toast.success("Produto duplicado!"); loadProducts(); }
   };
 
   const filteredProducts = products.filter((p) => {
