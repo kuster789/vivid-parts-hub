@@ -233,30 +233,7 @@ const BlogPost = () => {
               a: ({ href, children }) => {
                 if (href && href.toLowerCase().endsWith(".pdf")) {
                   const pdfTitle = typeof children === "string" ? children : "PDF";
-                  return (
-                    <div className="my-6 rounded-lg border border-border overflow-hidden">
-                      <div className="flex items-center justify-between bg-secondary px-4 py-2">
-                        <span className="text-xs font-medium text-foreground">{children}</span>
-                        <button
-                          onClick={() => {
-                            const iframe = document.querySelector(`iframe[title="${pdfTitle}"]`) as HTMLIFrameElement;
-                            if (iframe) {
-                              if (iframe.requestFullscreen) iframe.requestFullscreen();
-                            }
-                          }}
-                          className="text-[10px] text-primary hover:underline inline-flex items-center gap-1"
-                        >
-                          <Maximize2 className="h-3 w-3" /> Tela cheia
-                        </button>
-                      </div>
-                      <iframe
-                        src={href}
-                        className="w-full border-0"
-                        style={{ height: "80vh" }}
-                        title={pdfTitle}
-                      />
-                    </div>
-                  );
+                  return <PdfViewer fileUrl={href} title={pdfTitle} />;
                 }
                 return (
                   <a href={href} className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
