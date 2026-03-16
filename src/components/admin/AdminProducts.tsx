@@ -491,18 +491,20 @@ const AdminProducts = () => {
                     <span className="font-display text-sm font-bold text-primary">R$ {Number(p.price).toFixed(2).replace(".", ",")}</span>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1">
-                      <Link to={`/produto/${p.id}`} className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors" title="Ver Produto">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Link to={`/produto/${p.id}`} className="inline-flex items-center gap-1 rounded-md border border-border bg-secondary/50 px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors" title="Ver Produto">
                         <Eye className="h-3.5 w-3.5" />
+                        <span className="hidden xl:inline">Ver</span>
                       </Link>
-                      <button onClick={() => handleDuplicate(p)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors" title="Duplicar Produto">
+                      <button onClick={() => handleDuplicate(p)} className="inline-flex items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/15 transition-colors" title="Duplicar Produto">
                         <Copy className="h-3.5 w-3.5" />
+                        <span className="hidden xl:inline">Duplicar</span>
                       </button>
                       <button onClick={() => openEdit(p)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors" title="Editar">
-                        <Pencil className="h-3.5 w-3.5" />
+                        <Pencil className="h-4 w-4" />
                       </button>
                       <button onClick={() => handleDelete(p.id)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors" title="Excluir">
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   </td>
