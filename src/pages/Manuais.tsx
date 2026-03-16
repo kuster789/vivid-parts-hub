@@ -166,6 +166,16 @@ const manuals: ManualItem[] = [
     icon: Wrench,
     coverImage: "/blog/manutencao-agrale-cover.jpg",
   },
+  {
+    title: "Manual de Serviço — Yamaha DT 200",
+    description: "Manual de serviço oficial da Yamaha DT 200 com procedimentos completos de manutenção, desmontagem, montagem, especificações técnicas e diagramas.",
+    blogSlug: "manual-servico-yamaha-dt200",
+    category: "manual",
+    brand: "Yamaha",
+    models: ["DT200", "DT200R"],
+    icon: Wrench,
+    coverImage: "/blog/motor-agrale-2tempos-cover.jpg",
+  },
 ];
 
 const categoryConfig: Record<string, { label: string; color: string; description: string }> = {
