@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Package, Plus, Pencil, Trash2, Save, X, Upload, Image, Loader2, FileBox,
   Search, Eye, GripVertical, AlertTriangle, CheckCircle, Clock, Ban, ChevronDown,
-  ChevronLeft, ChevronRight, RotateCw, Wand2
+  ChevronLeft, ChevronRight, RotateCw, Wand2, Copy
 } from "lucide-react";
 import { uploadProductImage, deleteProductImage, upload3DModel } from "@/lib/storage";
 import { brands } from "@/data/products";
@@ -326,7 +326,6 @@ const AdminProducts = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Excluir este produto permanentemente? Registros relacionados (itens de pedido, reviews, wishlist) também serão removidos.")) return;
-    // Remove dependent records first to avoid foreign key constraint errors
     await Promise.all([
       supabase.from("order_items").delete().eq("product_id", id),
       supabase.from("reviews").delete().eq("product_id", id),
@@ -339,6 +338,18 @@ const AdminProducts = () => {
     }
     toast.success("Produto excluído.");
     loadProducts();
+  };
+
+  const handleDuplicate = async (p: any) => {
+    const { id, created_at, updated_at, ...rest } = p;
+    const payload = {
+      ...rest,
+      name: `${p.name} (Cópia)`,
+      sku: generateSKU(p.brand, p.model, p.name),
+    };
+    const { error } = await supabase.from("products").insert([payload]);
+    if (error) toast.error("Erro ao duplicar: " + error.message);
+    else { toast.success("Produto duplicado!"); loadProducts(); }
   };
 
   const filteredProducts = products.filter((p) => {
@@ -481,9 +492,12 @@ const AdminProducts = () => {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
-                      <Link to={`/produto/${p.id}`} className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors" title="Ver">
+                      <Link to={`/produto/${p.id}`} className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors" title="Ver Produto">
                         <Eye className="h-3.5 w-3.5" />
                       </Link>
+                      <button onClick={() => handleDuplicate(p)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors" title="Duplicar Produto">
+                        <Copy className="h-3.5 w-3.5" />
+                      </button>
                       <button onClick={() => openEdit(p)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors" title="Editar">
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
