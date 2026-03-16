@@ -492,9 +492,12 @@ const AdminProducts = () => {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
-                      <Link to={`/produto/${p.id}`} className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors" title="Ver">
+                      <Link to={`/produto/${p.id}`} className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors" title="Ver Produto">
                         <Eye className="h-3.5 w-3.5" />
                       </Link>
+                      <button onClick={() => handleDuplicate(p)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors" title="Duplicar Produto">
+                        <Copy className="h-3.5 w-3.5" />
+                      </button>
                       <button onClick={() => openEdit(p)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors" title="Editar">
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
