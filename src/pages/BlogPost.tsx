@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, Loader2, BookOpen, X, ZoomIn, ZoomOut, Maximize2, 
 import ShareButtons from "@/components/ShareButtons";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import PdfViewer from "@/components/PdfViewer";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
 import type { Tables } from "@/integrations/supabase/types";
