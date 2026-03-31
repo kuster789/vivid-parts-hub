@@ -193,7 +193,7 @@ const AdminQuotes = () => {
 
       // === PAGE CONTENT ===
       addHeader();
-      y = 55;
+      y = 60;
 
       // Client info box
       if (clientName || clientPhone || clientEmail) {
