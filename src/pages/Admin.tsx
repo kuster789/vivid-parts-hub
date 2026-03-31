@@ -90,6 +90,7 @@ const Admin = () => {
     sales: "Controle de Vendas",
     coupons: "Gerenciar Cupons",
     stock: "Controle de Estoque",
+    quotes: "Orçamentos",
     audit_logs: "Logs de Auditoria",
   };
 
