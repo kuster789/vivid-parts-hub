@@ -102,16 +102,33 @@ const AdminQuotes = () => {
       const contentW = pageW - margin * 2;
       let y = margin;
 
+      // Load logo
+      let logoDataUrl: string | null = null;
+      try {
+        const res = await fetch("/pwa-512x512.png");
+        const blob = await res.blob();
+        logoDataUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+      } catch { /* skip logo */ }
+
       // Header
       doc.setFillColor(23, 23, 23);
       doc.rect(0, 0, pageW, 40, "F");
+
+      if (logoDataUrl) {
+        doc.addImage(logoDataUrl, "PNG", margin, 5, 30, 30);
+      }
+
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(20);
       doc.setFont("helvetica", "bold");
-      doc.text("ORÇAMENTO", margin, 18);
+      doc.text("ORÇAMENTO", logoDataUrl ? margin + 34 : margin, 18);
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
-      doc.text("Auto Peças Agrale", margin, 28);
+      doc.text("Auto Peças Agrale", logoDataUrl ? margin + 34 : margin, 28);
       doc.text(`Data: ${new Date().toLocaleDateString("pt-BR")}`, pageW - margin, 18, { align: "right" });
       if (validity) {
         const validDate = new Date();
