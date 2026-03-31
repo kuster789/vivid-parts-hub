@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import {
   Search, Plus, Minus, Trash2, FileDown, Loader2, Percent,
-  ArrowLeft, Edit, Eye, List,
+  ArrowLeft, Edit, List,
 } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
@@ -53,9 +54,22 @@ const AdminQuotes = () => {
   const [brandFilter, setBrandFilter] = useState("all");
   const [modelFilter, setModelFilter] = useState("all");
   const [items, setItems] = useState<QuoteItem[]>([]);
+
+  // Client fields
   const [clientName, setClientName] = useState("");
+  const [clientFantasyName, setClientFantasyName] = useState("");
+  const [clientCpfCnpj, setClientCpfCnpj] = useState("");
+  const [clientIe, setClientIe] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [clientEmail, setClientEmail] = useState("");
+  const [clientAddress, setClientAddress] = useState("");
+  const [clientNumber, setClientNumber] = useState("");
+  const [clientComplement, setClientComplement] = useState("");
+  const [clientNeighborhood, setClientNeighborhood] = useState("");
+  const [clientCity, setClientCity] = useState("");
+  const [clientState, setClientState] = useState("");
+  const [clientZip, setClientZip] = useState("");
+
   const [notes, setNotes] = useState("");
   const [validity, setValidity] = useState("7");
   const [discountPercent, setDiscountPercent] = useState(0);
@@ -108,8 +122,12 @@ const AdminQuotes = () => {
   /* ───── editor helpers ───── */
   const resetEditor = () => {
     setEditingId(null); setQuoteNumber(""); setItems([]);
-    setClientName(""); setClientPhone(""); setClientEmail("");
-    setNotes(""); setValidity("7"); setDiscountPercent(0); setStatus("draft");
+    setClientName(""); setClientFantasyName(""); setClientCpfCnpj("");
+    setClientIe(""); setClientPhone(""); setClientEmail("");
+    setClientAddress(""); setClientNumber(""); setClientComplement("");
+    setClientNeighborhood(""); setClientCity(""); setClientState("");
+    setClientZip(""); setNotes(""); setValidity("7");
+    setDiscountPercent(0); setStatus("draft");
     setSearch(""); setBrandFilter("all"); setModelFilter("all");
   };
 
@@ -122,23 +140,29 @@ const AdminQuotes = () => {
     setView("editor");
     await fetchProducts();
 
-    // load full quote data
     const { data: full } = await supabase.from("quotes").select("*").eq("id", q.id).single();
     if (full) {
-      setClientName((full as any).client_name || "");
-      setClientPhone((full as any).client_phone || "");
-      setClientEmail((full as any).client_email || "");
-      setNotes((full as any).notes || "");
-      setValidity(String((full as any).validity_days || 7));
-      setDiscountPercent(Number((full as any).discount_percent) || 0);
-      setStatus((full as any).status || "draft");
+      const f = full as any;
+      setClientName(f.client_name || "");
+      setClientFantasyName(f.client_fantasy_name || "");
+      setClientCpfCnpj(f.client_cpf_cnpj || "");
+      setClientIe(f.client_ie || "");
+      setClientPhone(f.client_phone || "");
+      setClientEmail(f.client_email || "");
+      setClientAddress(f.client_address || "");
+      setClientNumber(f.client_number || "");
+      setClientComplement(f.client_complement || "");
+      setClientNeighborhood(f.client_neighborhood || "");
+      setClientCity(f.client_city || "");
+      setClientState(f.client_state || "");
+      setClientZip(f.client_zip || "");
+      setNotes(f.notes || "");
+      setValidity(String(f.validity_days || 7));
+      setDiscountPercent(Number(f.discount_percent) || 0);
+      setStatus(f.status || "draft");
     }
 
-    // load items
-    const { data: qItems } = await supabase
-      .from("quote_items")
-      .select("*")
-      .eq("quote_id", q.id);
+    const { data: qItems } = await supabase.from("quote_items").select("*").eq("quote_id", q.id);
     if (qItems) {
       setItems(qItems.map((qi: any) => ({
         product: {
@@ -146,8 +170,7 @@ const AdminQuotes = () => {
           model: qi.product_model, price: qi.unit_price, sku: qi.product_sku,
           images: qi.product_image ? [qi.product_image] : null, stock: 0,
         },
-        quantity: qi.quantity,
-        unitPrice: qi.unit_price,
+        quantity: qi.quantity, unitPrice: qi.unit_price,
       })));
     }
   };
@@ -173,6 +196,23 @@ const AdminQuotes = () => {
   const total = subtotal - discountValue;
   const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+  /* ───── build client data for save ───── */
+  const buildClientData = () => ({
+    client_name: clientName || null,
+    client_phone: clientPhone || null,
+    client_email: clientEmail || null,
+    client_fantasy_name: clientFantasyName || null,
+    client_cpf_cnpj: clientCpfCnpj || null,
+    client_ie: clientIe || null,
+    client_address: clientAddress || null,
+    client_number: clientNumber || null,
+    client_complement: clientComplement || null,
+    client_neighborhood: clientNeighborhood || null,
+    client_city: clientCity || null,
+    client_state: clientState || null,
+    client_zip: clientZip || null,
+  });
+
   /* ───── save quote ───── */
   const saveQuote = async () => {
     if (!user) return;
@@ -181,43 +221,34 @@ const AdminQuotes = () => {
       let qid = editingId;
       let qnum = quoteNumber;
 
+      const commonData = {
+        status,
+        ...buildClientData(),
+        notes: notes || null,
+        validity_days: parseInt(validity) || 7,
+        discount_percent: discountPercent,
+        subtotal, discount_value: discountValue, total,
+      };
+
       if (!qid) {
-        // Generate quote number server-side
         const { data: numData, error: numErr } = await supabase.rpc("generate_quote_number");
         if (numErr) throw numErr;
         qnum = numData as string;
 
         const { data: ins, error: insErr } = await supabase.from("quotes").insert({
           quote_number: qnum,
-          status,
-          client_name: clientName || null,
-          client_phone: clientPhone || null,
-          client_email: clientEmail || null,
-          notes: notes || null,
-          validity_days: parseInt(validity) || 7,
-          discount_percent: discountPercent,
-          subtotal, discount_value: discountValue, total,
           created_by: user.id,
-        }).select("id").single();
+          ...commonData,
+        } as any).select("id").single();
         if (insErr) throw insErr;
         qid = (ins as any).id;
         setEditingId(qid);
         setQuoteNumber(qnum);
       } else {
-        const { error: updErr } = await supabase.from("quotes").update({
-          status,
-          client_name: clientName || null,
-          client_phone: clientPhone || null,
-          client_email: clientEmail || null,
-          notes: notes || null,
-          validity_days: parseInt(validity) || 7,
-          discount_percent: discountPercent,
-          subtotal, discount_value: discountValue, total,
-        }).eq("id", qid);
+        const { error: updErr } = await supabase.from("quotes").update(commonData as any).eq("id", qid);
         if (updErr) throw updErr;
       }
 
-      // Replace items
       await supabase.from("quote_items").delete().eq("quote_id", qid!);
       if (items.length > 0) {
         const { error: itemsErr } = await supabase.from("quote_items").insert(
@@ -259,10 +290,7 @@ const AdminQuotes = () => {
 
   const generatePDF = async () => {
     if (items.length === 0) { toast.error("Adicione pelo menos um produto"); return; }
-
-    // Auto-save before generating
     await saveQuote();
-
     setGenerating(true);
     try {
       const doc = new jsPDF("p", "mm", "a4");
@@ -282,7 +310,6 @@ const AdminQuotes = () => {
         const headerH = 30;
         const pad = 14;
 
-        // === LEFT: Logo (30% bigger = ~16mm) ===
         const logoW = 16;
         const logoH = 16;
         const logoY = (headerH - logoH) / 2;
@@ -290,14 +317,12 @@ const AdminQuotes = () => {
           doc.addImage(logoDataUrl, "PNG", pad, logoY, logoW, logoH);
         }
 
-        // === CENTER: Title + Company Info ===
         const cx = logoDataUrl ? pad + logoW + 6 : pad;
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(13);
         doc.setFont("helvetica", "bold");
         doc.text("ORÇAMENTO", cx, 9);
 
-        // Quote number
         if (quoteNumber) {
           doc.setFontSize(8);
           doc.setFont("helvetica", "normal");
@@ -315,9 +340,7 @@ const AdminQuotes = () => {
         doc.setTextColor(100, 100, 100);
         doc.text("CNPJ: 62.440.010/0001-03  |  WhatsApp: (43) 9643-8823  |  autopecaagralecagiva@outlook.com", cx, 22);
 
-        // === RIGHT: Date Block ===
         const rx = pageW - pad;
-
         doc.setTextColor(40, 40, 40);
         doc.setFontSize(8);
         doc.setFont("helvetica", "bold");
@@ -336,53 +359,89 @@ const AdminQuotes = () => {
         doc.setFontSize(9);
         doc.text(vd.toLocaleDateString("pt-BR"), rx, 16, { align: "right" });
 
-        // Divider
         doc.setDrawColor(220, 220, 220);
         doc.setLineWidth(0.3);
         doc.line(pad, headerH, pageW - pad, headerH);
       };
 
       const addFooter = () => {
-        doc.setFillColor(245, 245, 245);
-        doc.rect(0, 282, pageW, 15, "F");
-        doc.setDrawColor(220, 38, 38);
-        doc.setLineWidth(0.5);
-        doc.line(margin, 282, pageW - margin, 282);
-        doc.setTextColor(120, 120, 120);
-        doc.setFontSize(7);
+        const footerY = 275;
+        // Thin divider
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.3);
+        doc.line(margin, footerY, pageW - margin, footerY);
+
+        doc.setTextColor(60, 60, 60);
+        doc.setFontSize(7.5);
+        doc.setFont("helvetica", "bold");
+        doc.text("Auto Peças Agrale Cagiva", pageW / 2, footerY + 4, { align: "center" });
+
         doc.setFont("helvetica", "normal");
-        doc.text("Auto Peças Agrale — Londrina, PR — www.motopecasagrale.com.br", pageW / 2, 288, { align: "center" });
-        doc.text("Este orçamento não constitui nota fiscal. Valores sujeitos a alteração.", pageW / 2, 292, { align: "center" });
+        doc.setFontSize(6.5);
+        doc.setTextColor(100, 100, 100);
+        doc.text("Jacarezinho - PR", pageW / 2, footerY + 8, { align: "center" });
+        doc.text("WhatsApp: (43) 9643-8823  |  E-mail: autopecaagralecagiva@outlook.com", pageW / 2, footerY + 12, { align: "center" });
+        doc.text("www.motopecasagrale.com.br", pageW / 2, footerY + 16, { align: "center" });
+
+        doc.setFontSize(5.5);
+        doc.setTextColor(150, 150, 150);
+        doc.text("Este orçamento não constitui nota fiscal. Valores sujeitos a alteração.", pageW / 2, footerY + 21, { align: "center" });
       };
 
       const checkPage = (needed: number) => {
-        if (y + needed > 275) { addFooter(); doc.addPage(); y = margin + 5; }
+        if (y + needed > 268) { addFooter(); doc.addPage(); y = margin + 5; }
       };
 
       addHeader();
-      y = 40;
+      y = 34;
 
-      // Client info
-      if (clientName || clientPhone || clientEmail) {
+      // ── Client data section ──
+      const clientLines: string[] = [];
+      if (clientName) clientLines.push(clientName);
+      if (clientFantasyName) clientLines.push(`Nome Fantasia: ${clientFantasyName}`);
+      if (clientCpfCnpj) clientLines.push(`CPF/CNPJ: ${clientCpfCnpj}`);
+      if (clientIe) clientLines.push(`Inscrição Estadual: ${clientIe}`);
+      if (clientPhone) clientLines.push(`Telefone: ${clientPhone}`);
+      if (clientEmail) clientLines.push(`E-mail: ${clientEmail}`);
+
+      // Build address line
+      const addrParts: string[] = [];
+      if (clientAddress) {
+        let addr = clientAddress;
+        if (clientNumber) addr += `, Nº ${clientNumber}`;
+        if (clientComplement) addr += `, ${clientComplement}`;
+        addrParts.push(addr);
+      }
+      if (clientNeighborhood) addrParts.push(clientNeighborhood);
+      const cityState = [clientCity, clientState].filter(Boolean).join(" - ");
+      if (cityState) addrParts.push(cityState);
+      if (clientZip) addrParts.push(`CEP ${clientZip}`);
+      if (addrParts.length > 0) clientLines.push(`Endereço: ${addrParts.join(", ")}`);
+
+      if (clientLines.length > 0) {
+        const boxH = 8 + clientLines.length * 4.5 + 3;
         doc.setFillColor(248, 248, 248);
-        const boxH = 8 + (clientName ? 5 : 0) + (clientPhone ? 5 : 0) + (clientEmail ? 5 : 0) + 3;
-        doc.roundedRect(margin, y, contentW, boxH, 2, 2, "F");
+        doc.roundedRect(margin, y, contentW, boxH, 1.5, 1.5, "F");
         doc.setDrawColor(230, 230, 230);
-        doc.roundedRect(margin, y, contentW, boxH, 2, 2, "S");
-        y += 6;
-        doc.setTextColor(220, 38, 38);
-        doc.setFontSize(8);
+        doc.roundedRect(margin, y, contentW, boxH, 1.5, 1.5, "S");
+        y += 5.5;
+        doc.setTextColor(40, 40, 40);
+        doc.setFontSize(7.5);
         doc.setFont("helvetica", "bold");
-        doc.text("CLIENTE", margin + 4, y);
+        doc.text("DADOS DO CLIENTE", margin + 4, y);
         y += 5;
         doc.setTextColor(50, 50, 50);
-        doc.setFontSize(9);
+        doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
-        if (clientName) { doc.text(clientName, margin + 4, y); y += 5; }
-        if (clientPhone) { doc.text(`Tel: ${clientPhone}`, margin + 4, y); y += 5; }
-        if (clientEmail) { doc.text(clientEmail, margin + 4, y); y += 5; }
-        y += 5;
+        for (const line of clientLines) {
+          const splitLine = doc.splitTextToSize(line, contentW - 10);
+          doc.text(splitLine, margin + 4, y);
+          y += splitLine.length * 4.5;
+        }
+        y += 4;
       }
+
+      y += 2;
 
       // Table header
       doc.setFillColor(24, 24, 27);
@@ -516,7 +575,6 @@ const AdminQuotes = () => {
     draft: "secondary", sent: "default", approved: "default", cancelled: "destructive",
   };
 
-  /* ───── filtered list ───── */
   const filteredQuotes = savedQuotes.filter(q => {
     if (!listSearch) return true;
     const s = listSearch.toLowerCase();
@@ -683,29 +741,104 @@ const AdminQuotes = () => {
           </CardContent>
         </Card>
 
-        {/* Client data */}
+        {/* Client data — professional grid */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Dados do Cliente</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <Input placeholder="Nome do cliente" value={clientName} onChange={e => setClientName(e.target.value)} />
-            <Input placeholder="Telefone" value={clientPhone} onChange={e => setClientPhone(e.target.value)} />
-            <Input placeholder="E-mail" value={clientEmail} onChange={e => setClientEmail(e.target.value)} />
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <label className="text-xs text-muted-foreground mb-1 block">Validade (dias)</label>
+          <CardContent className="space-y-4">
+            {/* Row 1: Nome + CPF/CNPJ */}
+            <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Nome / Razão Social</Label>
+                <Input placeholder="Nome completo ou razão social" value={clientName} onChange={e => setClientName(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">CPF / CNPJ</Label>
+                <Input placeholder="000.000.000-00" value={clientCpfCnpj} onChange={e => setClientCpfCnpj(e.target.value)} />
+              </div>
+            </div>
+
+            {/* Row 1b: Nome Fantasia + IE */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Nome Fantasia <span className="text-muted-foreground">(opcional)</span></Label>
+                <Input placeholder="Nome fantasia" value={clientFantasyName} onChange={e => setClientFantasyName(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Inscrição Estadual <span className="text-muted-foreground">(opcional)</span></Label>
+                <Input placeholder="Inscrição estadual" value={clientIe} onChange={e => setClientIe(e.target.value)} />
+              </div>
+            </div>
+
+            {/* Row 2: Telefone + E-mail */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Telefone / WhatsApp</Label>
+                <Input placeholder="(00) 00000-0000" value={clientPhone} onChange={e => setClientPhone(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">E-mail</Label>
+                <Input placeholder="email@exemplo.com" value={clientEmail} onChange={e => setClientEmail(e.target.value)} />
+              </div>
+            </div>
+
+            {/* Row 3: Endereço + Número + Complemento */}
+            <div className="grid grid-cols-1 sm:grid-cols-[2fr_80px_1fr] gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Endereço</Label>
+                <Input placeholder="Rua, Avenida..." value={clientAddress} onChange={e => setClientAddress(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Nº</Label>
+                <Input placeholder="Nº" value={clientNumber} onChange={e => setClientNumber(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Complemento</Label>
+                <Input placeholder="Apto, Sala..." value={clientComplement} onChange={e => setClientComplement(e.target.value)} />
+              </div>
+            </div>
+
+            {/* Row 4: Bairro + Cidade + Estado + CEP */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Bairro</Label>
+                <Input placeholder="Bairro" value={clientNeighborhood} onChange={e => setClientNeighborhood(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Cidade</Label>
+                <Input placeholder="Cidade" value={clientCity} onChange={e => setClientCity(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Estado</Label>
+                <Input placeholder="UF" value={clientState} onChange={e => setClientState(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">CEP</Label>
+                <Input placeholder="00000-000" value={clientZip} onChange={e => setClientZip(e.target.value)} />
+              </div>
+            </div>
+
+            {/* Row 5: Validade + Desconto */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Validade (dias)</Label>
                 <Input type="number" value={validity} onChange={e => setValidity(e.target.value)} min="1" />
               </div>
-              <div className="flex-1">
-                <label className="text-xs text-muted-foreground mb-1 block">Desconto (%)</label>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Desconto (%)</Label>
                 <div className="relative">
                   <Input type="number" value={discountPercent} onChange={e => setDiscountPercent(Math.max(0, Math.min(100, Number(e.target.value))))} min="0" max="100" className="pr-8" />
                   <Percent className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 </div>
               </div>
             </div>
-            <Textarea placeholder="Observações / condições de pagamento..." value={notes} onChange={e => setNotes(e.target.value)} rows={3} />
+
+            {/* Row 6: Observações */}
+            <div className="space-y-1.5">
+              <Label className="text-xs">Observações / Condições de Pagamento</Label>
+              <Textarea placeholder="Condições de pagamento, prazo de entrega, observações gerais..." value={notes} onChange={e => setNotes(e.target.value)} rows={3} />
+            </div>
           </CardContent>
         </Card>
       </div>
