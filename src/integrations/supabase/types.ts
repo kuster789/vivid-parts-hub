@@ -485,6 +485,117 @@ export type Database = {
         }
         Relationships: []
       }
+      quote_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_brand: string
+          product_id: string
+          product_image: string | null
+          product_model: string
+          product_name: string
+          product_sku: string | null
+          quantity: number
+          quote_id: string
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_brand: string
+          product_id: string
+          product_image?: string | null
+          product_model: string
+          product_name: string
+          product_sku?: string | null
+          quantity?: number
+          quote_id: string
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_brand?: string
+          product_id?: string
+          product_image?: string | null
+          product_model?: string
+          product_name?: string
+          product_sku?: string | null
+          quantity?: number
+          quote_id?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          client_email: string | null
+          client_name: string | null
+          client_phone: string | null
+          created_at: string
+          created_by: string
+          discount_percent: number
+          discount_value: number
+          id: string
+          notes: string | null
+          quote_number: string
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+          validity_days: number
+        }
+        Insert: {
+          client_email?: string | null
+          client_name?: string | null
+          client_phone?: string | null
+          created_at?: string
+          created_by: string
+          discount_percent?: number
+          discount_value?: number
+          id?: string
+          notes?: string | null
+          quote_number: string
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          validity_days?: number
+        }
+        Update: {
+          client_email?: string | null
+          client_name?: string | null
+          client_phone?: string | null
+          created_at?: string
+          created_by?: string
+          discount_percent?: number
+          discount_value?: number
+          id?: string
+          notes?: string | null
+          quote_number?: string
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          validity_days?: number
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           comment: string | null
@@ -732,6 +843,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      generate_quote_number: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
