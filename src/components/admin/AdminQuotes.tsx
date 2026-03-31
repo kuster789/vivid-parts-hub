@@ -123,41 +123,50 @@ const AdminQuotes = () => {
       let y = 0;
 
       const addHeader = () => {
-        // Dark header bar
+        const headerH = 52;
+        // Dark header background
         doc.setFillColor(24, 24, 27);
-        doc.rect(0, 0, pageW, 48, "F");
-        // Accent line
+        doc.rect(0, 0, pageW, headerH, "F");
+        // Red accent line
         doc.setFillColor(220, 38, 38);
-        doc.rect(0, 48, pageW, 1.5, "F");
+        doc.rect(0, headerH, pageW, 2, "F");
 
+        // Logo with white background box
         if (logoDataUrl) {
-          doc.addImage(logoDataUrl, "PNG", margin, 6, 20, 20);
+          doc.setFillColor(255, 255, 255);
+          doc.roundedRect(margin, 6, 30, 30, 1.5, 1.5, "F");
+          doc.addImage(logoDataUrl, "PNG", margin + 2, 8, 26, 26);
         }
 
-        const tx = logoDataUrl ? margin + 24 : margin;
+        // Title "ORÇAMENTO" — large and bold
+        const tx = logoDataUrl ? margin + 36 : margin;
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(22);
+        doc.setFontSize(26);
         doc.setFont("helvetica", "bold");
-        doc.text("ORÇAMENTO", tx, 17);
+        doc.text("ORÇAMENTO", tx, 19);
 
-        doc.setFontSize(8);
+        // Company info below title
+        doc.setFontSize(8.5);
         doc.setFont("helvetica", "normal");
-        doc.setTextColor(180, 180, 180);
-        doc.text("AUTO PEÇAS AGRALE", tx, 24);
-        doc.text("CNPJ: 62.440.010/0001-03", tx, 29);
-        doc.text("WhatsApp: (43) 9643-8823", tx, 34);
-        doc.text("autopecaagralecagiva@outlook.com", tx, 39);
+        doc.setTextColor(200, 200, 200);
+        doc.text("AUTO PEÇAS AGRALE", tx, 26);
+        doc.text("CNPJ: 62.440.010/0001-03", tx, 31);
+        doc.text("WhatsApp: (43) 9643-8823", tx, 36);
+        doc.text("autopecaagralecagiva@outlook.com", tx, 41);
 
-        // Right side
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(9);
+        // Right side — date info with styled labels
+        const rx = pageW - margin;
+        doc.setTextColor(220, 38, 38);
+        doc.setFontSize(10);
         doc.setFont("helvetica", "bold");
-        doc.text(`Data: ${new Date().toLocaleDateString("pt-BR")}`, pageW - margin, 17, { align: "right" });
+        doc.text(`Data: ${new Date().toLocaleDateString("pt-BR")}`, rx, 16, { align: "right" });
         if (validity) {
           const vd = new Date();
           vd.setDate(vd.getDate() + parseInt(validity));
+          doc.setTextColor(200, 200, 200);
+          doc.setFontSize(9);
           doc.setFont("helvetica", "normal");
-          doc.text(`Válido até: ${vd.toLocaleDateString("pt-BR")}`, pageW - margin, 24, { align: "right" });
+          doc.text(`Válido até: ${vd.toLocaleDateString("pt-BR")}`, rx, 23, { align: "right" });
         }
       };
 
@@ -184,7 +193,7 @@ const AdminQuotes = () => {
 
       // === PAGE CONTENT ===
       addHeader();
-      y = 55;
+      y = 60;
 
       // Client info box
       if (clientName || clientPhone || clientEmail) {
