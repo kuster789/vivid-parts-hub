@@ -60,6 +60,7 @@ const Admin = () => {
     { id: "coupons", label: "Cupons", icon: Tag, module: "coupons" },
     { id: "leads", label: "Leads", icon: Mail, module: "leads" },
     { id: "users", label: "Usuários", icon: Users, module: "users" },
+    { id: "quotes", label: "Orçamentos", icon: ClipboardList, module: "quotes" },
     { id: "audit_logs", label: "Auditoria", icon: FileText, module: "audit_logs" },
   ];
 
