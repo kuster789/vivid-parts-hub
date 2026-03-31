@@ -133,7 +133,7 @@ const AdminQuotes = () => {
       doc.setFontSize(7.5);
       doc.setTextColor(200, 200, 200);
       doc.text("WhatsApp: (43) 9643-8823  |  autopecaagralecagiva@outlook.com", textX, 29);
-      doc.text("CNPJ: 00.000.000/0001-00  |  Londrina - PR", textX, 34);
+      doc.text("CNPJ: 62.440.010/0001-03  |  Londrina - PR", textX, 34);
 
       // Right side: date & validity
       doc.setTextColor(255, 255, 255);
