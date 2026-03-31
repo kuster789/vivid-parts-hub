@@ -7,6 +7,7 @@ export interface CartProduct {
   brand: string;
   model: string;
   has_3d?: boolean;
+  images?: string[] | null;
 }
 
 export interface CartItem {

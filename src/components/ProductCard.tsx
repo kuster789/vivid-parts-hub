@@ -97,7 +97,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </p>
           {product.stock > 0 ? (
             <button
-              onClick={() => addItem({ id: product.id, name: product.name, price, brand: product.brand, model: product.model, has_3d: product.has_3d ?? false })}
+              onClick={() => addItem({ id: product.id, name: product.name, price, brand: product.brand, model: product.model, has_3d: product.has_3d ?? false, images: product.images })}
               className="btn-primary-glow flex w-full items-center justify-center gap-2 rounded-md py-2.5 text-xs font-semibold transition-all"
             >
               <ShoppingCart className="h-3.5 w-3.5" /> Adicionar
