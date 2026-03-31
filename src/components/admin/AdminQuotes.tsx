@@ -123,70 +123,87 @@ const AdminQuotes = () => {
       let y = 0;
 
       const addHeader = () => {
-        const headerH = 48;
-        // Dark header background
-        doc.setFillColor(18, 18, 20);
-        doc.rect(0, 0, pageW, headerH, "F");
-        // Thin red accent line at bottom
-        doc.setFillColor(220, 38, 38);
-        doc.rect(0, headerH, pageW, 1.2, "F");
+        const headerH = 56;
+        const pad = 16; // side padding
+        const topPad = 10; // top padding
 
-        // === LEFT COLUMN: Logo (centered vertically) ===
-        const logoSize = 24;
-        const logoY = (headerH - logoSize) / 2;
+        // Background — near black
+        doc.setFillColor(13, 13, 13);
+        doc.rect(0, 0, pageW, headerH, "F");
+
+        // Bottom accent line — 1.5mm red, full width
+        doc.setFillColor(220, 38, 38);
+        doc.rect(0, headerH, pageW, 1.5, "F");
+
+        // Vertical center reference
+        const midY = headerH / 2;
+
+        // === LEFT: Logo ===
+        const logoW = 18;
+        const logoH = 18;
+        const logoX = pad;
+        const logoYPos = midY - logoH / 2;
         if (logoDataUrl) {
-          doc.setFillColor(255, 255, 255);
-          doc.roundedRect(margin, logoY, logoSize + 4, logoSize + 4, 2, 2, "F");
-          doc.addImage(logoDataUrl, "PNG", margin + 2, logoY + 2, logoSize, logoSize);
+          doc.addImage(logoDataUrl, "PNG", logoX, logoYPos, logoW, logoH);
         }
 
-        // === CENTER COLUMN: Title + Company Info ===
-        const cx = logoDataUrl ? margin + logoSize + 12 : margin;
-        // Title
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(22);
-        doc.setFont("helvetica", "bold");
-        doc.text("O R Ç A M E N T O", cx, 16);
-        // Separator dot line
-        doc.setFillColor(220, 38, 38);
-        doc.rect(cx, 19, 30, 0.8, "F");
-        // Company name
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(220, 220, 220);
-        doc.text("AUTO PEÇAS AGRALE", cx, 25);
-        // Company details
-        doc.setFontSize(7);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(160, 160, 160);
-        doc.text("CNPJ: 62.440.010/0001-03", cx, 30);
-        doc.text("WhatsApp: (43) 9643-8823", cx, 35);
-        doc.text("autopecaagralecagiva@outlook.com", cx, 40);
+        // === CENTER: Title + Company Info ===
+        const cx = logoDataUrl ? logoX + logoW + 10 : pad;
 
-        // === RIGHT COLUMN: Date + Validity ===
-        const rx = pageW - margin;
-        // Date label
-        doc.setTextColor(220, 38, 38);
-        doc.setFontSize(7);
+        // Title — dominant
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(28);
         doc.setFont("helvetica", "bold");
-        doc.text("DATA", rx, 14, { align: "right" });
+        doc.text("ORÇAMENTO", cx, topPad + 9);
+
+        // Red underline accent below title
+        doc.setFillColor(220, 38, 38);
+        doc.rect(cx, topPad + 12, 40, 0.8, "F");
+
+        // Company name
+        doc.setFontSize(8.5);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(200, 200, 200);
+        doc.text("Auto Peças Agrale", cx, topPad + 19);
+
+        // Company details — lighter, spaced
+        doc.setFontSize(7.5);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(150, 150, 150);
+        doc.text("CNPJ: 62.440.010/0001-03", cx, topPad + 24.5);
+        doc.text("WhatsApp: (43) 9643-8823  |  autopecaagralecagiva@outlook.com", cx, topPad + 30);
+
+        // === RIGHT: Date Block ===
+        const rx = pageW - pad;
+        const dateBlockTop = midY - 12;
+
+        // "DATA" label
+        doc.setTextColor(220, 38, 38);
+        doc.setFontSize(7.5);
+        doc.setFont("helvetica", "bold");
+        doc.text("DATA", rx, dateBlockTop, { align: "right" });
+
         // Date value
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(11);
-        doc.text(new Date().toLocaleDateString("pt-BR"), rx, 20, { align: "right" });
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text(new Date().toLocaleDateString("pt-BR"), rx, dateBlockTop + 6, { align: "right" });
 
         if (validity) {
           const vd = new Date();
           vd.setDate(vd.getDate() + parseInt(validity));
-          // Validity label
-          doc.setTextColor(220, 38, 38);
+
+          // "VÁLIDO ATÉ" label
+          doc.setTextColor(150, 150, 150);
           doc.setFontSize(7);
-          doc.text("VÁLIDO ATÉ", rx, 28, { align: "right" });
-          // Validity value
-          doc.setTextColor(180, 180, 180);
-          doc.setFontSize(10);
           doc.setFont("helvetica", "normal");
-          doc.text(vd.toLocaleDateString("pt-BR"), rx, 34, { align: "right" });
+          doc.text("VÁLIDO ATÉ", rx, dateBlockTop + 14, { align: "right" });
+
+          // Validity value
+          doc.setTextColor(200, 200, 200);
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          doc.text(vd.toLocaleDateString("pt-BR"), rx, dateBlockTop + 20, { align: "right" });
         }
       };
 
@@ -213,7 +230,7 @@ const AdminQuotes = () => {
 
       // === PAGE CONTENT ===
       addHeader();
-      y = 56;
+      y = 64;
 
       // Client info box
       if (clientName || clientPhone || clientEmail) {
