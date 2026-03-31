@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import { Calendar, ArrowRight, BookOpen, MessageCircle, Users, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import communityCover from "@/assets/community-cover.png";
 
 const whatsappGroups = [
   {
@@ -118,17 +118,25 @@ const Blog = () => {
 
         {/* ── Community / WhatsApp Groups Section ── */}
         <section className="mt-16 border-t border-border pt-12">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[hsl(142,70%,45%)]/10 px-4 py-1.5 text-xs font-semibold text-[hsl(142,70%,35%)] mb-4">
-              <Users className="h-3.5 w-3.5" />
-              COMUNIDADE
+          <div className="relative mb-10 overflow-hidden rounded-xl">
+            <img
+              src={communityCover}
+              alt="Cilindro de motor 2 tempos - Comunidade Agrale"
+              className="h-48 w-full object-cover brightness-[0.35]"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/15 backdrop-blur-sm px-4 py-1.5 text-xs font-semibold text-white mb-3">
+                <Users className="h-3.5 w-3.5" />
+                COMUNIDADE
+              </div>
+              <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-white mb-2">
+                Participe da maior comunidade Agrale e 2T do Brasil
+              </h2>
+              <p className="text-white/80 max-w-xl mx-auto text-sm">
+                Entre nos grupos exclusivos de compra, venda e troca de informações técnicas sobre peças Agrale, Cagiva e motos 2 tempos.
+              </p>
             </div>
-            <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-foreground mb-3">
-              Participe da maior comunidade Agrale e 2T do Brasil
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto text-sm">
-              Entre nos grupos exclusivos de compra, venda e troca de informações técnicas sobre peças Agrale, Cagiva e motos 2 tempos.
-            </p>
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
