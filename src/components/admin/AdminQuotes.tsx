@@ -123,61 +123,61 @@ const AdminQuotes = () => {
       let y = 0;
 
       const addHeader = () => {
-        const headerH = 32;
+        const headerH = 26;
         const pad = 14;
 
         // === LEFT: Logo ===
-        const logoW = 14;
-        const logoH = 14;
+        const logoW = 12;
+        const logoH = 12;
         const logoY = (headerH - logoH) / 2;
         if (logoDataUrl) {
           doc.addImage(logoDataUrl, "PNG", pad, logoY, logoW, logoH);
         }
 
         // === CENTER: Title + Company Info ===
-        const cx = logoDataUrl ? pad + logoW + 8 : pad;
+        const cx = logoDataUrl ? pad + logoW + 6 : pad;
         doc.setTextColor(0, 0, 0);
-        doc.setFontSize(18);
+        doc.setFontSize(13);
         doc.setFont("helvetica", "bold");
-        doc.text("ORÇAMENTO", cx, 10);
-
-        doc.setFontSize(7.5);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(85, 85, 85);
-        doc.text("Auto Peças Agrale", cx, 16);
+        doc.text("ORÇAMENTO", cx, 9);
 
         doc.setFontSize(7);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(60, 60, 60);
+        doc.text("Auto Peças Agrale", cx, 14);
+
+        doc.setFontSize(6.5);
         doc.setFont("helvetica", "normal");
-        doc.setTextColor(120, 120, 120);
-        doc.text("CNPJ: 62.440.010/0001-03  |  WhatsApp: (43) 9643-8823  |  autopecaagralecagiva@outlook.com", cx, 21);
+        doc.setTextColor(100, 100, 100);
+        doc.text("CNPJ: 62.440.010/0001-03  |  WhatsApp: (43) 9643-8823  |  autopecaagralecagiva@outlook.com", cx, 18.5);
 
         // === RIGHT: Date Block ===
         const rx = pageW - pad;
-        doc.setTextColor(120, 120, 120);
-        doc.setFontSize(7);
-        doc.setFont("helvetica", "normal");
-        doc.text("Data:", rx - 22, 10);
-        doc.setTextColor(0, 0, 0);
+        doc.setTextColor(50, 50, 50);
         doc.setFontSize(8);
         doc.setFont("helvetica", "bold");
-        doc.text(new Date().toLocaleDateString("pt-BR"), rx, 10, { align: "right" });
+        doc.text("Data:", rx - 24, 9);
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        doc.text(new Date().toLocaleDateString("pt-BR"), rx, 9, { align: "right" });
 
         if (validity) {
           const vd = new Date();
           vd.setDate(vd.getDate() + parseInt(validity));
-          doc.setTextColor(120, 120, 120);
-          doc.setFontSize(7);
-          doc.setFont("helvetica", "normal");
-          doc.text("Validade:", rx - 22, 16);
-          doc.setTextColor(0, 0, 0);
+          doc.setTextColor(50, 50, 50);
           doc.setFontSize(8);
           doc.setFont("helvetica", "bold");
-          doc.text(vd.toLocaleDateString("pt-BR"), rx, 16, { align: "right" });
+          doc.text("Validade:", rx - 24, 15);
+          doc.setTextColor(0, 0, 0);
+          doc.setFontSize(9);
+          doc.setFont("helvetica", "bold");
+          doc.text(vd.toLocaleDateString("pt-BR"), rx, 15, { align: "right" });
         }
 
         // Thin gray divider line
-        doc.setDrawColor(229, 229, 229);
-        doc.setLineWidth(0.4);
+        doc.setDrawColor(220, 220, 220);
+        doc.setLineWidth(0.3);
         doc.line(pad, headerH, pageW - pad, headerH);
       };
 
