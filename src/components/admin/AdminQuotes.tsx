@@ -88,6 +88,18 @@ const AdminQuotes = () => {
 
   const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+  const loadImageAsDataUrl = async (url: string): Promise<string | null> => {
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      return await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    } catch { return null; }
+  };
+
   const generatePDF = async () => {
     if (items.length === 0) {
       toast.error("Adicione pelo menos um produto ao orçamento");
@@ -98,158 +110,245 @@ const AdminQuotes = () => {
     try {
       const doc = new jsPDF("p", "mm", "a4");
       const pageW = 210;
-      const margin = 15;
+      const margin = 14;
       const contentW = pageW - margin * 2;
-      let y = margin;
 
-      // Load logo
-      let logoDataUrl: string | null = null;
-      try {
-        const res = await fetch("/pwa-512x512.png");
-        const blob = await res.blob();
-        logoDataUrl = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(blob);
-        });
-      } catch { /* skip logo */ }
+      // Preload logo + all product images in parallel
+      const logoPromise = loadImageAsDataUrl("/pwa-512x512.png");
+      const imagePromises = items.map(item =>
+        item.product.images?.[0] ? loadImageAsDataUrl(item.product.images[0]) : Promise.resolve(null)
+      );
+      const [logoDataUrl, ...productImages] = await Promise.all([logoPromise, ...imagePromises]);
 
-      // Header
-      doc.setFillColor(23, 23, 23);
-      doc.rect(0, 0, pageW, 52, "F");
+      let y = 0;
 
-      if (logoDataUrl) {
-        doc.addImage(logoDataUrl, "PNG", margin, 5, 30, 30);
-      }
+      const addHeader = () => {
+        // Dark header bar
+        doc.setFillColor(24, 24, 27);
+        doc.rect(0, 0, pageW, 48, "F");
+        // Accent line
+        doc.setFillColor(220, 38, 38);
+        doc.rect(0, 48, pageW, 1.5, "F");
 
-      const textX = logoDataUrl ? margin + 34 : margin;
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(18);
-      doc.setFont("helvetica", "bold");
-      doc.text("ORÇAMENTO", textX, 16);
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.text("Auto Peças Agrale", textX, 23);
-      doc.setFontSize(7.5);
-      doc.setTextColor(200, 200, 200);
-      doc.text("WhatsApp: (43) 9643-8823  |  autopecaagralecagiva@outlook.com", textX, 29);
-      doc.text("CNPJ: 62.440.010/0001-03  |  Londrina - PR", textX, 34);
+        if (logoDataUrl) {
+          doc.addImage(logoDataUrl, "PNG", margin, 6, 20, 20);
+        }
 
-      // Right side: date & validity
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(9);
-      doc.text(`Data: ${new Date().toLocaleDateString("pt-BR")}`, pageW - margin, 16, { align: "right" });
-      if (validity) {
-        const validDate = new Date();
-        validDate.setDate(validDate.getDate() + parseInt(validity));
-        doc.text(`Válido até: ${validDate.toLocaleDateString("pt-BR")}`, pageW - margin, 23, { align: "right" });
-      }
-
-      y = 58;
-
-      // Client info
-      if (clientName || clientPhone || clientEmail) {
-        doc.setTextColor(60, 60, 60);
-        doc.setFontSize(11);
+        const tx = logoDataUrl ? margin + 24 : margin;
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
         doc.setFont("helvetica", "bold");
-        doc.text("DADOS DO CLIENTE", margin, y);
-        y += 7;
+        doc.text("ORÇAMENTO", tx, 17);
+
+        doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        if (clientName) { doc.text(`Nome: ${clientName}`, margin, y); y += 5; }
-        if (clientPhone) { doc.text(`Telefone: ${clientPhone}`, margin, y); y += 5; }
-        if (clientEmail) { doc.text(`E-mail: ${clientEmail}`, margin, y); y += 5; }
+        doc.setTextColor(180, 180, 180);
+        doc.text("AUTO PEÇAS AGRALE", tx, 24);
+        doc.text("CNPJ: 62.440.010/0001-03", tx, 29);
+        doc.text("WhatsApp: (43) 9643-8823", tx, 34);
+        doc.text("autopecaagralecagiva@outlook.com", tx, 39);
+
+        // Right side
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        doc.text(`Data: ${new Date().toLocaleDateString("pt-BR")}`, pageW - margin, 17, { align: "right" });
+        if (validity) {
+          const vd = new Date();
+          vd.setDate(vd.getDate() + parseInt(validity));
+          doc.setFont("helvetica", "normal");
+          doc.text(`Válido até: ${vd.toLocaleDateString("pt-BR")}`, pageW - margin, 24, { align: "right" });
+        }
+      };
+
+      const addFooter = () => {
+        doc.setFillColor(245, 245, 245);
+        doc.rect(0, 282, pageW, 15, "F");
+        doc.setDrawColor(220, 38, 38);
+        doc.setLineWidth(0.5);
+        doc.line(margin, 282, pageW - margin, 282);
+        doc.setTextColor(120, 120, 120);
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "normal");
+        doc.text("Auto Peças Agrale — Londrina, PR — www.motopecasagrale.com.br", pageW / 2, 288, { align: "center" });
+        doc.text("Este orçamento não constitui nota fiscal. Valores sujeitos a alteração.", pageW / 2, 292, { align: "center" });
+      };
+
+      const checkPage = (needed: number) => {
+        if (y + needed > 275) {
+          addFooter();
+          doc.addPage();
+          y = margin + 5;
+        }
+      };
+
+      // === PAGE CONTENT ===
+      addHeader();
+      y = 55;
+
+      // Client info box
+      if (clientName || clientPhone || clientEmail) {
+        doc.setFillColor(248, 248, 248);
+        const boxH = 8 + (clientName ? 5 : 0) + (clientPhone ? 5 : 0) + (clientEmail ? 5 : 0) + 3;
+        doc.roundedRect(margin, y, contentW, boxH, 2, 2, "F");
+        doc.setDrawColor(230, 230, 230);
+        doc.roundedRect(margin, y, contentW, boxH, 2, 2, "S");
+
+        y += 6;
+        doc.setTextColor(220, 38, 38);
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "bold");
+        doc.text("CLIENTE", margin + 4, y);
+        y += 5;
+
+        doc.setTextColor(50, 50, 50);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        if (clientName) { doc.text(clientName, margin + 4, y); y += 5; }
+        if (clientPhone) { doc.text(`Tel: ${clientPhone}`, margin + 4, y); y += 5; }
+        if (clientEmail) { doc.text(clientEmail, margin + 4, y); y += 5; }
         y += 5;
       }
 
       // Table header
-      doc.setFillColor(245, 245, 245);
-      doc.rect(margin, y, contentW, 8, "F");
-      doc.setTextColor(60, 60, 60);
-      doc.setFontSize(9);
+      doc.setFillColor(24, 24, 27);
+      doc.roundedRect(margin, y, contentW, 8, 1, 1, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(7.5);
       doc.setFont("helvetica", "bold");
-      doc.text("#", margin + 2, y + 5.5);
-      doc.text("Produto", margin + 10, y + 5.5);
-      doc.text("Qtd", margin + contentW - 60, y + 5.5, { align: "right" });
-      doc.text("Unit.", margin + contentW - 30, y + 5.5, { align: "right" });
-      doc.text("Total", margin + contentW, y + 5.5, { align: "right" });
-      y += 10;
+      doc.text("PRODUTO", margin + 22, y + 5.5);
+      doc.text("QTD", margin + contentW - 68, y + 5.5, { align: "center" });
+      doc.text("UNIT.", margin + contentW - 38, y + 5.5, { align: "right" });
+      doc.text("TOTAL", margin + contentW - 2, y + 5.5, { align: "right" });
+      y += 11;
 
-      // Table rows
-      doc.setFont("helvetica", "normal");
-      items.forEach((item, idx) => {
-        if (y > 260) {
-          doc.addPage();
-          y = margin;
-        }
-        const rowH = 7;
-        if (idx % 2 === 1) {
-          doc.setFillColor(250, 250, 250);
+      // Product rows with images
+      for (let idx = 0; idx < items.length; idx++) {
+        const item = items[idx];
+        const rowH = 20;
+        checkPage(rowH + 2);
+
+        // Zebra striping
+        if (idx % 2 === 0) {
+          doc.setFillColor(252, 252, 252);
           doc.rect(margin, y - 1, contentW, rowH, "F");
         }
-        doc.setTextColor(40, 40, 40);
+
+        // Product image
+        const imgData = productImages[idx];
+        if (imgData) {
+          try {
+            doc.setFillColor(255, 255, 255);
+            doc.roundedRect(margin + 2, y, 16, 16, 1, 1, "F");
+            doc.setDrawColor(235, 235, 235);
+            doc.roundedRect(margin + 2, y, 16, 16, 1, 1, "S");
+            doc.addImage(imgData, "JPEG", margin + 3, y + 1, 14, 14);
+          } catch { /* skip image */ }
+        } else {
+          doc.setFillColor(240, 240, 240);
+          doc.roundedRect(margin + 2, y, 16, 16, 1, 1, "F");
+          doc.setTextColor(180, 180, 180);
+          doc.setFontSize(6);
+          doc.text("Sem img", margin + 5, y + 9);
+        }
+
+        // Product info
+        doc.setTextColor(30, 30, 30);
+        doc.setFontSize(8.5);
+        doc.setFont("helvetica", "bold");
+        const nameText = doc.splitTextToSize(item.product.name, 85);
+        doc.text(nameText[0], margin + 22, y + 6);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`${item.product.brand} ${item.product.model}`, margin + 22, y + 11);
+        if (item.product.sku) {
+          doc.text(`SKU: ${item.product.sku}`, margin + 22, y + 15);
+        }
+
+        // Quantity
+        doc.setTextColor(50, 50, 50);
         doc.setFontSize(9);
-        doc.text(`${idx + 1}`, margin + 2, y + 4);
-        const productText = `${item.product.name} — ${item.product.brand} ${item.product.model}`;
-        doc.text(productText.substring(0, 60), margin + 10, y + 4);
-        doc.text(`${item.quantity}`, margin + contentW - 60, y + 4, { align: "right" });
-        doc.text(fmt(item.unitPrice), margin + contentW - 30, y + 4, { align: "right" });
-        doc.text(fmt(item.unitPrice * item.quantity), margin + contentW, y + 4, { align: "right" });
-        y += rowH;
-      });
+        doc.setFont("helvetica", "bold");
+        doc.text(`${item.quantity}`, margin + contentW - 68, y + 9, { align: "center" });
 
-      // Totals
-      y += 5;
+        // Unit price
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.text(fmt(item.unitPrice), margin + contentW - 38, y + 9, { align: "right" });
+
+        // Total
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8.5);
+        doc.setTextColor(30, 30, 30);
+        doc.text(fmt(item.unitPrice * item.quantity), margin + contentW - 2, y + 9, { align: "right" });
+
+        // Row divider
+        doc.setDrawColor(235, 235, 235);
+        doc.setLineWidth(0.3);
+        doc.line(margin, y + rowH, margin + contentW, y + rowH);
+
+        y += rowH + 1;
+      }
+
+      // Totals section
+      y += 4;
+      checkPage(35);
+
+      const totalsX = margin + contentW - 80;
+
       doc.setDrawColor(200, 200, 200);
-      doc.line(margin, y, margin + contentW, y);
-      y += 7;
+      doc.setLineWidth(0.3);
+      doc.line(totalsX, y, margin + contentW, y);
+      y += 6;
 
-      doc.setFontSize(10);
-      doc.setTextColor(60, 60, 60);
+      doc.setFontSize(9);
+      doc.setTextColor(80, 80, 80);
       doc.setFont("helvetica", "normal");
-      doc.text("Subtotal:", margin + contentW - 50, y);
-      doc.text(fmt(subtotal), margin + contentW, y, { align: "right" });
+      doc.text("Subtotal:", totalsX, y);
+      doc.text(fmt(subtotal), margin + contentW - 2, y, { align: "right" });
       y += 6;
 
       if (discountPercent > 0) {
-        doc.setTextColor(220, 50, 50);
-        doc.text(`Desconto (${discountPercent}%):`, margin + contentW - 50, y);
-        doc.text(`- ${fmt(discountValue)}`, margin + contentW, y, { align: "right" });
+        doc.setTextColor(220, 38, 38);
+        doc.text(`Desconto (${discountPercent}%):`, totalsX, y);
+        doc.text(`- ${fmt(discountValue)}`, margin + contentW - 2, y, { align: "right" });
         y += 6;
       }
 
-      doc.setFillColor(23, 23, 23);
-      doc.rect(margin + contentW - 75, y - 1, 75, 9, "F");
+      // Total box
+      doc.setFillColor(24, 24, 27);
+      doc.roundedRect(totalsX - 2, y - 1, contentW - totalsX + margin + 4, 12, 2, 2, "F");
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(12);
+      doc.setFontSize(13);
       doc.setFont("helvetica", "bold");
-      doc.text("TOTAL:", margin + contentW - 50, y + 5);
-      doc.text(fmt(total), margin + contentW - 2, y + 5, { align: "right" });
-
-      y += 18;
+      doc.text("TOTAL:", totalsX + 4, y + 7);
+      doc.text(fmt(total), margin + contentW, y + 7, { align: "right" });
+      y += 20;
 
       // Notes
       if (notes) {
-        if (y > 250) { doc.addPage(); y = margin; }
-        doc.setTextColor(60, 60, 60);
-        doc.setFontSize(10);
+        checkPage(25);
+        doc.setFillColor(255, 251, 235);
+        const splitNotes = doc.splitTextToSize(notes, contentW - 10);
+        const notesH = 10 + splitNotes.length * 4;
+        doc.roundedRect(margin, y, contentW, notesH, 2, 2, "F");
+        doc.setDrawColor(251, 191, 36);
+        doc.roundedRect(margin, y, contentW, notesH, 2, 2, "S");
+
+        doc.setTextColor(180, 130, 0);
+        doc.setFontSize(7.5);
         doc.setFont("helvetica", "bold");
-        doc.text("Observações:", margin, y);
-        y += 6;
+        doc.text("OBSERVAÇÕES", margin + 5, y + 5);
+
+        doc.setTextColor(80, 60, 0);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        const splitNotes = doc.splitTextToSize(notes, contentW);
-        doc.text(splitNotes, margin, y);
-        y += splitNotes.length * 4.5;
+        doc.setFontSize(8);
+        doc.text(splitNotes, margin + 5, y + 10);
       }
 
-      // Footer
-      const footerY = 285;
-      doc.setDrawColor(200, 200, 200);
-      doc.line(margin, footerY - 5, margin + contentW, footerY - 5);
-      doc.setTextColor(150, 150, 150);
-      doc.setFontSize(8);
-      doc.text("Auto Peças Agrale — Orçamento gerado automaticamente", pageW / 2, footerY, { align: "center" });
+      addFooter();
 
       doc.save(`orcamento_${clientName ? clientName.replace(/\s+/g, "_") : "cliente"}_${new Date().toISOString().split("T")[0]}.pdf`);
       toast.success("PDF gerado com sucesso!");
