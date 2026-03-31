@@ -213,7 +213,7 @@ const AdminQuotes = () => {
 
       // === PAGE CONTENT ===
       addHeader();
-      y = 60;
+      y = 56;
 
       // Client info box
       if (clientName || clientPhone || clientEmail) {
