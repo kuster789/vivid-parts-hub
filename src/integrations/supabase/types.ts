@@ -544,9 +544,19 @@ export type Database = {
       }
       quotes: {
         Row: {
+          client_address: string | null
+          client_city: string | null
+          client_complement: string | null
+          client_cpf_cnpj: string | null
           client_email: string | null
+          client_fantasy_name: string | null
+          client_ie: string | null
           client_name: string | null
+          client_neighborhood: string | null
+          client_number: string | null
           client_phone: string | null
+          client_state: string | null
+          client_zip: string | null
           created_at: string
           created_by: string
           discount_percent: number
@@ -561,9 +571,19 @@ export type Database = {
           validity_days: number
         }
         Insert: {
+          client_address?: string | null
+          client_city?: string | null
+          client_complement?: string | null
+          client_cpf_cnpj?: string | null
           client_email?: string | null
+          client_fantasy_name?: string | null
+          client_ie?: string | null
           client_name?: string | null
+          client_neighborhood?: string | null
+          client_number?: string | null
           client_phone?: string | null
+          client_state?: string | null
+          client_zip?: string | null
           created_at?: string
           created_by: string
           discount_percent?: number
@@ -578,9 +598,19 @@ export type Database = {
           validity_days?: number
         }
         Update: {
+          client_address?: string | null
+          client_city?: string | null
+          client_complement?: string | null
+          client_cpf_cnpj?: string | null
           client_email?: string | null
+          client_fantasy_name?: string | null
+          client_ie?: string | null
           client_name?: string | null
+          client_neighborhood?: string | null
+          client_number?: string | null
           client_phone?: string | null
+          client_state?: string | null
+          client_zip?: string | null
           created_at?: string
           created_by?: string
           discount_percent?: number
