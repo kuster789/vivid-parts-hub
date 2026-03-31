@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import { Calendar, ArrowRight, BookOpen, MessageCircle, Users, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import communityCover from "@/assets/community-cover.png";
 
 const whatsappGroups = [
   {
