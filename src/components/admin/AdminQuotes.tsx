@@ -116,27 +116,36 @@ const AdminQuotes = () => {
 
       // Header
       doc.setFillColor(23, 23, 23);
-      doc.rect(0, 0, pageW, 40, "F");
+      doc.rect(0, 0, pageW, 52, "F");
 
       if (logoDataUrl) {
         doc.addImage(logoDataUrl, "PNG", margin, 5, 30, 30);
       }
 
+      const textX = logoDataUrl ? margin + 34 : margin;
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(20);
+      doc.setFontSize(18);
       doc.setFont("helvetica", "bold");
-      doc.text("ORÇAMENTO", logoDataUrl ? margin + 34 : margin, 18);
-      doc.setFontSize(10);
+      doc.text("ORÇAMENTO", textX, 16);
+      doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
-      doc.text("Auto Peças Agrale", logoDataUrl ? margin + 34 : margin, 28);
-      doc.text(`Data: ${new Date().toLocaleDateString("pt-BR")}`, pageW - margin, 18, { align: "right" });
+      doc.text("Auto Peças Agrale", textX, 23);
+      doc.setFontSize(7.5);
+      doc.setTextColor(200, 200, 200);
+      doc.text("WhatsApp: (43) 9643-8823  |  autopecaagralecagiva@outlook.com", textX, 29);
+      doc.text("CNPJ: 00.000.000/0001-00  |  Londrina - PR", textX, 34);
+
+      // Right side: date & validity
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(9);
+      doc.text(`Data: ${new Date().toLocaleDateString("pt-BR")}`, pageW - margin, 16, { align: "right" });
       if (validity) {
         const validDate = new Date();
         validDate.setDate(validDate.getDate() + parseInt(validity));
-        doc.text(`Válido até: ${validDate.toLocaleDateString("pt-BR")}`, pageW - margin, 25, { align: "right" });
+        doc.text(`Válido até: ${validDate.toLocaleDateString("pt-BR")}`, pageW - margin, 23, { align: "right" });
       }
 
-      y = 50;
+      y = 58;
 
       // Client info
       if (clientName || clientPhone || clientEmail) {
