@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Navigate } from "react-router-dom";
 import { usePermissions, Module } from "@/hooks/usePermissions";
 import {
-  BarChart3, Package, ShoppingBag, Users, Bell, Loader2, Menu, X, ChevronRight, Mail, DollarSign, FileText, Tag, Warehouse
+  BarChart3, Package, ShoppingBag, Users, Bell, Loader2, Menu, X, ChevronRight, Mail, DollarSign, FileText, Tag, Warehouse, ClipboardList
 } from "lucide-react";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminProducts from "@/components/admin/AdminProducts";
@@ -15,8 +15,9 @@ import AdminSales from "@/components/admin/AdminSales";
 import AdminAuditLogs from "@/components/admin/AdminAuditLogs";
 import AdminCoupons from "@/components/admin/AdminCoupons";
 import AdminStock from "@/components/admin/AdminStock";
+import AdminQuotes from "@/components/admin/AdminQuotes";
 
-type Tab = "dashboard" | "products" | "orders" | "users" | "notifications" | "leads" | "sales" | "audit_logs" | "coupons" | "stock";
+type Tab = "dashboard" | "products" | "orders" | "users" | "notifications" | "leads" | "sales" | "audit_logs" | "coupons" | "stock" | "quotes";
 
 const ROLE_LABELS: Record<string, string> = {
   admin_master: "Admin Master",
@@ -59,6 +60,7 @@ const Admin = () => {
     { id: "coupons", label: "Cupons", icon: Tag, module: "coupons" },
     { id: "leads", label: "Leads", icon: Mail, module: "leads" },
     { id: "users", label: "Usuários", icon: Users, module: "users" },
+    { id: "quotes", label: "Orçamentos", icon: ClipboardList, module: "quotes" },
     { id: "audit_logs", label: "Auditoria", icon: FileText, module: "audit_logs" },
   ];
 
@@ -88,6 +90,7 @@ const Admin = () => {
     sales: "Controle de Vendas",
     coupons: "Gerenciar Cupons",
     stock: "Controle de Estoque",
+    quotes: "Orçamentos",
     audit_logs: "Logs de Auditoria",
   };
 
@@ -154,6 +157,7 @@ const Admin = () => {
             {effectiveTab === "leads" && <AdminLeads />}
             {effectiveTab === "sales" && <AdminSales />}
             {effectiveTab === "coupons" && <AdminCoupons />}
+            {effectiveTab === "quotes" && <AdminQuotes />}
             {effectiveTab === "users" && <AdminUsers />}
             {effectiveTab === "audit_logs" && <AdminAuditLogs />}
           </div>
