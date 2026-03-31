@@ -33,8 +33,12 @@ const Cart = () => {
             <div className="flex flex-col gap-3">
               {items.map(({ product, quantity }) => (
                 <div key={product.id} className="card-industrial flex items-center gap-4 p-4">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md bg-secondary">
-                    <ShoppingBag className="h-6 w-6 text-muted-foreground/40" />
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md bg-white overflow-hidden">
+                    {product.images?.[0] ? (
+                      <img src={product.images[0]} alt={product.name} className="h-full w-full object-contain" />
+                    ) : (
+                      <ShoppingBag className="h-6 w-6 text-muted-foreground/40" />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <Link to={`/produto/${product.id}`} className="line-clamp-1 text-sm font-semibold text-foreground hover:text-primary">
