@@ -15,8 +15,9 @@ import AdminSales from "@/components/admin/AdminSales";
 import AdminAuditLogs from "@/components/admin/AdminAuditLogs";
 import AdminCoupons from "@/components/admin/AdminCoupons";
 import AdminStock from "@/components/admin/AdminStock";
+import AdminQuotes from "@/components/admin/AdminQuotes";
 
-type Tab = "dashboard" | "products" | "orders" | "users" | "notifications" | "leads" | "sales" | "audit_logs" | "coupons" | "stock";
+type Tab = "dashboard" | "products" | "orders" | "users" | "notifications" | "leads" | "sales" | "audit_logs" | "coupons" | "stock" | "quotes";
 
 const ROLE_LABELS: Record<string, string> = {
   admin_master: "Admin Master",
