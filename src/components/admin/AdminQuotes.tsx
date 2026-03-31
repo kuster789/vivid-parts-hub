@@ -123,88 +123,62 @@ const AdminQuotes = () => {
       let y = 0;
 
       const addHeader = () => {
-        const headerH = 56;
-        const pad = 16; // side padding
-        const topPad = 10; // top padding
-
-        // Background — near black
-        doc.setFillColor(13, 13, 13);
-        doc.rect(0, 0, pageW, headerH, "F");
-
-        // Bottom accent line — 1.5mm red, full width
-        doc.setFillColor(220, 38, 38);
-        doc.rect(0, headerH, pageW, 1.5, "F");
-
-        // Vertical center reference
-        const midY = headerH / 2;
+        const headerH = 32;
+        const pad = 14;
 
         // === LEFT: Logo ===
-        const logoW = 18;
-        const logoH = 18;
-        const logoX = pad;
-        const logoYPos = midY - logoH / 2;
+        const logoW = 14;
+        const logoH = 14;
+        const logoY = (headerH - logoH) / 2;
         if (logoDataUrl) {
-          doc.addImage(logoDataUrl, "PNG", logoX, logoYPos, logoW, logoH);
+          doc.addImage(logoDataUrl, "PNG", pad, logoY, logoW, logoH);
         }
 
         // === CENTER: Title + Company Info ===
-        const cx = logoDataUrl ? logoX + logoW + 10 : pad;
-
-        // Title — dominant
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(28);
+        const cx = logoDataUrl ? pad + logoW + 8 : pad;
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(18);
         doc.setFont("helvetica", "bold");
-        doc.text("ORÇAMENTO", cx, topPad + 9);
+        doc.text("ORÇAMENTO", cx, 10);
 
-        // Red underline accent below title
-        doc.setFillColor(220, 38, 38);
-        doc.rect(cx, topPad + 12, 40, 0.8, "F");
-
-        // Company name
-        doc.setFontSize(8.5);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(200, 200, 200);
-        doc.text("Auto Peças Agrale", cx, topPad + 19);
-
-        // Company details — lighter, spaced
         doc.setFontSize(7.5);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(85, 85, 85);
+        doc.text("Auto Peças Agrale", cx, 16);
+
+        doc.setFontSize(7);
         doc.setFont("helvetica", "normal");
-        doc.setTextColor(150, 150, 150);
-        doc.text("CNPJ: 62.440.010/0001-03", cx, topPad + 24.5);
-        doc.text("WhatsApp: (43) 9643-8823  |  autopecaagralecagiva@outlook.com", cx, topPad + 30);
+        doc.setTextColor(120, 120, 120);
+        doc.text("CNPJ: 62.440.010/0001-03  |  WhatsApp: (43) 9643-8823  |  autopecaagralecagiva@outlook.com", cx, 21);
 
         // === RIGHT: Date Block ===
         const rx = pageW - pad;
-        const dateBlockTop = midY - 12;
-
-        // "DATA" label
-        doc.setTextColor(220, 38, 38);
-        doc.setFontSize(7.5);
+        doc.setTextColor(120, 120, 120);
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "normal");
+        doc.text("Data:", rx - 22, 10);
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(8);
         doc.setFont("helvetica", "bold");
-        doc.text("DATA", rx, dateBlockTop, { align: "right" });
-
-        // Date value
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "bold");
-        doc.text(new Date().toLocaleDateString("pt-BR"), rx, dateBlockTop + 6, { align: "right" });
+        doc.text(new Date().toLocaleDateString("pt-BR"), rx, 10, { align: "right" });
 
         if (validity) {
           const vd = new Date();
           vd.setDate(vd.getDate() + parseInt(validity));
-
-          // "VÁLIDO ATÉ" label
-          doc.setTextColor(150, 150, 150);
+          doc.setTextColor(120, 120, 120);
           doc.setFontSize(7);
           doc.setFont("helvetica", "normal");
-          doc.text("VÁLIDO ATÉ", rx, dateBlockTop + 14, { align: "right" });
-
-          // Validity value
-          doc.setTextColor(200, 200, 200);
-          doc.setFontSize(10);
+          doc.text("Validade:", rx - 22, 16);
+          doc.setTextColor(0, 0, 0);
+          doc.setFontSize(8);
           doc.setFont("helvetica", "bold");
-          doc.text(vd.toLocaleDateString("pt-BR"), rx, dateBlockTop + 20, { align: "right" });
+          doc.text(vd.toLocaleDateString("pt-BR"), rx, 16, { align: "right" });
         }
+
+        // Thin gray divider line
+        doc.setDrawColor(229, 229, 229);
+        doc.setLineWidth(0.4);
+        doc.line(pad, headerH, pageW - pad, headerH);
       };
 
       const addFooter = () => {
@@ -230,7 +204,7 @@ const AdminQuotes = () => {
 
       // === PAGE CONTENT ===
       addHeader();
-      y = 64;
+      y = 38;
 
       // Client info box
       if (clientName || clientPhone || clientEmail) {
