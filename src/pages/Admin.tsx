@@ -157,6 +157,7 @@ const Admin = () => {
             {effectiveTab === "leads" && <AdminLeads />}
             {effectiveTab === "sales" && <AdminSales />}
             {effectiveTab === "coupons" && <AdminCoupons />}
+            {effectiveTab === "quotes" && <AdminQuotes />}
             {effectiveTab === "users" && <AdminUsers />}
             {effectiveTab === "audit_logs" && <AdminAuditLogs />}
           </div>
