@@ -114,7 +114,7 @@ const AdminQuotes = () => {
       const contentW = pageW - margin * 2;
 
       // Preload logo + all product images in parallel
-      const logoPromise = loadImageAsDataUrl("/pwa-512x512.png");
+      const logoPromise = loadImageAsDataUrl("/images/logo-agrale.png");
       const imagePromises = items.map(item =>
         item.product.images?.[0] ? loadImageAsDataUrl(item.product.images[0]) : Promise.resolve(null)
       );
