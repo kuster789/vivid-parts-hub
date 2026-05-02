@@ -6,9 +6,9 @@
     <title>Auto Peças Agrale — Peças para Agrale, Yamaha, Cagiva e KTM</title>
     <meta name="description" content="Especialistas em peças para Agrale, Yamaha, Cagiva e KTM. Componentes originais e de qualidade com envio para todo o Brasil." />
     <meta name="author" content="Auto Peças Agrale" />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="theme-color" content="#0d1117" />
-    <link rel="icon" href="/favicon.png" type="image/png" />
+    <link rel="icon" href="/favicon.png" type="image/png" sizes="64x64" />
     <link rel="apple-touch-icon" href="/pwa-192x192.png" />
     <link rel="canonical" href="https://www.motopecasagrale.com.br/" />
     <link rel="preconnect" href="https://nohatbgbowlnfizrqtap.supabase.co" crossorigin />
@@ -31,6 +31,36 @@
     <meta name="twitter:title" content="Auto Peças Agrale" />
     <meta name="twitter:description" content="Especialistas em peças para Agrale, Yamaha, Cagiva e KTM." />
     <meta name="twitter:image" content="https://www.motopecasagrale.com.br/og-default.png?v3" />
+
+    <!-- Organization & WebSite schema for Google sitelinks/branding -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Auto Peças Agrale",
+        "url": "https://www.motopecasagrale.com.br",
+        "logo": "https://www.motopecasagrale.com.br/images/logo-agrale.png",
+        "description": "Especialistas em peças para Agrale, Yamaha, Cagiva e KTM. Componentes originais e de qualidade com envio para todo o Brasil.",
+        "areaServed": "BR"
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Auto Peças Agrale",
+        "url": "https://www.motopecasagrale.com.br",
+        "inLanguage": "pt-BR",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://www.motopecasagrale.com.br/catalogo?q={search_term_string}"
+          },
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
   </head>
 
   <body>
@@ -47,7 +77,19 @@
         }
       })();
     </script>
-    <div id="root"></div>
+    <div id="root">
+      <!-- SEO fallback content: rendered while the SPA bundle loads,
+           and visible to crawlers that ignore JavaScript. The SPA replaces
+           this content on hydration. -->
+      <noscript>
+        <div style="padding:2rem;font-family:system-ui,sans-serif;color:#fff;background:#0d1117;">
+          <h1>Auto Peças Agrale</h1>
+          <p>Peças e componentes para motocicletas Agrale, Yamaha, Cagiva e KTM.
+          Envio para todo o Brasil. Para usar a loja, ative o JavaScript.</p>
+          <p><a href="/catalogo" style="color:#f97316;">Ver catálogo</a></p>
+        </div>
+      </noscript>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
