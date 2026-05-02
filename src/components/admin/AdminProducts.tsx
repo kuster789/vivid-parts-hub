@@ -276,6 +276,15 @@ const AdminProducts = () => {
       toast.error("Preencha nome, marca e modelo.");
       return;
     }
+    // Block publishing without at least one image. Cards with no photo
+    // tank conversion — keep the product as draft (active=false) until
+    // an image is uploaded.
+    if (form.active && (!formImages || formImages.length === 0)) {
+      toast.error(
+        "Adicione pelo menos 1 foto antes de publicar. Salve como rascunho (desative) ou faça upload de uma imagem."
+      );
+      return;
+    }
     if (!form.shipping_weight || form.shipping_weight <= 0) {
       toast.error("Informe o peso do produto para cálculo de frete.");
       return;
