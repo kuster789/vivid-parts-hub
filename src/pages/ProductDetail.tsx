@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
-import { ArrowLeft, ShoppingCart, Package, CheckCircle, AlertTriangle, Loader2, Heart, Truck, Shield, RotateCcw, Bike } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Package, CheckCircle, AlertTriangle, Loader2, Heart, Truck, Shield, RotateCcw, Bike, Box } from "lucide-react";
 import { brands as brandsList } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
