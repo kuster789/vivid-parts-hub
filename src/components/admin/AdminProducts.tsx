@@ -141,18 +141,30 @@ const AdminProducts = () => {
   const handle3DUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
+    // Check file size (max 50MB recommended for browser upload)
+    const MAX_SIZE = 50 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      toast.error("Arquivo muito grande. O limite recomendado é 50MB.");
+      return;
+    }
+
     setUploading3D(true);
     const tempId = editingId || "temp-" + Date.now();
+    
     try {
+      console.log("Iniciando upload 3D para o produto:", tempId);
       const url = await upload3DModel(tempId, file);
       setFormModel3D(url);
       setFormHas3D(true);
-      toast.success("Modelo 3D enviado!");
+      toast.success("Modelo 3D enviado com sucesso!");
     } catch (err: any) {
-      toast.error("Erro no upload 3D: " + err.message);
+      console.error("Erro capturado no handle3DUpload:", err);
+      toast.error("Erro no upload 3D: " + (err.message || "Erro desconhecido"));
+    } finally {
+      setUploading3D(false);
+      if (model3DInputRef.current) model3DInputRef.current.value = "";
     }
-    setUploading3D(false);
-    if (model3DInputRef.current) model3DInputRef.current.value = "";
   };
 
   const handleRemove3D = () => {
