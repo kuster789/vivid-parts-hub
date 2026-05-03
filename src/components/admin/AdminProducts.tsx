@@ -138,28 +138,40 @@ const AdminProducts = () => {
     await deleteProductImage(url);
   };
 
+  const [uploadProgress3D, setUploadProgress3D] = useState(0);
+
   const handle3DUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Check file size (max 50MB recommended for browser upload)
-    const MAX_SIZE = 50 * 1024 * 1024;
+    const MAX_SIZE = 100 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      toast.error("Arquivo muito grande. O limite recomendado é 50MB.");
+      toast.error("Arquivo muito grande. O limite recomendado é 100MB.");
       return;
     }
 
     setUploading3D(true);
+    setUploadProgress3D(0);
     const tempId = editingId || "temp-" + Date.now();
     
     try {
-      console.log("Iniciando upload 3D para o produto:", tempId);
+      // Supabase storage upload progress is not natively supported in a single call with the client
+      // We'll simulate a steady progress while the promise is pending for better UX
+      const progressInterval = setInterval(() => {
+        setUploadProgress3D(prev => {
+          if (prev >= 95) return prev;
+          return prev + Math.floor(Math.random() * 5);
+        });
+      }, 500);
+
       const url = await upload3DModel(tempId, file);
+      clearInterval(progressInterval);
+      setUploadProgress3D(100);
+      
       setFormModel3D(url);
       setFormHas3D(true);
       toast.success("Modelo 3D enviado com sucesso!");
     } catch (err: any) {
-      console.error("Erro capturado no handle3DUpload:", err);
       toast.error("Erro no upload 3D: " + (err.message || "Erro desconhecido"));
     } finally {
       setUploading3D(false);
