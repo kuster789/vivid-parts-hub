@@ -8,6 +8,7 @@ export interface CartProduct {
   model: string;
   has_3d?: boolean;
   images?: string[] | null;
+  selectedColor?: string; // Cache the selected color for 3D/Preview
 }
 
 export interface CartItem {
