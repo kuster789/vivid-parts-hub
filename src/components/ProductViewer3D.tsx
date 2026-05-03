@@ -197,10 +197,15 @@ function ModelViewerWrapper({
 
   const applyColorToModel = (colorName: string) => {
     const viewer = viewerRef.current;
-    if (!viewer || !viewer.model) return;
+    if (!viewer || !viewer.model) {
+      return;
+    }
+
     const color = colorOptions.find(c => c.name === colorName);
     if (!color) return;
+
     const rgba = hexToRgb(color.hex);
+
     viewer.model.materials.forEach((material: any) => {
       if (material.pbrMetallicRoughness) {
         material.pbrMetallicRoughness.setBaseColorFactor(rgba);
