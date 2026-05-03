@@ -245,7 +245,7 @@ const ProductDetail = () => {
                   </div>
                 </div>
               ) : product.has_3d && product.model_3d_url ? (
-                <ProductViewer3D modelUrl={product.model_3d_url} />
+                <ProductViewer3D modelUrl={product.model_3d_url} poster={product.images?.[0]} />
               ) : (
                 <div className="flex h-[400px] items-center justify-center rounded-lg border border-border bg-secondary md:h-[500px]">
                   <Package className="h-24 w-24 text-muted-foreground/20" />
