@@ -28,6 +28,7 @@ const ProductDetail = () => {
   const [selectedVariations, setSelectedVariations] = useState<Record<string, string>>({});
   const [selectedColor, setSelectedColor] = useState("");
   const [activeImageIdx, setActiveImageIdx] = useState(0);
+  const [show3D, setShow3D] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState<Tables<"products">[]>([]);
 
