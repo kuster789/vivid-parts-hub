@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { RotateCcw, Loader2, AlertCircle, Maximize2, Plus, Minus, RefreshCw } from "lucide-react";
 import "@google/model-viewer";
 import { colorOptions } from "./ColorSelector";
@@ -181,9 +181,7 @@ function ModelViewerWrapper({
     };
   }, [modelUrl]);
 
-  useEffect(() => {
-    if (!loading && selectedColor) applyColorToModel(selectedColor);
-  }, [selectedColor, loading]);
+  // Empty for now, will use useCallback/useEffect combo below
 
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -195,23 +193,31 @@ function ModelViewerWrapper({
     ] : [1, 1, 1, 1];
   };
 
-  const applyColorToModel = (colorName: string) => {
+  const applyColorToModel = useCallback((colorName: string) => {
     const viewer = viewerRef.current;
-    if (!viewer || !viewer.model) {
-      return;
+    if (!viewer) return;
+    
+    const apply = () => {
+      if (!viewer.model) return;
+      const color = colorOptions.find(c => c.name === colorName);
+      if (!color) return;
+      const rgba = hexToRgb(color.hex);
+      viewer.model.materials.forEach((material: any) => {
+        if (material.pbrMetallicRoughness) {
+          material.pbrMetallicRoughness.setBaseColorFactor(rgba);
+        }
+      });
+    };
+
+    if (viewer.model) apply();
+    else viewer.addEventListener("load", apply, { once: true });
+  }, []);
+
+  useEffect(() => {
+    if (selectedColor) {
+      applyColorToModel(selectedColor);
     }
-
-    const color = colorOptions.find(c => c.name === colorName);
-    if (!color) return;
-
-    const rgba = hexToRgb(color.hex);
-
-    viewer.model.materials.forEach((material: any) => {
-      if (material.pbrMetallicRoughness) {
-        material.pbrMetallicRoughness.setBaseColorFactor(rgba);
-      }
-    });
-  };
+  }, [selectedColor, applyColorToModel]);
 
   const toggleFullscreen = () => {
     if (!containerRef.current) return;
