@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { RotateCcw, Loader2, AlertCircle, Maximize2, Plus, Minus, RefreshCw } from "lucide-react";
 import "@google/model-viewer";
 import { colorOptions } from "./ColorSelector";

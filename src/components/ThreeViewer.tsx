@@ -322,8 +322,7 @@ const ThreeViewer = ({ fileUrl, fileName, className, selectedColor }: ThreeViewe
 
   // Update color when prop changes
   useEffect(() => {
-    if (!loading && sceneRef.current && selectedColor) {
-      // Find the loaded object in scene (it's the one we added that's not light/grid)
+    if (sceneRef.current && selectedColor) {
       const model = sceneRef.current.children.find((c: any) => 
         c.type === 'Mesh' || c.type === 'Group' || c.type === 'Object3D'
       );
