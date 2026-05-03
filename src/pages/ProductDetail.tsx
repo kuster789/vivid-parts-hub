@@ -142,8 +142,37 @@ const ProductDetail = () => {
           {/* Image / 3D viewer */}
           <ScrollReveal direction="left">
             <div className="sticky top-24">
-              {product.has_3d ? (
-                <ProductViewer3D modelUrl={product.model_3d_url} />
+              {show3D && product.model_3d_url ? (
+                <div className="space-y-3">
+                  <ProductViewer3D modelUrl={product.model_3d_url} />
+                  {(product.images && product.images.length > 0) && (
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      <button
+                        onClick={() => setShow3D(true)}
+                        className={`relative flex h-16 w-16 shrink-0 flex-col items-center justify-center overflow-hidden rounded-md border transition-all ${
+                          show3D ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/40"
+                        } bg-secondary`}
+                      >
+                        <Box className="h-6 w-6 text-primary" />
+                        <span className="text-[10px] font-bold text-primary">3D</span>
+                      </button>
+                      {product.images.map((img: string, idx: number) => (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            setActiveImageIdx(idx);
+                            setShow3D(false);
+                          }}
+                          className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-md border transition-all ${
+                            !show3D && activeImageIdx === idx ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/40"
+                          }`}
+                        >
+                          <img src={img} alt={`${product.name} ${idx + 1}`} className="h-full w-full bg-white object-contain" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ) : product.images && product.images.length > 0 ? (
                 <div className="space-y-3">
                     <div className="relative overflow-hidden rounded-lg border border-border bg-white">
@@ -173,31 +202,50 @@ const ProductDetail = () => {
                        </div>
                      )}
                     {product.has_3d && (
-                      <span className="absolute left-3 top-3 rounded-md bg-primary px-2 py-0.5 font-display text-[10px] font-bold text-primary-foreground">3D</span>
+                      <button 
+                        onClick={() => setShow3D(true)}
+                        className="absolute left-3 top-3 flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 font-display text-[10px] font-bold text-primary-foreground transition-transform hover:scale-105"
+                      >
+                        <Box className="h-3 w-3" /> VER EM 3D
+                      </button>
                     )}
                   </div>
-                  {product.images.length > 1 && (
-                    <div className="flex gap-2 overflow-x-auto pb-1">
-                      {product.images.map((img: string, idx: number) => (
-                         <button
-                           key={idx}
-                           onClick={() => setActiveImageIdx(idx)}
-                           className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-md border transition-all ${
-                             activeImageIdx === idx ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/40"
-                           }`}
-                         >
-                           <img src={img} alt={`${product.name} ${idx + 1}`} className="h-full w-full bg-white object-contain" />
-                           {selectedColor && (
-                             <div
-                               className="pointer-events-none absolute inset-0"
-                               style={getColorOverlayStyle(selectedColor, img)}
-                             />
-                           )}
-                         </button>
-                      ))}
-                    </div>
-                  )}
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {product.has_3d && product.model_3d_url && (
+                      <button
+                        onClick={() => setShow3D(true)}
+                        className={`relative flex h-16 w-16 shrink-0 flex-col items-center justify-center overflow-hidden rounded-md border transition-all ${
+                          show3D ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/40"
+                        } bg-secondary`}
+                      >
+                        <Box className="h-6 w-6 text-primary" />
+                        <span className="text-[10px] font-bold text-primary">3D</span>
+                      </button>
+                    )}
+                    {product.images.map((img: string, idx: number) => (
+                       <button
+                         key={idx}
+                         onClick={() => {
+                           setActiveImageIdx(idx);
+                           setShow3D(false);
+                         }}
+                         className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-md border transition-all ${
+                           !show3D && activeImageIdx === idx ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/40"
+                         }`}
+                       >
+                         <img src={img} alt={`${product.name} ${idx + 1}`} className="h-full w-full bg-white object-contain" />
+                         {selectedColor && (
+                           <div
+                             className="pointer-events-none absolute inset-0"
+                             style={getColorOverlayStyle(selectedColor, img)}
+                           />
+                         )}
+                       </button>
+                    ))}
+                  </div>
                 </div>
+              ) : product.has_3d && product.model_3d_url ? (
+                <ProductViewer3D modelUrl={product.model_3d_url} />
               ) : (
                 <div className="flex h-[400px] items-center justify-center rounded-lg border border-border bg-secondary md:h-[500px]">
                   <Package className="h-24 w-24 text-muted-foreground/20" />
