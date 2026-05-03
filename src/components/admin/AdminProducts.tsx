@@ -138,28 +138,40 @@ const AdminProducts = () => {
     await deleteProductImage(url);
   };
 
+  const [uploadProgress3D, setUploadProgress3D] = useState(0);
+
   const handle3DUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Check file size (max 50MB recommended for browser upload)
-    const MAX_SIZE = 50 * 1024 * 1024;
+    const MAX_SIZE = 100 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      toast.error("Arquivo muito grande. O limite recomendado é 50MB.");
+      toast.error("Arquivo muito grande. O limite recomendado é 100MB.");
       return;
     }
 
     setUploading3D(true);
+    setUploadProgress3D(0);
     const tempId = editingId || "temp-" + Date.now();
     
     try {
-      console.log("Iniciando upload 3D para o produto:", tempId);
+      // Supabase storage upload progress is not natively supported in a single call with the client
+      // We'll simulate a steady progress while the promise is pending for better UX
+      const progressInterval = setInterval(() => {
+        setUploadProgress3D(prev => {
+          if (prev >= 95) return prev;
+          return prev + Math.floor(Math.random() * 5);
+        });
+      }, 500);
+
       const url = await upload3DModel(tempId, file);
+      clearInterval(progressInterval);
+      setUploadProgress3D(100);
+      
       setFormModel3D(url);
       setFormHas3D(true);
       toast.success("Modelo 3D enviado com sucesso!");
     } catch (err: any) {
-      console.error("Erro capturado no handle3DUpload:", err);
       toast.error("Erro no upload 3D: " + (err.message || "Erro desconhecido"));
     } finally {
       setUploading3D(false);
@@ -737,11 +749,24 @@ const AdminProducts = () => {
               <section>
                 <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">🧩 Modelo 3D</h4>
                 <p className="mb-3 text-[11px] text-muted-foreground">Formatos: GLB (prioritário), glTF. Carregamento otimizado no navegador.</p>
-                {formModel3D ? (
+                {uploading3D ? (
+                  <div className="flex flex-col gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                        <span className="text-xs font-medium text-foreground">Enviando e processando...</span>
+                      </div>
+                      <span className="text-[10px] font-bold text-primary">{uploadProgress3D}%</span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/10">
+                      <div className="h-full bg-primary transition-all duration-300" style={{ width: `${uploadProgress3D}%` }} />
+                    </div>
+                  </div>
+                ) : formModel3D ? (
                   <div className="flex items-center gap-3 rounded-lg border border-border bg-secondary/30 px-4 py-3">
                     <FileBox className="h-5 w-5 text-primary" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-foreground truncate">Modelo 3D carregado</p>
+                      <p className="text-xs font-medium text-foreground truncate">Modelo 3D pronto</p>
                       <p className="text-[10px] text-muted-foreground truncate">{formModel3D.split("/").pop()}</p>
                     </div>
                     <button onClick={handleRemove3D} className="rounded-lg p-1.5 text-muted-foreground hover:text-destructive transition-colors">
@@ -753,11 +778,13 @@ const AdminProducts = () => {
                     <input ref={model3DInputRef} type="file" accept=".glb,.gltf" className="hidden" onChange={handle3DUpload} />
                     <button
                       onClick={() => model3DInputRef.current?.click()}
-                      disabled={uploading3D}
-                      className="flex items-center gap-2 rounded-lg border-2 border-dashed border-border px-4 py-3 text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary disabled:opacity-50"
+                      className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-8 text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
                     >
-                      {uploading3D ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileBox className="h-4 w-4" />}
-                      <span className="text-xs">{uploading3D ? "Enviando..." : "Upload Modelo 3D"}</span>
+                      <Upload className="h-6 w-6" />
+                      <div className="text-center">
+                        <p className="text-xs font-medium">Clique para enviar modelo 3D</p>
+                        <p className="text-[10px]">Recomendado: GLB até 100MB</p>
+                      </div>
                     </button>
                   </>
                 )}

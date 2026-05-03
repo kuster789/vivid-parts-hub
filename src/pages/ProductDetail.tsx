@@ -358,7 +358,7 @@ const ProductDetail = () => {
                 <button
                   onClick={() => {
                     for (let i = 0; i < quantity; i++) {
-                      addItem({ id: product.id, name: product.name, price, brand: product.brand, model: product.model, has_3d: product.has_3d ?? false, images: product.images }, selectedVariations);
+                      addItem({ id: product.id, name: product.name, price, brand: product.brand, model: product.model, has_3d: product.has_3d ?? false, images: product.images, selectedColor }, selectedVariations);
                     }
                     toast.success(`${quantity}x ${product.name} adicionado(s) ao carrinho`);
                   }}
