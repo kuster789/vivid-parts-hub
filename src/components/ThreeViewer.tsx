@@ -338,14 +338,17 @@ const ThreeViewer = ({ fileUrl, fileName, className, selectedColor }: ThreeViewe
     if (!color) return;
 
     const threeColor = new THREE.Color(color.hex);
+    console.log("Applying color to Three.js model:", colorName, color.hex);
     
     model.traverse((child: any) => {
       if (child.isMesh && child.material) {
         // If it's an array of materials
         if (Array.isArray(child.material)) {
-          child.material.forEach((m: any) => m.color.copy(threeColor));
+          child.material.forEach((m: any) => {
+            if (m.color) m.color.copy(threeColor);
+          });
         } else {
-          child.material.color.copy(threeColor);
+          if (child.material.color) child.material.color.copy(threeColor);
         }
       }
     });
