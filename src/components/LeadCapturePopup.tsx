@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { X, Gift, Copy, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/utils/analytics";
 
 const STORAGE_KEY = "lead_popup_dismissed";
 const DELAY_MS = 8000;
@@ -53,6 +54,13 @@ const LeadCapturePopup = () => {
         .single();
 
       if (leadData?.id) {
+        trackEvent({
+          event_type: "lead_created",
+          metadata: {
+            lead_id: leadData.id,
+            source: "popup"
+          }
+        });
         const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
         const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
         const res = await fetch(`${SUPABASE_URL}/functions/v1/send-coupon-email`, {

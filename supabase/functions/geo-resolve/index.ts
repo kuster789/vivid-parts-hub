@@ -10,17 +10,10 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { page_view_id } = await req.json();
-    if (!page_view_id || typeof page_view_id !== "string") {
-      return new Response(JSON.stringify({ error: "page_view_id required" }), {
+    const { page_view_id, event_id } = await req.json();
+    
+    if (!page_view_id && !event_id) {
+      return new Response(JSON.stringify({ error: "ID required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -29,7 +22,7 @@ Deno.serve(async (req) => {
     const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 
     let country = null, region = null, city = null;
-    if (clientIp !== "unknown") {
+    if (clientIp !== "unknown" && clientIp !== "127.0.0.1" && !clientIp.startsWith("10.") && !clientIp.startsWith("172.")) {
       try {
         const geoRes = await fetch(`http://ip-api.com/json/${clientIp}?fields=status,country,regionName,city`);
         const geo = await geoRes.json();
@@ -43,7 +36,18 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
-    await adminSupabase.from("page_views").update({ country, region, city }).eq("id", page_view_id);
+
+    if (page_view_id) {
+      await adminSupabase.from("page_views").update({ country, region, city }).eq("id", page_view_id);
+    }
+    
+    if (event_id) {
+      await adminSupabase.from("analytics_events").update({ 
+        country, 
+        state: region, 
+        city 
+      }).eq("id", event_id);
+    }
 
     return new Response(JSON.stringify({ country, region, city }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

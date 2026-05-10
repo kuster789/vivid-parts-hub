@@ -17,6 +17,7 @@ import { useSEO } from "@/hooks/useSEO";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ShareButtons from "@/components/ShareButtons";
+import { trackEvent } from "@/utils/analytics";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -48,6 +49,17 @@ const ProductDetail = () => {
       setLoading(false);
 
       if (data) {
+        trackEvent({
+          event_type: "product_view",
+          metadata: {
+            product_id: data.id,
+            product_name: data.name,
+            brand: data.brand,
+            price: Number(data.price),
+            stock_status: data.stock > 0 ? "in_stock" : "out_of_stock",
+          }
+        });
+
         trackView({
           id: data.id,
           name: data.name,
@@ -365,6 +377,16 @@ const ProductDetail = () => {
                 </div>
                 <button
                   onClick={() => {
+                    trackEvent({
+                      event_type: "add_to_cart",
+                      metadata: {
+                        product_id: product.id,
+                        quantity,
+                        price,
+                        product_name: product.name,
+                        brand: product.brand
+                      }
+                    });
                     for (let i = 0; i < quantity; i++) {
                       addItem({ id: product.id, name: product.name, price, brand: product.brand, model: product.model, has_3d: product.has_3d ?? false, images: product.images, selectedColor }, selectedVariations);
                     }

@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          anonymous_id: string | null
+          browser: string | null
+          city: string | null
+          country: string | null
+          created_at: string | null
+          device_type: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          path: string | null
+          referrer: string | null
+          session_id: string | null
+          state: string | null
+          user_id: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Insert: {
+          anonymous_id?: string | null
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          path?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          state?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Update: {
+          anonymous_id?: string | null
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          path?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          state?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -874,6 +940,74 @@ export type Database = {
         }
       }
       generate_quote_number: { Args: never; Returns: string }
+      get_dashboard_metrics: {
+        Args: {
+          end_date: string
+          p_brand?: string
+          p_state?: string
+          p_utm_source?: string
+          start_date: string
+        }
+        Returns: Json
+      }
+      get_geo_performance: {
+        Args: { end_date: string; start_date: string }
+        Returns: {
+          city: string
+          country: string
+          orders: number
+          revenue: number
+          state: string
+          visits: number
+        }[]
+      }
+      get_inventory_priority: {
+        Args: never
+        Returns: {
+          name: string
+          orders_30d: number
+          product_id: string
+          recommendation: string
+          score: number
+          stock: number
+          views_30d: number
+        }[]
+      }
+      get_monthly_revenue_comparison: {
+        Args: never
+        Returns: {
+          externo: number
+          name: string
+          site: number
+        }[]
+      }
+      get_product_performance: {
+        Args: { end_date: string; limit_count?: number; start_date: string }
+        Returns: {
+          brand: string
+          cart_additions: number
+          conversion_rate: number
+          name: string
+          orders: number
+          product_id: string
+          revenue: number
+          stock: number
+          views: number
+        }[]
+      }
+      get_sales_funnel: {
+        Args: { end_date: string; start_date: string }
+        Returns: Json
+      }
+      get_search_insights: {
+        Args: { end_date: string; start_date: string }
+        Returns: {
+          conversions: number
+          no_results: boolean
+          query: string
+          search_count: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

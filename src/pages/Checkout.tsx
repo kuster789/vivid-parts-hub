@@ -10,6 +10,7 @@ import {
 import { Link } from "react-router-dom";
 import CouponInput from "@/components/CouponInput";
 import { useToast } from "@/hooks/use-toast";
+import { trackEvent } from "@/utils/analytics";
 
 interface ShippingOption {
   id: number;
@@ -75,7 +76,32 @@ const Checkout = () => {
   const paymentStatus = searchParams.get("status");
   const isPaymentApproved = paymentStatus === "approved";
 
+  useEffect(() => {
+    if (items.length > 0) {
+      trackEvent({
+        event_type: "checkout_started",
+        metadata: {
+          items_count: items.length,
+          total_price: totalPrice
+        }
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isPaymentApproved) {
+      trackEvent({
+        event_type: "payment_approved",
+        metadata: {
+          status: "approved",
+          source: "mercadopago"
+        }
+      });
+    }
+  }, [isPaymentApproved]);
+
   if (!user) {
+
     return (
       <main className="container flex min-h-[60vh] flex-col items-center justify-center">
         <Lock className="mb-4 h-12 w-12 text-muted-foreground/30" />
@@ -215,6 +241,16 @@ const Checkout = () => {
       .single();
 
     if (orderError || !order) return null;
+
+    trackEvent({
+      event_type: "order_created",
+      metadata: {
+        order_id: order.id,
+        user_id: user.id,
+        total: finalTotal,
+        payment_method: "mercadopago"
+      }
+    });
 
     const orderItems = items.map((item) => ({
       order_id: order.id,
