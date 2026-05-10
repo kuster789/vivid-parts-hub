@@ -1,41 +1,37 @@
+I will implement a comprehensive security hardening migration to fix all identified vulnerabilities and warnings.
 
-# Plano: Corrigir Build + Gerar Capas para os 4 Novos Posts
+### Security Hardening Plan
 
-## Problema de Build
-O arquivo `public/blog/esquema-eletrico-elefantre.png` tem 3.17 MB, ultrapassando o limite de 3 MB do cache PWA (Workbox). Isso causa falha no build.
+1. **Realtime & Broadcast Security**
+   - Restrict Realtime access to authenticated users only for sensitive channels.
+   - Implement policies to ensure users can only subscribe to their own notification channels.
+   - Disable public broadcast for page views.
 
-**Solucao:** Aumentar o `maximumFileSizeToCacheInBytes` de 3 MB para 4 MB no `vite.config.ts` (linha 25).
+2. **Privilege Escalation Prevention**
+   - Update `user_roles` policies to ensure only `admin_master` can promote or demote other administrative roles.
+   - Prevent `admin` from promoting themselves to `admin_master`.
+   - Add a trigger to enforce these rules at the database level.
 
----
+3. **Security Definer Functions**
+   - Revoke `EXECUTE` on all `SECURITY DEFINER` functions from `public` and `anon` roles.
+   - Explicitly grant `EXECUTE` only to `authenticated` or specific administrative roles as needed.
+   - Ensure all `SECURITY DEFINER` functions have a secure `search_path` set (most already do, but I will verify).
 
-## Geracao de Imagens de Capa
+4. **Storage Security**
+   - Update storage policies for `product-images` and `manuals` buckets to prevent public listing while maintaining public read access for individual files.
+   - Restrict upload/update/delete permissions to authorized administrative roles.
 
-Criar uma edge function temporaria que usa a API de geracao de imagens do Lovable AI para gerar 4 capas tematicas, salvar no Storage e atualizar o campo `cover_image` de cada post no banco.
+5. **RLS Policy Hardening**
+   - Identify and replace any `USING (true)` or `WITH CHECK (true)` policies with specific, restrictive conditions.
+   - For public tables like `products`, keep `SELECT` open but ensure `INSERT/UPDATE/DELETE` are strictly controlled.
+   - Secure sensitive tables like `leads`, `page_views`, and `notifications`.
 
-### Capas planejadas:
+6. **Validation**
+   - Run the Supabase linter again after the migration to ensure all errors and warnings are resolved.
 
-| Post | Tema da Capa |
-|------|-------------|
-| Tabela de Resistencia de Bobinas | Multimetro digital medindo bobina de ignicao de moto, tons escuros com destaque em laranja |
-| Guia de Retentores Agrale | Retentores de motor dispostos em fundo escuro, estilo catalogo tecnico |
-| Agrale WXT 125 - Motocross 1985 | Moto de motocross estilo anos 80 em pista de terra, visual vintage |
-| Esquema Eletrico Elefantre | Diagrama eletrico estilizado com fios coloridos em fundo escuro |
+### Technical Details
 
-### Passos de implementacao:
-
-1. **Corrigir build** -- aumentar limite PWA de 3 MB para 4 MB no `vite.config.ts`
-2. **Criar edge function `generate-blog-cover`** que:
-   - Recebe o slug do post e o prompt da imagem
-   - Chama a API Lovable AI (modelo `google/gemini-2.5-flash-image`) com o prompt
-   - Faz upload da imagem base64 gerada para o bucket `product-images` (ou um bucket dedicado)
-   - Atualiza o campo `cover_image` do post no banco de dados
-3. **Chamar a edge function** 4 vezes para gerar as capas
-4. **Verificar** que as capas aparecem corretamente na listagem `/blog` e nos posts individuais
-
-### Detalhes tecnicos
-
-- Modelo: `google/gemini-2.5-flash-image` via `https://ai.gateway.lovable.dev/v1/chat/completions`
-- Formato de saida: base64 PNG
-- Armazenamento: bucket Supabase Storage
-- Atualizacao: SQL UPDATE no campo `cover_image` da tabela `blog_posts`
-- A edge function sera chamada via `supabase--curl_edge_functions` para testar
+- **Affected Tables**: `user_roles`, `notifications`, `leads`, `page_views`, `reviews`, `manuals`, `role_permissions`.
+- **Affected Functions**: All `SECURITY DEFINER` functions in the `public` schema.
+- **Affected Buckets**: `product-images`, `manuals`.
+- **Approach**: A single, versioned migration file using the `supabase--migration` tool.
