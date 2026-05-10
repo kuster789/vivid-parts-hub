@@ -5,6 +5,7 @@ import { ArrowRight, AlertTriangle, Lightbulb } from "lucide-react";
 interface Step {
   name: string;
   count: number;
+  benchmark_rate?: number;
 }
 
 interface SalesFunnelProps {
