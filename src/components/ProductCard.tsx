@@ -3,6 +3,7 @@ import { ShoppingCart, Box, Heart, Eye } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlist } from "@/hooks/useWishlist";
+import { trackEvent } from "@/utils/analytics";
 
 interface ProductCardProps {
   product: {
