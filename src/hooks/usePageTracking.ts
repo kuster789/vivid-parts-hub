@@ -1,24 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-
-const getSessionId = (): string => {
-  let id = sessionStorage.getItem("pv_session");
-  if (!id) {
-    id = crypto.randomUUID();
-    sessionStorage.setItem("pv_session", id);
-  }
-  return id;
-};
-
-const getUtmParams = (search: string) => {
-  const params = new URLSearchParams(search);
-  return {
-    utm_source: params.get("utm_source") || null,
-    utm_medium: params.get("utm_medium") || null,
-    utm_campaign: params.get("utm_campaign") || null,
-  };
-};
+import { trackEvent } from "@/utils/analytics";
 
 export const usePageTracking = () => {
   const location = useLocation();
@@ -29,29 +11,6 @@ export const usePageTracking = () => {
     if (path === lastPath.current) return;
     lastPath.current = path;
 
-    const sessionId = getSessionId();
-    const utm = getUtmParams(location.search);
-    const pageViewId = crypto.randomUUID();
-
-    supabase.from("page_views").insert({
-      id: pageViewId,
-      session_id: sessionId,
-      path,
-      referrer: document.referrer || null,
-      user_agent: navigator.userAgent || null,
-      ...utm,
-    } as any).then(({ error }) => {
-      if (!error) {
-        // Fire-and-forget geo resolution via edge function
-        // Only call if user is authenticated to avoid 401 and comply with security rules
-        supabase.auth.getSession().then(({ data }) => {
-          if (data.session) {
-            supabase.functions.invoke("geo-resolve", {
-              body: { page_view_id: pageViewId },
-            }).catch(() => { /* Safe fallback, ignore geo-resolve errors */ });
-          }
-        });
-      }
-    });
-  }, [location.pathname, location.search]);
+    trackEvent({ event_type: "page_view", path });
+  }, [location.pathname]);
 };
