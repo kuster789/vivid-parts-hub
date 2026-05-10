@@ -15,7 +15,7 @@ interface SEOProps {
 
 const SITE_NAME = "Auto Peças Agrale";
 const BASE_URL = "https://www.motopecasagrale.com.br";
-const DEFAULT_IMAGE = `${BASE_URL}/og-default.png?v3`;
+const DEFAULT_IMAGE = `${BASE_URL}/og-default.png?v4`;
 const DEFAULT_DESCRIPTION =
   "Especialistas em peças para Agrale, Yamaha, Cagiva e KTM. Componentes originais e de qualidade, com envio para todo o Brasil.";
 
@@ -60,6 +60,9 @@ export function useSEO({
       el.setAttribute("href", href);
     };
 
+    // Fix potential relative URLs for social sharing
+    const absoluteImage = image?.startsWith('http') ? image : `${BASE_URL}${image?.startsWith('/') ? '' : '/'}${image}`;
+
     // Standard meta
     setMeta('[name="description"]', description);
     setMeta('[name="author"]', SITE_NAME);
@@ -70,7 +73,7 @@ export function useSEO({
     // Open Graph
     setMeta('[property="og:title"]', fullTitle);
     setMeta('[property="og:description"]', description);
-    setMeta('[property="og:image"]', image);
+    setMeta('[property="og:image"]', absoluteImage);
     setMeta('[property="og:url"]', fullUrl);
     setMeta('[property="og:type"]', type === "product" ? "product" : type === "article" ? "article" : "website");
     setMeta('[property="og:site_name"]', SITE_NAME);
@@ -80,7 +83,7 @@ export function useSEO({
     setMeta('[name="twitter:card"]', "summary_large_image");
     setMeta('[name="twitter:title"]', fullTitle);
     setMeta('[name="twitter:description"]', description);
-    setMeta('[name="twitter:image"]', image);
+    setMeta('[name="twitter:image"]', absoluteImage);
 
     // Product-specific OG (used by WhatsApp for pricing)
     if (price !== undefined) {
@@ -98,7 +101,7 @@ export function useSEO({
       document.head.appendChild(script);
     }
 
-    const structuredData = jsonLd ?? buildJsonLd({ type, title: fullTitle, description, image, url: fullUrl, price, availability, brand, sku });
+    const structuredData = jsonLd ?? buildJsonLd({ type, title: fullTitle, description, image: absoluteImage, url: fullUrl, price, availability, brand, sku });
     script.textContent = JSON.stringify(structuredData);
 
     return () => {
