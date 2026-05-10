@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { 
   Users, Eye, MousePointer2, ShoppingCart, CreditCard, 
   ShoppingBag, DollarSign, Ban, Percent, TrendingUp,
-  Package, Mail, ClipboardList, AlertCircle
+  Package, Mail, ClipboardList, AlertCircle, CheckCircle2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
