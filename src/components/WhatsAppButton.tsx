@@ -1,12 +1,24 @@
 import { MessageCircle } from "lucide-react";
+import { trackEvent } from "@/utils/analytics";
 
 const WHATSAPP_NUMBER = "554396438823";
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Olá! Vim pelo site e gostaria de informações.")}`;
 
-const WhatsAppButton = () => (
-  <a
-    href={WHATSAPP_URL}
-    target="_blank"
+const WhatsAppButton = () => {
+  const handleClick = () => {
+    trackEvent({
+      event_type: "whatsapp_click",
+      metadata: {
+        source_page: window.location.pathname
+      }
+    });
+  };
+
+  return (
+    <a
+      href={WHATSAPP_URL}
+      onClick={handleClick}
+      target="_blank"
     rel="noopener noreferrer"
     aria-label="Fale conosco pelo WhatsApp"
     className="fixed bottom-6 left-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] shadow-lg transition-transform hover:scale-110 hover:shadow-xl"
