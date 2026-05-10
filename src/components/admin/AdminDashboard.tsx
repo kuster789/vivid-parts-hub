@@ -70,9 +70,9 @@ const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
         supabase.from("orders").select("id, total, status, created_at, shipping_name").order("created_at", { ascending: false }).limit(5)
       ]);
 
-      setData({
+        setData({
         kpis,
-        funnel: funnel?.steps || [],
+        funnel: (funnel as any)?.steps || [],
         products: products || [],
         searches: searches || [],
         geo: geo || [],
