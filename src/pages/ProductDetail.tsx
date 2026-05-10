@@ -49,6 +49,18 @@ const ProductDetail = () => {
       setLoading(false);
 
       if (data) {
+        trackEvent({
+          event_type: "product_view",
+          metadata: {
+            product_id: data.id,
+            product_name: data.name,
+            brand: data.brand,
+            category: data.category,
+            price: Number(data.price),
+            stock_status: data.stock > 0 ? "in_stock" : "out_of_stock",
+          }
+        });
+
         trackView({
           id: data.id,
           name: data.name,
