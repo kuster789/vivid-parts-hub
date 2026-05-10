@@ -985,74 +985,47 @@ export type Database = {
           site: number
         }[]
       }
-      get_product_performance:
-        | {
-            Args: { end_date: string; limit_count?: number; start_date: string }
-            Returns: {
-              brand: string
-              cart_additions: number
-              conversion_rate: number
-              name: string
-              orders: number
-              product_id: string
-              revenue: number
-              stock: number
-              views: number
-            }[]
-          }
-        | {
-            Args: {
-              end_date: string
-              limit_count?: number
-              p_brand?: string
-              p_state?: string
-              p_utm_source?: string
-              start_date: string
-            }
-            Returns: {
-              brand: string
-              name: string
-              orders: number
-              product_id: string
-              revenue: number
-              views: number
-            }[]
-          }
-      get_sales_funnel:
-        | { Args: { end_date: string; start_date: string }; Returns: Json }
-        | {
-            Args: {
-              end_date: string
-              p_brand?: string
-              p_state?: string
-              p_utm_source?: string
-              start_date: string
-            }
-            Returns: Json
-          }
-      get_search_insights:
-        | {
-            Args: { end_date: string; start_date: string }
-            Returns: {
-              conversions: number
-              no_results: boolean
-              query: string
-              search_count: number
-            }[]
-          }
-        | {
-            Args: {
-              end_date: string
-              p_state?: string
-              p_utm_source?: string
-              start_date: string
-            }
-            Returns: {
-              no_results: boolean
-              query: string
-              search_count: number
-            }[]
-          }
+      get_product_performance: {
+        Args: {
+          end_date: string
+          limit_count?: number
+          p_brand?: string
+          p_state?: string
+          p_utm_source?: string
+          start_date: string
+        }
+        Returns: {
+          brand: string
+          name: string
+          orders: number
+          product_id: string
+          revenue: number
+          views: number
+        }[]
+      }
+      get_sales_funnel: {
+        Args: {
+          end_date: string
+          p_brand?: string
+          p_state?: string
+          p_utm_source?: string
+          start_date: string
+        }
+        Returns: Json
+      }
+      get_search_insights: {
+        Args: {
+          end_date: string
+          p_state?: string
+          p_utm_source?: string
+          start_date: string
+        }
+        Returns: {
+          no_results: boolean
+          query: string
+          search_count: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
