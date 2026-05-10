@@ -87,6 +87,7 @@ const Checkout = () => {
       });
     }
   }, []);
+  if (!user) {
 
     return (
       <main className="container flex min-h-[60vh] flex-col items-center justify-center">
