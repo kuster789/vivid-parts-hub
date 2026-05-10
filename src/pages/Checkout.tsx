@@ -87,6 +87,19 @@ const Checkout = () => {
       });
     }
   }, []);
+
+  useEffect(() => {
+    if (isPaymentApproved) {
+      trackEvent({
+        event_type: "payment_approved",
+        metadata: {
+          status: "approved",
+          source: "mercadopago"
+        }
+      });
+    }
+  }, [isPaymentApproved]);
+
   if (!user) {
 
     return (
