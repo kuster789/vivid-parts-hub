@@ -73,7 +73,7 @@ export function useSEO({
     // Open Graph
     setMeta('[property="og:title"]', fullTitle);
     setMeta('[property="og:description"]', description);
-    setMeta('[property="og:image"]', image);
+    setMeta('[property="og:image"]', absoluteImage);
     setMeta('[property="og:url"]', fullUrl);
     setMeta('[property="og:type"]', type === "product" ? "product" : type === "article" ? "article" : "website");
     setMeta('[property="og:site_name"]', SITE_NAME);
@@ -83,7 +83,7 @@ export function useSEO({
     setMeta('[name="twitter:card"]', "summary_large_image");
     setMeta('[name="twitter:title"]', fullTitle);
     setMeta('[name="twitter:description"]', description);
-    setMeta('[name="twitter:image"]', image);
+    setMeta('[name="twitter:image"]', absoluteImage);
 
     // Product-specific OG (used by WhatsApp for pricing)
     if (price !== undefined) {
