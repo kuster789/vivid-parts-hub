@@ -973,6 +973,14 @@ export type Database = {
           views_30d: number
         }[]
       }
+      get_monthly_revenue_comparison: {
+        Args: never
+        Returns: {
+          externo: number
+          name: string
+          site: number
+        }[]
+      }
       get_product_performance: {
         Args: { end_date: string; limit_count?: number; start_date: string }
         Returns: {
