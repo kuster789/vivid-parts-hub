@@ -377,6 +377,16 @@ const ProductDetail = () => {
                 </div>
                 <button
                   onClick={() => {
+                    trackEvent({
+                      event_type: "add_to_cart",
+                      metadata: {
+                        product_id: product.id,
+                        quantity,
+                        price,
+                        product_name: product.name,
+                        brand: product.brand
+                      }
+                    });
                     for (let i = 0; i < quantity; i++) {
                       addItem({ id: product.id, name: product.name, price, brand: product.brand, model: product.model, has_3d: product.has_3d ?? false, images: product.images, selectedColor }, selectedVariations);
                     }
