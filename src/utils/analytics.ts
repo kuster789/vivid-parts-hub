@@ -66,8 +66,15 @@ export const trackEvent = async ({ event_type, path, metadata = {} }: TrackEvent
     };
 
     // Use a background task to not block UI
-    supabase.from("analytics_events").insert(eventData).then(({ error }) => {
-      if (error) console.warn("Analytics error:", error.message);
+    supabase.from("analytics_events").insert(eventData).select("id").single().then(({ data, error }) => {
+      if (error) {
+        console.warn("Analytics error:", error.message);
+      } else if (data && event_type === "page_view") {
+        // Trigger geo resolution for page views
+        supabase.functions.invoke("geo-resolve", {
+          body: { event_id: data.id },
+        }).catch(() => { /* Silent fallback */ });
+      }
     });
   } catch (err) {
     // Fail silently in production to not break UX
