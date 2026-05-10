@@ -36,7 +36,14 @@ const ProductDetail = () => {
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase.from("products").select("*").eq("id", id).maybeSingle();
+      setLoading(true);
+      const { data, error } = await supabase.from("products").select("*").eq("id", id).maybeSingle();
+      
+      if (error) {
+        console.error("Erro ao carregar produto:", error);
+        toast.error("Erro ao carregar detalhes do produto.");
+      }
+      
       setProduct(data);
       setLoading(false);
 
@@ -61,7 +68,8 @@ const ProductDetail = () => {
       }
     };
     load();
-  }, [id]);
+    window.scrollTo(0, 0);
+  }, [id, trackView]);
 
   // SEO dinâmico — sempre chamado no topo (hooks não podem estar após early returns)
   useSEO({
