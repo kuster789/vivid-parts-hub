@@ -95,7 +95,7 @@ const KPIOverview = ({ data, previousData }: KPIOverviewProps) => {
       { 
         label: "Pedidos Pagos", 
         value: data.orders_paid || 0, 
-        icon: CheckCircle, 
+        icon: CheckCircle2, 
         tooltip: "Pedidos com status aprovado/pago." 
       },
       { 
