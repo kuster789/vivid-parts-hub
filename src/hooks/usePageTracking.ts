@@ -43,8 +43,13 @@ export const usePageTracking = () => {
     } as any).then(({ error }) => {
       if (!error) {
         // Fire-and-forget geo resolution via edge function
-        supabase.functions.invoke("geo-resolve", {
-          body: { page_view_id: pageViewId },
+        // Only call if user is authenticated to avoid 401 and comply with security rules
+        supabase.auth.getSession().then(({ data }) => {
+          if (data.session) {
+            supabase.functions.invoke("geo-resolve", {
+              body: { page_view_id: pageViewId },
+            }).catch(() => { /* Safe fallback, ignore geo-resolve errors */ });
+          }
         });
       }
     });
