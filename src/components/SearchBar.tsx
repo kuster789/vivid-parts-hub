@@ -31,6 +31,15 @@ const SearchBar = () => {
         .ilike("name", `%${query}%`)
         .limit(6);
       setResults(data || []);
+      
+      trackEvent({
+        event_type: (data && data.length > 0) ? "search_performed" : "search_no_results",
+        metadata: {
+          query,
+          results_count: data?.length || 0
+        }
+      });
+
       setLoading(false);
       setOpen(true);
     }, 300);
