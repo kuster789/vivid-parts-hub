@@ -10,10 +10,23 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!
+    );
+
+    const authHeader = req.headers.get("Authorization");
+    const { data: { user } } = await supabase.auth.getUser(authHeader?.replace("Bearer ", ""));
+    
+    if (!user) {
+      return new Response(JSON.stringify({ error: "Autenticação necessária" }), { 
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      });
+    }
+
     const { messages } = await req.json();
 
-    // Input validation
-    if (!Array.isArray(messages) || messages.length === 0 || messages.length > 50) {
+    if (!Array.isArray(messages) || messages.length === 0 || messages.length > 20) {
       return new Response(JSON.stringify({ error: "Mensagens inválidas" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 

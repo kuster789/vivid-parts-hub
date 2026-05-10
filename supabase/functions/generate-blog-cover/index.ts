@@ -10,25 +10,24 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { slug, prompt } = await req.json();
-    if (!slug || !prompt) {
-      return new Response(JSON.stringify({ error: "slug and prompt required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
+    const authHeader = req.headers.get("Authorization");
+    const { data: { user } } = await supabase.auth.getUser(authHeader?.replace("Bearer ", ""));
+
+    // REQUIRE ADMIN ROLE
+    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user?.id);
+    const isAdmin = roles?.some(r => ["admin", "admin_master"].includes(r.role));
+
+    if (!isAdmin) {
+      return new Response(JSON.stringify({ error: "Apenas administradores podem gerar capas" }), { status: 403, headers: corsHeaders });
     }
 
+    const { slug, prompt } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
-
-    console.log(`Generating cover for: ${slug}`);
-
-    // Generate image via Lovable AI
+    
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-image",
         messages: [{ role: "user", content: prompt }],
@@ -36,53 +35,21 @@ serve(async (req) => {
       }),
     });
 
-    if (!aiResp.ok) {
-      const t = await aiResp.text();
-      console.error("AI error:", aiResp.status, t);
-      throw new Error(`AI gateway error: ${aiResp.status}`);
-    }
-
     const aiData = await aiResp.json();
     const imageUrl = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-    if (!imageUrl) throw new Error("No image returned from AI");
-
-    // Extract base64 data
+    
+    const adminSupabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, "");
     const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-
-    // Upload to Storage
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
+    
     const path = `blog-covers/${slug}.png`;
-    const { error: uploadError } = await supabase.storage
-      .from("product-images")
-      .upload(path, binaryData, { contentType: "image/png", upsert: true });
+    await adminSupabase.storage.from("product-images").upload(path, binaryData, { contentType: "image/png", upsert: true });
+    const { data: urlData } = adminSupabase.storage.from("product-images").getPublicUrl(path);
+    
+    await adminSupabase.from("blog_posts").update({ cover_image: urlData.publicUrl }).eq("slug", slug);
 
-    if (uploadError) throw new Error(`Upload error: ${uploadError.message}`);
-
-    const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
-    const publicUrl = urlData.publicUrl;
-
-    // Update blog post
-    const { error: updateError } = await supabase
-      .from("blog_posts")
-      .update({ cover_image: publicUrl })
-      .eq("slug", slug);
-
-    if (updateError) throw new Error(`DB update error: ${updateError.message}`);
-
-    console.log(`Cover generated for ${slug}: ${publicUrl}`);
-
-    return new Response(JSON.stringify({ success: true, url: publicUrl }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(JSON.stringify({ success: true, url: urlData.publicUrl }), { headers: corsHeaders });
   } catch (e) {
-    console.error("Error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
   }
 });
