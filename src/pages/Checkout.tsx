@@ -10,6 +10,7 @@ import {
 import { Link } from "react-router-dom";
 import CouponInput from "@/components/CouponInput";
 import { useToast } from "@/hooks/use-toast";
+import { trackEvent } from "@/utils/analytics";
 
 interface ShippingOption {
   id: number;
