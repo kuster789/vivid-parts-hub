@@ -60,6 +60,9 @@ export function useSEO({
       el.setAttribute("href", href);
     };
 
+    // Fix potential relative URLs for social sharing
+    const absoluteImage = image?.startsWith('http') ? image : `${BASE_URL}${image?.startsWith('/') ? '' : '/'}${image}`;
+
     // Standard meta
     setMeta('[name="description"]', description);
     setMeta('[name="author"]', SITE_NAME);
