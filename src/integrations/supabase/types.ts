@@ -950,9 +950,55 @@ export type Database = {
         }
         Returns: Json
       }
+      get_geo_performance: {
+        Args: { end_date: string; start_date: string }
+        Returns: {
+          city: string
+          country: string
+          orders: number
+          revenue: number
+          state: string
+          visits: number
+        }[]
+      }
+      get_inventory_priority: {
+        Args: never
+        Returns: {
+          name: string
+          orders_30d: number
+          product_id: string
+          recommendation: string
+          score: number
+          stock: number
+          views_30d: number
+        }[]
+      }
+      get_product_performance: {
+        Args: { end_date: string; limit_count?: number; start_date: string }
+        Returns: {
+          brand: string
+          cart_additions: number
+          conversion_rate: number
+          name: string
+          orders: number
+          product_id: string
+          revenue: number
+          stock: number
+          views: number
+        }[]
+      }
       get_sales_funnel: {
         Args: { end_date: string; start_date: string }
         Returns: Json
+      }
+      get_search_insights: {
+        Args: { end_date: string; start_date: string }
+        Returns: {
+          conversions: number
+          no_results: boolean
+          query: string
+          search_count: number
+        }[]
       }
       has_role: {
         Args: {
