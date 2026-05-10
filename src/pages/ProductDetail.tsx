@@ -17,6 +17,7 @@ import { useSEO } from "@/hooks/useSEO";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ShareButtons from "@/components/ShareButtons";
+import { trackEvent } from "@/utils/analytics";
 
 const ProductDetail = () => {
   const { id } = useParams();
