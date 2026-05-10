@@ -996,10 +996,13 @@ export type Database = {
         }
         Returns: {
           brand: string
+          cart_additions: number
+          conversion_rate: number
           name: string
           orders: number
           product_id: string
           revenue: number
+          stock: number
           views: number
         }[]
       }
