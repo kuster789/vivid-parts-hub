@@ -33,6 +33,7 @@ const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
   const [prevData, setPrevData] = useState<any>(null);
+  const [monthlyRev, setMonthlyRev] = useState<any[]>([]);
   const [dateRange, setDateRange] = useState<DateRange>({
     from: subDays(new Date(), 30),
     to: new Date(),
@@ -45,11 +46,9 @@ const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
       const start = startOfDay(dateRange.from).toISOString();
       const end = endOfDay(dateRange.to).toISOString();
       
-      // Calculate previous period for comparison
       const diff = dateRange.to.getTime() - dateRange.from.getTime();
       const prevStart = new Date(dateRange.from.getTime() - diff).toISOString();
       const prevEnd = start;
-  const [monthlyRev, setMonthlyRev] = useState<any[]>([]);
 
       const [
         { data: kpis },
@@ -59,7 +58,8 @@ const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
         { data: searches },
         { data: geo },
         { data: inventory },
-        { data: recentOrders }
+        { data: recentOrders },
+        { data: monthlyRevData }
       ] = await Promise.all([
         supabase.rpc("get_dashboard_metrics", { start_date: start, end_date: end }),
         supabase.rpc("get_dashboard_metrics", { start_date: prevStart, end_date: prevEnd }),
@@ -68,10 +68,11 @@ const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
         supabase.rpc("get_search_insights", { start_date: start, end_date: end }),
         supabase.rpc("get_geo_performance", { start_date: start, end_date: end }),
         supabase.rpc("get_inventory_priority"),
-        supabase.from("orders").select("id, total, status, created_at, shipping_name").order("created_at", { ascending: false }).limit(5)
+        supabase.from("orders").select("id, total, status, created_at, shipping_name").order("created_at", { ascending: false }).limit(5),
+        supabase.rpc("get_monthly_revenue_comparison")
       ]);
 
-        setData({
+      setData({
         kpis,
         funnel: (funnel as any)?.steps || [],
         products: products || [],
@@ -81,6 +82,7 @@ const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
         recentOrders: recentOrders || []
       });
       setPrevData(prevKpis);
+      setMonthlyRev(monthlyRevData || []);
     } catch (err: any) {
       console.error("Erro ao carregar dashboard:", err);
       toast.error("Erro ao carregar dados do painel.");
@@ -97,7 +99,6 @@ const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
     if (!data) return [];
     const list: any[] = [];
 
-    // Rule: High views, no sales
     data.products?.forEach((p: any) => {
       if (p.views > 50 && p.orders === 0) {
         list.push({
@@ -112,7 +113,6 @@ const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
       }
     });
 
-    // Rule: Search without results
     data.searches?.slice(0, 3).forEach((s: any, i: number) => {
       if (s.no_results && s.search_count > 5) {
         list.push({
@@ -127,7 +127,6 @@ const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
       }
     });
 
-    // Rule: High dropoff
     const cartStep = data.funnel?.find((s: any) => s.name.includes("Carrinho"));
     const checkoutStep = data.funnel?.find((s: any) => s.name.includes("Checkout"));
     if (cartStep && checkoutStep) {
@@ -159,7 +158,6 @@ const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
 
   return (
     <div className="space-y-8 animate-fade-in pb-20">
-      {/* Header: Date filter + Quick actions */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-card/30 p-4 rounded-xl border border-border/50 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -176,48 +174,44 @@ const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
         </div>
       </div>
 
-      {/* 🚀 Principais Insights */}
       {insights.length > 0 && (
         <DashboardSection title="Insights Automáticos" icon={Lightbulb}>
           <AutomaticInsights insights={insights} />
         </DashboardSection>
       )}
 
-      {/* 💰 KPIs Principais */}
       <DashboardSection title="Indicadores de Performance (KPIs)" icon={DollarSign}>
         <KPIOverview data={data?.kpis} previousData={prevData} />
       </DashboardSection>
 
-      {/* 🌪️ Funil de Vendas */}
       <DashboardSection title="Funil de Conversão" icon={Filter}>
         <SalesFunnel steps={data?.funnel} />
       </DashboardSection>
 
       <div className="grid gap-8 lg:grid-cols-2">
-        {/* 📦 Performance de Produtos */}
         <div className="lg:col-span-2">
            <DashboardSection title="Performance de Produtos" icon={Package}>
             <ProductPerformance products={data?.products} />
           </DashboardSection>
         </div>
 
-        {/* 🔍 Buscas e Oportunidades */}
         <DashboardSection title="Buscas dos Clientes" icon={Search}>
           <SearchInsights searches={data?.searches} />
         </DashboardSection>
 
-        {/* 🏢 Estoque Inteligente */}
         <DashboardSection title="Prioridade de Estoque" icon={Warehouse}>
           <SmartInventory items={data?.inventory} />
         </DashboardSection>
       </div>
 
-      {/* 🌍 Audiência e Geografia */}
+      <DashboardSection title="Tendências de Receita" icon={BarChart3}>
+        <MonthlyComparisonChart data={monthlyRev} />
+      </DashboardSection>
+
       <DashboardSection title="Performance Geográfica (Normalizada)" icon={Globe}>
         <GeoPerformance data={data?.geo} />
       </DashboardSection>
 
-      {/* 🛒 Vendas e Pedidos */}
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <DashboardSection title="Pedidos Recentes" icon={ShoppingBag}>
