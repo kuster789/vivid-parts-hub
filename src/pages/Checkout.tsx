@@ -229,6 +229,16 @@ const Checkout = () => {
 
     if (orderError || !order) return null;
 
+    trackEvent({
+      event_type: "order_created",
+      metadata: {
+        order_id: order.id,
+        user_id: user.id,
+        total: finalTotal,
+        payment_method: "mercadopago"
+      }
+    });
+
     const orderItems = items.map((item) => ({
       order_id: order.id,
       product_id: item.product.id,
