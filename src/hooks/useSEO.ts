@@ -101,7 +101,7 @@ export function useSEO({
       document.head.appendChild(script);
     }
 
-    const structuredData = jsonLd ?? buildJsonLd({ type, title: fullTitle, description, image, url: fullUrl, price, availability, brand, sku });
+    const structuredData = jsonLd ?? buildJsonLd({ type, title: fullTitle, description, image: absoluteImage, url: fullUrl, price, availability, brand, sku });
     script.textContent = JSON.stringify(structuredData);
 
     return () => {
