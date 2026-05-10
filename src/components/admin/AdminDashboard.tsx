@@ -49,6 +49,7 @@ const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
       const diff = dateRange.to.getTime() - dateRange.from.getTime();
       const prevStart = new Date(dateRange.from.getTime() - diff).toISOString();
       const prevEnd = start;
+  const [monthlyRev, setMonthlyRev] = useState<any[]>([]);
 
       const [
         { data: kpis },
