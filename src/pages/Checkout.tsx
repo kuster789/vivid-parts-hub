@@ -76,7 +76,18 @@ const Checkout = () => {
   const paymentStatus = searchParams.get("status");
   const isPaymentApproved = paymentStatus === "approved";
 
-  if (!user) {
+  useEffect(() => {
+    if (items.length > 0) {
+      trackEvent({
+        event_type: "checkout_started",
+        metadata: {
+          items_count: items.length,
+          total_price: totalPrice
+        }
+      });
+    }
+  }, []);
+
     return (
       <main className="container flex min-h-[60vh] flex-col items-center justify-center">
         <Lock className="mb-4 h-12 w-12 text-muted-foreground/30" />
