@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { X, Gift, Copy, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/utils/analytics";
 
 const STORAGE_KEY = "lead_popup_dismissed";
 const DELAY_MS = 8000;
