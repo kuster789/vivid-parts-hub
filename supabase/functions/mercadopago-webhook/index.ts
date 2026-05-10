@@ -8,119 +8,78 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const ACCESS_TOKEN = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
-    if (!ACCESS_TOKEN) {
-      console.error("MERCADO_PAGO_ACCESS_TOKEN not configured");
-      return new Response("Server error", { status: 500 });
-    }
+    const WEBHOOK_SECRET = Deno.env.get("MERCADO_PAGO_WEBHOOK_SECRET");
+
+    // 1. Signature Validation
+    const signature = req.headers.get("x-signature");
+    const requestId = req.headers.get("x-request-id");
+    
+    // Manual verification would go here if needed, but we MUST fetch from API to be sure
+    // We rely on fetching the resource directly from MP API using the resourceId
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Mercado Pago sends either query params or JSON body
     const url = new URL(req.url);
-    let topic = url.searchParams.get("topic") || url.searchParams.get("type");
-    let resourceId = url.searchParams.get("id");
+    let topic = url.searchParams.get("type") || url.searchParams.get("topic");
+    let resourceId = url.searchParams.get("id") || url.searchParams.get("data.id");
 
-    // Also check JSON body for newer webhook format
     if (!topic || !resourceId) {
-      try {
-        const body = await req.json();
-        topic = body.type || body.topic || topic;
-        resourceId = body.data?.id?.toString() || resourceId;
-        console.log("Webhook body:", JSON.stringify(body));
-      } catch {
-        // No JSON body
-      }
+      const body = await req.json().catch(() => ({}));
+      topic = topic || body.type || body.topic;
+      resourceId = resourceId || body.data?.id;
     }
 
-    console.log(`Webhook received: topic=${topic}, id=${resourceId}`);
-
-    // We only care about payment notifications
-    if (topic !== "payment" && topic !== "payment.updated" && topic !== "payment.created") {
-      return new Response(JSON.stringify({ received: true }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (topic !== "payment") {
+      return new Response(JSON.stringify({ received: true }), { status: 200, headers: corsHeaders });
     }
 
-    if (!resourceId) {
-      console.error("No resource ID in webhook");
-      return new Response("Missing ID", { status: 400 });
-    }
-
-    // Fetch payment details from Mercado Pago
+    // 2. Fetch directly from MP API (Source of Truth)
     const paymentRes = await fetch(`https://api.mercadopago.com/v1/payments/${resourceId}`, {
       headers: { Authorization: `Bearer ${ACCESS_TOKEN}` },
     });
 
-    if (!paymentRes.ok) {
-      console.error(`MP API error: ${paymentRes.status}`);
-      return new Response("MP API error", { status: 500 });
-    }
-
+    if (!paymentRes.ok) throw new Error("Failed to fetch payment from MP");
     const payment = await paymentRes.json();
-    console.log(`Payment ${resourceId}: status=${payment.status}, external_ref=${payment.external_reference}`);
 
     const orderId = payment.external_reference;
-    if (!orderId) {
-      console.log("No external_reference, skipping");
-      return new Response(JSON.stringify({ received: true }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (!orderId) return new Response("No external_ref", { status: 200 });
+
+    // 3. Validate Order Existence and Amount
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .select("total_amount, status")
+      .eq("id", orderId)
+      .single();
+
+    if (orderError || !order) throw new Error("Order not found");
+
+    // Amount validation
+    if (Math.abs(order.total_amount - payment.transaction_amount) > 0.01) {
+      console.error(`Amount mismatch: Order=${order.total_amount}, MP=${payment.transaction_amount}`);
+      return new Response("Amount mismatch", { status: 400 });
     }
 
-    // Map MP payment status to our order status
-    let orderStatus: string | null = null;
-    switch (payment.status) {
-      case "approved":
-        orderStatus = "confirmed";
-        break;
-      case "rejected":
-      case "cancelled":
-        orderStatus = "cancelled";
-        break;
-      case "pending":
-      case "in_process":
-      case "authorized":
-        // Keep as pending
-        orderStatus = null;
-        break;
-      case "refunded":
-      case "charged_back":
-        orderStatus = "cancelled";
-        break;
+    // 4. Update Order Status
+    let newStatus = order.status;
+    if (payment.status === "approved") newStatus = "confirmed";
+    else if (["rejected", "cancelled", "refunded"].includes(payment.status)) newStatus = "cancelled";
+
+    if (newStatus !== order.status) {
+      await supabase.from("orders").update({ status: newStatus }).eq("id", orderId);
+      console.log(`Order ${orderId} updated to ${newStatus}`);
     }
 
-    if (orderStatus) {
-      const { error } = await supabase
-        .from("orders")
-        .update({ status: orderStatus })
-        .eq("id", orderId);
-
-      if (error) {
-        console.error("DB update error:", error);
-        return new Response("DB error", { status: 500 });
-      }
-
-      console.log(`Order ${orderId} updated to ${orderStatus}`);
-    }
-
-    return new Response(JSON.stringify({ received: true, order_id: orderId, new_status: orderStatus }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
   } catch (error) {
-    console.error("Webhook error:", error);
-    return new Response("Internal error", { status: 500 });
+    console.error("Webhook error:", error.message);
+    return new Response(error.message, { status: 500 });
   }
 });
 

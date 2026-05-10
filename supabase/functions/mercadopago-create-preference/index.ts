@@ -13,68 +13,89 @@ serve(async (req) => {
   }
 
   try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
     // Auth check
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Não autorizado" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
     if (userError || !user) {
       return new Response(JSON.stringify({ error: "Não autorizado" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const ACCESS_TOKEN = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
-    if (!ACCESS_TOKEN) {
-      throw new Error("MERCADO_PAGO_ACCESS_TOKEN is not configured");
+    const { items: clientItems, payer, external_reference, back_urls, coupon_code } = await req.json();
+
+    if (!clientItems || !Array.isArray(clientItems) || clientItems.length === 0) {
+      return new Response(JSON.stringify({ error: "Items are required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const { items, payer, external_reference, back_urls } = await req.json();
+    // SERVER-SIDE PRICE CALCULATION
+    const validatedItems = [];
+    let subtotal = 0;
 
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return new Response(
-        JSON.stringify({ error: "Items are required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    for (const item of clientItems) {
+      const { data: product, error: prodError } = await supabase
+        .from("products")
+        .select("id, name, price, stock")
+        .eq("id", item.id)
+        .single();
 
-    // Validate each item
-    for (const item of items) {
-      if (!item.title || typeof item.title !== "string" || item.title.length > 200) {
-        return new Response(JSON.stringify({ error: "Invalid item title" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (prodError || !product) {
+        throw new Error(`Produto não encontrado: ${item.title}`);
       }
-      const price = Number(item.unit_price);
-      const qty = Number(item.quantity);
-      if (isNaN(price) || price < -10000 || price > 100000) {
-        return new Response(JSON.stringify({ error: "Invalid price" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      if (isNaN(qty) || qty < 1 || qty > 1000) {
-        return new Response(JSON.stringify({ error: "Invalid quantity" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-    }
 
-    const preference = {
-      items: items.map((item: any) => ({
-        title: item.title,
+      if (product.stock < item.quantity) {
+        throw new Error(`Estoque insuficiente para: ${product.name}`);
+      }
+
+      const unitPrice = Number(product.price);
+      validatedItems.push({
+        id: product.id,
+        title: product.name,
         quantity: item.quantity,
-        unit_price: Number(item.unit_price),
+        unit_price: unitPrice,
         currency_id: "BRL",
-      })),
+      });
+      subtotal += unitPrice * item.quantity;
+    }
+
+    // Coupon validation (Server-side)
+    let discount = 0;
+    if (coupon_code) {
+      const { data: coupon } = await supabase
+        .from("coupons")
+        .select("*")
+        .eq("code", coupon_code)
+        .eq("active", true)
+        .single();
+
+      if (coupon) {
+        if (coupon.discount_percent) {
+          discount = subtotal * (coupon.discount_percent / 100);
+        } else if (coupon.discount_amount) {
+          discount = coupon.discount_amount;
+        }
+      }
+    }
+
+    const total = subtotal - discount;
+
+    const ACCESS_TOKEN = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
+    const preference = {
+      items: validatedItems,
       payer: payer || {},
-      payment_methods: {
-        excluded_payment_types: [],
-        installments: 12,
-      },
       external_reference: external_reference || "",
       back_urls: back_urls || {
-        success: `${req.headers.get("origin") || "https://vivid-parts-hub.lovable.app"}/checkout?status=approved`,
-        failure: `${req.headers.get("origin") || "https://vivid-parts-hub.lovable.app"}/checkout?status=rejected`,
-        pending: `${req.headers.get("origin") || "https://vivid-parts-hub.lovable.app"}/checkout?status=pending`,
+        success: `${req.headers.get("origin")}/checkout?status=approved`,
+        failure: `${req.headers.get("origin")}/checkout?status=rejected`,
+        pending: `${req.headers.get("origin")}/checkout?status=pending`,
       },
       auto_return: "approved",
-      statement_descriptor: "AUTO PECAS AGRALE",
     };
 
     const response = await fetch("https://api.mercadopago.com/checkout/preferences", {
@@ -87,29 +108,14 @@ serve(async (req) => {
     });
 
     const data = await response.json();
-
-    if (!response.ok) {
-      console.error("Mercado Pago error:", response.status, JSON.stringify(data));
-      return new Response(
-        JSON.stringify({ error: "Mercado Pago API error", details: data }),
-        { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    return new Response(
-      JSON.stringify({
-        id: data.id,
-        init_point: data.init_point,
-        sandbox_init_point: data.sandbox_init_point,
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ id: data.id, init_point: data.init_point }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
-    console.error("Error creating preference:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return new Response(
-      JSON.stringify({ error: message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
