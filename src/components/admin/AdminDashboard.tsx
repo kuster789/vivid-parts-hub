@@ -1,3 +1,7 @@
+/**
+ * Dashboard de Inteligência Comercial - Versão 2.1 (Atualizado em Maio 2026)
+ * Focado em elevar o padrão visual, analítico e estratégico.
+ */
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { 
