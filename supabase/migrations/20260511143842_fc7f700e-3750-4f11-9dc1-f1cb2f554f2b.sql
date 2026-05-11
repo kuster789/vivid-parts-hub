@@ -1,0 +1,1 @@
+ALTER FUNCTION public.normalize_geo_data() SET search_path = public;
