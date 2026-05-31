@@ -572,16 +572,15 @@ const Checkout = () => {
                     <ArrowLeft className="h-4 w-4" /> Voltar
                   </button>
                   <button
-                    onClick={() => {
-                      if (!selectedShipping) {
-                        toast({ title: "Selecione o frete", description: "Calcule e escolha uma opção de entrega.", variant: "destructive" });
-                        return;
-                      }
-                      setStep(3);
-                    }}
-                    className="btn-primary-glow flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-sm font-semibold"
+                    onClick={goToStep3}
+                    disabled={creatingOrder}
+                    className="btn-primary-glow flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-sm font-semibold disabled:opacity-50"
                   >
-                    Ir para Pagamento <ArrowRight className="h-4 w-4" />
+                    {creatingOrder ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> Criando pedido...</>
+                    ) : (
+                      <>Ir para Pagamento <ArrowRight className="h-4 w-4" /></>
+                    )}
                   </button>
                 </div>
               </div>
