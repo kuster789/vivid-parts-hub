@@ -279,7 +279,8 @@ const Checkout = () => {
         return;
       }
 
-      const mpItems = items.map((item) => ({
+      const mpItems: Array<{ id?: string; title: string; quantity: number; unit_price: number }> = items.map((item) => ({
+        id: item.product.id,
         title: item.product.name,
         quantity: item.quantity,
         unit_price: Number(item.product.price),
