@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import CouponInput from "@/components/CouponInput";
+import CheckoutBricks from "@/components/CheckoutBricks";
 import { useToast } from "@/hooks/use-toast";
 import { trackEvent } from "@/utils/analytics";
 
@@ -36,6 +37,14 @@ const formatPhone = (value: string) => {
   return "";
 };
 
+const formatCPF = (value: string) => {
+  const d = value.replace(/\D/g, "").slice(0, 11);
+  if (d.length > 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+  if (d.length > 6) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+  if (d.length > 3) return `${d.slice(0, 3)}.${d.slice(3)}`;
+  return d;
+};
+
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
   const { user } = useAuth();
@@ -48,7 +57,9 @@ const Checkout = () => {
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
   const [selectedShipping, setSelectedShipping] = useState<ShippingOption | null>(null);
   const [shippingLoading, setShippingLoading] = useState(false);
-  const [form, setForm] = useState({ name: "", address: "", city: "", state: "", zip: "", phone: "" });
+  const [form, setForm] = useState({ name: "", address: "", city: "", state: "", zip: "", phone: "", cpf: "" });
+  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
+  const [creatingOrder, setCreatingOrder] = useState(false);
   const [discount, setDiscount] = useState(0);
   const [couponCode, setCouponCode] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -67,6 +78,7 @@ const Checkout = () => {
           city: data.city || prev.city,
           state: data.state || prev.state,
           zip: data.zip_code || prev.zip,
+          cpf: (data as any).cpf || prev.cpf,
         }));
       }
     };
@@ -158,6 +170,7 @@ const Checkout = () => {
     if (!form.state.trim() || form.state.trim().length !== 2) newErrors.state = "Use a sigla do estado (ex: SP)";
     if (!form.phone || form.phone.replace(/\D/g, "").length < 10) newErrors.phone = "Telefone inválido";
     if (!form.zip || form.zip.replace(/\D/g, "").length < 8) newErrors.zip = "CEP inválido";
+    if (!form.cpf || form.cpf.replace(/\D/g, "").length !== 11) newErrors.cpf = "CPF inválido";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -235,8 +248,9 @@ const Checkout = () => {
         shipping_state: form.state,
         shipping_zip: form.zip,
         shipping_phone: form.phone,
+        cpf: form.cpf.replace(/\D/g, ""),
         notes: selectedShipping ? `Frete: ${selectedShipping.name} (${selectedShipping.company})` : undefined,
-      })
+      } as any)
       .select()
       .single();
 
@@ -261,61 +275,51 @@ const Checkout = () => {
     }));
 
     await supabase.from("order_items").insert(orderItems);
+
+    // Persist CPF on profile for reuse on future purchases
+    await supabase
+      .from("profiles")
+      .update({ cpf: form.cpf.replace(/\D/g, "") } as any)
+      .eq("user_id", user.id);
+
     return order;
   };
 
-  const handlePayWithMercadoPago = async () => {
+  const goToStep3 = async () => {
     if (!selectedShipping) {
-      toast({ title: "Selecione o frete", description: "Escolha uma opção de entrega.", variant: "destructive" });
+      toast({ title: "Selecione o frete", description: "Calcule e escolha uma opção de entrega.", variant: "destructive" });
       return;
     }
-
-    setPaymentLoading(true);
+    if (createdOrderId) {
+      setStep(3);
+      return;
+    }
+    setCreatingOrder(true);
     try {
       const order = await createOrder();
       if (!order) {
         toast({ title: "Erro ao criar pedido", description: "Tente novamente.", variant: "destructive" });
-        setPaymentLoading(false);
         return;
       }
-
-      const mpItems: Array<{ id?: string; title: string; quantity: number; unit_price: number }> = items.map((item) => ({
-        id: item.product.id,
-        title: item.product.name,
-        quantity: item.quantity,
-        unit_price: Number(item.product.price),
-      }));
-
-      if (selectedShipping && shippingCost > 0) {
-        mpItems.push({ title: `Frete: ${selectedShipping.name}`, quantity: 1, unit_price: shippingCost });
-      }
-      if (discount > 0) {
-        mpItems.push({ title: `Desconto (${couponCode})`, quantity: 1, unit_price: -discount });
-      }
-
-      const { data, error } = await supabase.functions.invoke("mercadopago-create-preference", {
-        body: { items: mpItems, payer: { name: form.name }, external_reference: order.id },
-      });
-
-      if (error) throw error;
-      if (data?.init_point) {
-        clearCart();
-        window.location.href = data.init_point;
-      } else {
-        throw new Error("URL de pagamento não retornada");
-      }
-    } catch (err: any) {
-      console.error("Payment error:", err);
-      toast({ title: "Erro no pagamento", description: err.message || "Tente novamente.", variant: "destructive" });
+      setCreatedOrderId(order.id);
+      setStep(3);
+    } finally {
+      setCreatingOrder(false);
     }
-    setPaymentLoading(false);
   };
+
+  const handlePaymentApproved = () => {
+    clearCart();
+    setSuccess(true);
+  };
+
 
 
   const updateForm = (key: string, value: string) => {
     let formatted = value;
     if (key === "zip") formatted = formatCEP(value);
     else if (key === "phone") formatted = formatPhone(value);
+    else if (key === "cpf") formatted = formatCPF(value);
     else if (key === "state") formatted = value.toUpperCase().slice(0, 2);
     setForm({ ...form, [key]: formatted });
     if (errors[key]) setErrors({ ...errors, [key]: "" });
@@ -457,6 +461,22 @@ const Checkout = () => {
                     </div>
                   </div>
 
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">CPF *</label>
+                    <input
+                      type="text"
+                      value={form.cpf}
+                      onChange={(e) => updateForm("cpf", e.target.value)}
+                      placeholder="000.000.000-00"
+                      inputMode="numeric"
+                      className={`w-full rounded-lg border bg-secondary px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none transition-colors ${
+                        errors.cpf ? "border-destructive focus:border-destructive" : "border-border focus:border-primary"
+                      }`}
+                    />
+                    {errors.cpf && <p className="mt-1 text-xs text-destructive">{errors.cpf}</p>}
+                    <p className="mt-1 text-[10px] text-muted-foreground">Obrigatório para emissão do pagamento (PIX, cartão ou boleto).</p>
+                  </div>
+
                   <button
                     onClick={goToStep2}
                     className="btn-primary-glow flex w-full items-center justify-center gap-2 rounded-lg py-3.5 text-sm font-semibold mt-2"
@@ -552,16 +572,15 @@ const Checkout = () => {
                     <ArrowLeft className="h-4 w-4" /> Voltar
                   </button>
                   <button
-                    onClick={() => {
-                      if (!selectedShipping) {
-                        toast({ title: "Selecione o frete", description: "Calcule e escolha uma opção de entrega.", variant: "destructive" });
-                        return;
-                      }
-                      setStep(3);
-                    }}
-                    className="btn-primary-glow flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-sm font-semibold"
+                    onClick={goToStep3}
+                    disabled={creatingOrder}
+                    className="btn-primary-glow flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-sm font-semibold disabled:opacity-50"
                   >
-                    Ir para Pagamento <ArrowRight className="h-4 w-4" />
+                    {creatingOrder ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> Criando pedido...</>
+                    ) : (
+                      <>Ir para Pagamento <ArrowRight className="h-4 w-4" /></>
+                    )}
                   </button>
                 </div>
               </div>
@@ -590,41 +609,22 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                {/* Payment options */}
-                <div className="space-y-3">
-                  <button
-                    onClick={handlePayWithMercadoPago}
-                    disabled={paymentLoading}
-                    className="btn-primary-glow flex w-full items-center justify-center gap-3 rounded-lg py-4 text-sm font-bold transition-all disabled:opacity-50"
-                  >
-                    {paymentLoading ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <>
-                        <CreditCard className="h-5 w-5" />
-                        Pagar com Mercado Pago — R$ {finalTotal.toFixed(2).replace(".", ",")}
-                      </>
-                    )}
-                  </button>
-
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <div className="h-px flex-1 bg-border" />
-                    <span>Métodos aceitos</span>
-                    <div className="h-px flex-1 bg-border" />
-                  </div>
-
-                  <div className="flex items-center justify-center gap-6">
-                    {[
-                      { icon: QrCode, label: "PIX" },
-                      { icon: CreditCard, label: "Cartão" },
-                      { icon: ExternalLink, label: "Boleto" },
-                    ].map(({ icon: Icon, label }) => (
-                      <div key={label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Icon className="h-4 w-4 text-primary" /> {label}
-                      </div>
-                    ))}
-                  </div>
-
+                {/* Payment Bricks (PIX, Cartão, Boleto) */}
+                <div>
+                  {createdOrderId ? (
+                    <CheckoutBricks
+                      orderId={createdOrderId}
+                      amount={finalTotal}
+                      payerEmail={user.email || ""}
+                      payerCpf={form.cpf.replace(/\D/g, "")}
+                      payerName={form.name}
+                      onApproved={handlePaymentApproved}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Preparando pagamento...
+                    </div>
+                  )}
                 </div>
 
                 {/* Trust badges */}
