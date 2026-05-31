@@ -170,6 +170,7 @@ const Checkout = () => {
     if (!form.state.trim() || form.state.trim().length !== 2) newErrors.state = "Use a sigla do estado (ex: SP)";
     if (!form.phone || form.phone.replace(/\D/g, "").length < 10) newErrors.phone = "Telefone inválido";
     if (!form.zip || form.zip.replace(/\D/g, "").length < 8) newErrors.zip = "CEP inválido";
+    if (!form.cpf || form.cpf.replace(/\D/g, "").length !== 11) newErrors.cpf = "CPF inválido";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
