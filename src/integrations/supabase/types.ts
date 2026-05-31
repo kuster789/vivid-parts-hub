@@ -335,10 +335,13 @@ export type Database = {
       orders: {
         Row: {
           coupon_code: string | null
+          cpf: string | null
           created_at: string
           discount: number | null
           id: string
           notes: string | null
+          payment_id: string | null
+          payment_method: string | null
           production_stage: string | null
           shipping_address: string | null
           shipping_city: string | null
@@ -354,10 +357,13 @@ export type Database = {
         }
         Insert: {
           coupon_code?: string | null
+          cpf?: string | null
           created_at?: string
           discount?: number | null
           id?: string
           notes?: string | null
+          payment_id?: string | null
+          payment_method?: string | null
           production_stage?: string | null
           shipping_address?: string | null
           shipping_city?: string | null
@@ -373,10 +379,13 @@ export type Database = {
         }
         Update: {
           coupon_code?: string | null
+          cpf?: string | null
           created_at?: string
           discount?: number | null
           id?: string
           notes?: string | null
+          payment_id?: string | null
+          payment_method?: string | null
           production_stage?: string | null
           shipping_address?: string | null
           shipping_city?: string | null
@@ -513,6 +522,7 @@ export type Database = {
         Row: {
           address: string | null
           city: string | null
+          cpf: string | null
           created_at: string
           email: string | null
           full_name: string | null
@@ -526,6 +536,7 @@ export type Database = {
         Insert: {
           address?: string | null
           city?: string | null
+          cpf?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -539,6 +550,7 @@ export type Database = {
         Update: {
           address?: string | null
           city?: string | null
+          cpf?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
