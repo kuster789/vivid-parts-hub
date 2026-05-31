@@ -609,41 +609,22 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                {/* Payment options */}
-                <div className="space-y-3">
-                  <button
-                    onClick={handlePayWithMercadoPago}
-                    disabled={paymentLoading}
-                    className="btn-primary-glow flex w-full items-center justify-center gap-3 rounded-lg py-4 text-sm font-bold transition-all disabled:opacity-50"
-                  >
-                    {paymentLoading ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <>
-                        <CreditCard className="h-5 w-5" />
-                        Pagar com Mercado Pago — R$ {finalTotal.toFixed(2).replace(".", ",")}
-                      </>
-                    )}
-                  </button>
-
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <div className="h-px flex-1 bg-border" />
-                    <span>Métodos aceitos</span>
-                    <div className="h-px flex-1 bg-border" />
-                  </div>
-
-                  <div className="flex items-center justify-center gap-6">
-                    {[
-                      { icon: QrCode, label: "PIX" },
-                      { icon: CreditCard, label: "Cartão" },
-                      { icon: ExternalLink, label: "Boleto" },
-                    ].map(({ icon: Icon, label }) => (
-                      <div key={label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Icon className="h-4 w-4 text-primary" /> {label}
-                      </div>
-                    ))}
-                  </div>
-
+                {/* Payment Bricks (PIX, Cartão, Boleto) */}
+                <div>
+                  {createdOrderId ? (
+                    <CheckoutBricks
+                      orderId={createdOrderId}
+                      amount={finalTotal}
+                      payerEmail={user.email || ""}
+                      payerCpf={form.cpf.replace(/\D/g, "")}
+                      payerName={form.name}
+                      onApproved={handlePaymentApproved}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Preparando pagamento...
+                    </div>
+                  )}
                 </div>
 
                 {/* Trust badges */}
