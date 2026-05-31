@@ -329,6 +329,7 @@ const Checkout = () => {
     let formatted = value;
     if (key === "zip") formatted = formatCEP(value);
     else if (key === "phone") formatted = formatPhone(value);
+    else if (key === "cpf") formatted = formatCPF(value);
     else if (key === "state") formatted = value.toUpperCase().slice(0, 2);
     setForm({ ...form, [key]: formatted });
     if (errors[key]) setErrors({ ...errors, [key]: "" });
