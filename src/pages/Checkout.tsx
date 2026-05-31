@@ -248,8 +248,9 @@ const Checkout = () => {
         shipping_state: form.state,
         shipping_zip: form.zip,
         shipping_phone: form.phone,
+        cpf: form.cpf.replace(/\D/g, ""),
         notes: selectedShipping ? `Frete: ${selectedShipping.name} (${selectedShipping.company})` : undefined,
-      })
+      } as any)
       .select()
       .single();
 
@@ -274,55 +275,44 @@ const Checkout = () => {
     }));
 
     await supabase.from("order_items").insert(orderItems);
+
+    // Persist CPF on profile for reuse on future purchases
+    await supabase
+      .from("profiles")
+      .update({ cpf: form.cpf.replace(/\D/g, "") } as any)
+      .eq("user_id", user.id);
+
     return order;
   };
 
-  const handlePayWithMercadoPago = async () => {
+  const goToStep3 = async () => {
     if (!selectedShipping) {
-      toast({ title: "Selecione o frete", description: "Escolha uma opção de entrega.", variant: "destructive" });
+      toast({ title: "Selecione o frete", description: "Calcule e escolha uma opção de entrega.", variant: "destructive" });
       return;
     }
-
-    setPaymentLoading(true);
+    if (createdOrderId) {
+      setStep(3);
+      return;
+    }
+    setCreatingOrder(true);
     try {
       const order = await createOrder();
       if (!order) {
         toast({ title: "Erro ao criar pedido", description: "Tente novamente.", variant: "destructive" });
-        setPaymentLoading(false);
         return;
       }
-
-      const mpItems: Array<{ id?: string; title: string; quantity: number; unit_price: number }> = items.map((item) => ({
-        id: item.product.id,
-        title: item.product.name,
-        quantity: item.quantity,
-        unit_price: Number(item.product.price),
-      }));
-
-      if (selectedShipping && shippingCost > 0) {
-        mpItems.push({ title: `Frete: ${selectedShipping.name}`, quantity: 1, unit_price: shippingCost });
-      }
-      if (discount > 0) {
-        mpItems.push({ title: `Desconto (${couponCode})`, quantity: 1, unit_price: -discount });
-      }
-
-      const { data, error } = await supabase.functions.invoke("mercadopago-create-preference", {
-        body: { items: mpItems, payer: { name: form.name }, external_reference: order.id },
-      });
-
-      if (error) throw error;
-      if (data?.init_point) {
-        clearCart();
-        window.location.href = data.init_point;
-      } else {
-        throw new Error("URL de pagamento não retornada");
-      }
-    } catch (err: any) {
-      console.error("Payment error:", err);
-      toast({ title: "Erro no pagamento", description: err.message || "Tente novamente.", variant: "destructive" });
+      setCreatedOrderId(order.id);
+      setStep(3);
+    } finally {
+      setCreatingOrder(false);
     }
-    setPaymentLoading(false);
   };
+
+  const handlePaymentApproved = () => {
+    clearCart();
+    setSuccess(true);
+  };
+
 
 
   const updateForm = (key: string, value: string) => {
