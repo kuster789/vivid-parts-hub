@@ -69,6 +69,7 @@ const Checkout = () => {
           city: data.city || prev.city,
           state: data.state || prev.state,
           zip: data.zip_code || prev.zip,
+          cpf: (data as any).cpf || prev.cpf,
         }));
       }
     };
