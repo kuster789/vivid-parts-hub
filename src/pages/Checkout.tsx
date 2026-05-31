@@ -461,6 +461,22 @@ const Checkout = () => {
                     </div>
                   </div>
 
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">CPF *</label>
+                    <input
+                      type="text"
+                      value={form.cpf}
+                      onChange={(e) => updateForm("cpf", e.target.value)}
+                      placeholder="000.000.000-00"
+                      inputMode="numeric"
+                      className={`w-full rounded-lg border bg-secondary px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none transition-colors ${
+                        errors.cpf ? "border-destructive focus:border-destructive" : "border-border focus:border-primary"
+                      }`}
+                    />
+                    {errors.cpf && <p className="mt-1 text-xs text-destructive">{errors.cpf}</p>}
+                    <p className="mt-1 text-[10px] text-muted-foreground">Obrigatório para emissão do pagamento (PIX, cartão ou boleto).</p>
+                  </div>
+
                   <button
                     onClick={goToStep2}
                     className="btn-primary-glow flex w-full items-center justify-center gap-2 rounded-lg py-3.5 text-sm font-semibold mt-2"
