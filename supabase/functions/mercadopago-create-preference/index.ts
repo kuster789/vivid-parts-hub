@@ -56,6 +56,18 @@ serve(async (req) => {
     let subtotal = 0;
 
     for (const item of clientItems) {
+      // Linhas virtuais (frete, desconto) não têm id — passam direto
+      if (!item.id) {
+        validatedItems.push({
+          title: item.title,
+          quantity: Number(item.quantity) || 1,
+          unit_price: Number(item.unit_price),
+          currency_id: "BRL",
+        });
+        subtotal += Number(item.unit_price) * (Number(item.quantity) || 1);
+        continue;
+      }
+
       const { data: product, error: prodError } = await supabase
         .from("products")
         .select("id, name, price, stock")
@@ -63,6 +75,7 @@ serve(async (req) => {
         .single();
 
       if (prodError || !product) {
+        console.error(`[mercadopago-create-preference] Produto não encontrado. id=${item.id} title=${item.title} err=${prodError?.message}`);
         throw new Error(`Produto não encontrado: ${item.title}`);
       }
 
