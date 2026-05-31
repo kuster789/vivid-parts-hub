@@ -274,8 +274,7 @@ const CheckoutBricks = ({ orderId, amount, payerEmail, payerCpf, payerName, onAp
                     first_name: payerName.split(" ")[0],
                     last_name: payerName.split(" ").slice(1).join(" ") || "—",
                   },
-                }
-              );
+                });
             } catch { /* toast already shown */ }
           }}
           onError={(e) => console.error("Card Brick error:", e)}
