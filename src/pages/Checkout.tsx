@@ -48,7 +48,9 @@ const Checkout = () => {
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
   const [selectedShipping, setSelectedShipping] = useState<ShippingOption | null>(null);
   const [shippingLoading, setShippingLoading] = useState(false);
-  const [form, setForm] = useState({ name: "", address: "", city: "", state: "", zip: "", phone: "" });
+  const [form, setForm] = useState({ name: "", address: "", city: "", state: "", zip: "", phone: "", cpf: "" });
+  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
+  const [creatingOrder, setCreatingOrder] = useState(false);
   const [discount, setDiscount] = useState(0);
   const [couponCode, setCouponCode] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
