@@ -261,12 +261,10 @@ const CheckoutBricks = ({ orderId, amount, payerEmail, payerCpf, payerName, onAp
             paymentMethods: { creditCard: "all", debitCard: "all" },
             visual: { hideFormTitle: true },
           }}
-          onSubmit={async ({ formData, selectedPaymentMethod }) => {
+          onSubmit={async ({ formData }) => {
             try {
               const fd: any = formData;
-              await submitPayment(
-                selectedPaymentMethod === "debit_card" ? "credit_card" : "credit_card",
-                {
+              await submitPayment("credit_card", {
                   ...fd,
                   payer: {
                     ...fd?.payer,
