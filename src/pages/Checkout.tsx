@@ -63,26 +63,52 @@ const Checkout = () => {
   const [discount, setDiscount] = useState(0);
   const [couponCode, setCouponCode] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [hasSavedAddress, setHasSavedAddress] = useState(false);
+  const [editingAddress, setEditingAddress] = useState(false);
 
-  // Load profile data
+  // Load profile + fallback to last order to prefill address
   useEffect(() => {
     if (!user) return;
-    const loadProfile = async () => {
-      const { data } = await supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle();
-      if (data) {
-        setForm((prev) => ({
-          ...prev,
-          name: data.full_name || prev.name,
-          phone: data.phone || prev.phone,
-          address: data.address || prev.address,
-          city: data.city || prev.city,
-          state: data.state || prev.state,
-          zip: data.zip_code || prev.zip,
-          cpf: (data as any).cpf || prev.cpf,
-        }));
+    const loadPrefill = async () => {
+      const [{ data: profile }, { data: lastOrder }] = await Promise.all([
+        supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle(),
+        supabase
+          .from("orders")
+          .select("shipping_name,shipping_address,shipping_city,shipping_state,shipping_zip,shipping_phone,cpf")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+
+      const pick = (a?: string | null, b?: string | null) => (a && a.trim()) || (b && b.trim()) || "";
+
+      const next = {
+        name: pick(profile?.full_name, lastOrder?.shipping_name),
+        phone: formatPhone(pick(profile?.phone, lastOrder?.shipping_phone)),
+        address: pick(profile?.address, lastOrder?.shipping_address),
+        city: pick(profile?.city, lastOrder?.shipping_city),
+        state: pick(profile?.state, lastOrder?.shipping_state).toUpperCase().slice(0, 2),
+        zip: formatCEP(pick(profile?.zip_code, lastOrder?.shipping_zip)),
+        cpf: formatCPF(pick((profile as any)?.cpf, (lastOrder as any)?.cpf)),
+      };
+
+      setForm((prev) => ({
+        name: next.name || prev.name,
+        phone: next.phone || prev.phone,
+        address: next.address || prev.address,
+        city: next.city || prev.city,
+        state: next.state || prev.state,
+        zip: next.zip || prev.zip,
+        cpf: next.cpf || prev.cpf,
+      }));
+
+      // Address is "complete" enough to offer one-click reuse
+      if (next.name && next.address && next.city && next.state && next.zip) {
+        setHasSavedAddress(true);
       }
     };
-    loadProfile();
+    loadPrefill();
   }, [user]);
 
   const paymentStatus = searchParams.get("status");
