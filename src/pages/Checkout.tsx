@@ -139,15 +139,7 @@ const Checkout = () => {
   }, [isPaymentApproved]);
 
   if (!user) {
-
-    return (
-      <main className="container flex min-h-[60vh] flex-col items-center justify-center">
-        <Lock className="mb-4 h-12 w-12 text-muted-foreground/30" />
-        <p className="mb-2 font-display text-lg font-bold text-foreground">Acesso Restrito</p>
-        <p className="mb-6 text-sm text-muted-foreground">Faça login para finalizar sua compra.</p>
-        <Link to="/login" className="btn-primary-glow rounded-md px-8 py-3 text-sm font-semibold">Entrar</Link>
-      </main>
-    );
+    return <Navigate to="/login?redirect=/checkout" replace />;
   }
 
   if (items.length === 0 && !success && !isPaymentApproved) {
