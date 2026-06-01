@@ -233,7 +233,7 @@ const Register = () => {
 
         <div className="mt-6 text-center text-sm text-muted-foreground">
           Já tem conta?{" "}
-          <Link to="/login" className="text-primary hover:underline">Entrar</Link>
+          <Link to={loginHref} className="text-primary hover:underline">Entrar</Link>
         </div>
       </div>
     </main>
