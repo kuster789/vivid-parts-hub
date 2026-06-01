@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { Eye, EyeOff, LogIn, ArrowLeft, Mail } from "lucide-react";
+import { Eye, EyeOff, LogIn, ArrowLeft, Mail, ShoppingBag } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -10,7 +10,10 @@ const Login = () => {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as any)?.from?.pathname || "/";
+  const [searchParams] = useSearchParams();
+  const redirectParam = searchParams.get("redirect");
+  const from = redirectParam || (location.state as any)?.from?.pathname || "/";
+  const isCheckoutFlow = redirectParam === "/checkout";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
