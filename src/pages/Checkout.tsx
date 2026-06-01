@@ -294,10 +294,18 @@ const Checkout = () => {
 
     await supabase.from("order_items").insert(orderItems);
 
-    // Persist CPF on profile for reuse on future purchases
+    // Persist full address on profile for reuse on future purchases
     await supabase
       .from("profiles")
-      .update({ cpf: form.cpf.replace(/\D/g, "") } as any)
+      .update({
+        full_name: form.name,
+        phone: form.phone,
+        address: form.address,
+        city: form.city,
+        state: form.state,
+        zip_code: form.zip,
+        cpf: form.cpf.replace(/\D/g, ""),
+      } as any)
       .eq("user_id", user.id);
 
     return order;
