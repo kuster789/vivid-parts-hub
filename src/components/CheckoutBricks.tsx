@@ -231,7 +231,7 @@ const CheckoutBricks = ({ orderId, amount, payerEmail, payerCpf, payerName, onAp
             payer: { email: payerEmail },
           }}
           customization={{
-            paymentMethods: { creditCard: "all", debitCard: "all" } as any,
+            paymentMethods: { creditCard: "all" } as any,
             visual: { hideFormTitle: true },
           }}
           onSubmit={async ({ formData }) => {

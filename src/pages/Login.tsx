@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { Eye, EyeOff, LogIn, ArrowLeft, Mail } from "lucide-react";
+import { Eye, EyeOff, LogIn, ArrowLeft, Mail, ShoppingBag } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -10,7 +10,10 @@ const Login = () => {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as any)?.from?.pathname || "/";
+  const [searchParams] = useSearchParams();
+  const redirectParam = searchParams.get("redirect");
+  const from = redirectParam || (location.state as any)?.from?.pathname || "/";
+  const isCheckoutFlow = redirectParam === "/checkout";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -206,6 +209,15 @@ const Login = () => {
           <p className="mt-1 text-sm text-muted-foreground">Acesse sua conta</p>
         </div>
 
+        {isCheckoutFlow && (
+          <div className="mb-5 flex items-start gap-3 rounded-md border border-primary/30 bg-primary/10 p-3">
+            <ShoppingBag className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <p className="text-xs text-foreground">
+              Faça login ou crie sua conta para finalizar a compra.
+            </p>
+          </div>
+        )}
+
         {/* Google Sign In */}
         <button
           type="button"
@@ -300,7 +312,12 @@ const Login = () => {
 
         <div className="mt-6 text-center text-sm text-muted-foreground">
           Não tem conta?{" "}
-          <Link to="/cadastro" className="text-primary hover:underline">Criar conta</Link>
+          <Link
+            to={redirectParam ? `/cadastro?redirect=${encodeURIComponent(redirectParam)}` : "/cadastro"}
+            className="text-primary hover:underline"
+          >
+            Criar conta
+          </Link>
         </div>
       </div>
     </main>

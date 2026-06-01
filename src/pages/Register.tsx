@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { UserPlus, Eye, EyeOff } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
@@ -8,6 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 const Register = () => {
   const { signUp } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectParam = searchParams.get("redirect");
+  const loginHref = redirectParam ? `/login?redirect=${encodeURIComponent(redirectParam)}` : "/login";
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -117,7 +120,7 @@ const Register = () => {
           <p className="mb-6 text-sm text-muted-foreground">
             Enviamos um link de confirmação para <span className="text-foreground">{email}</span>.
           </p>
-          <Link to="/login" className="text-sm text-primary hover:underline">Ir para login</Link>
+          <Link to={loginHref} className="text-sm text-primary hover:underline">Ir para login</Link>
         </div>
       </main>
     );
@@ -230,7 +233,7 @@ const Register = () => {
 
         <div className="mt-6 text-center text-sm text-muted-foreground">
           Já tem conta?{" "}
-          <Link to="/login" className="text-primary hover:underline">Entrar</Link>
+          <Link to={loginHref} className="text-primary hover:underline">Entrar</Link>
         </div>
       </div>
     </main>

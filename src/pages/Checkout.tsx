@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Navigate } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, ArrowRight, ShoppingBag, CheckCircle, Loader2, Truck,
-  CreditCard, QrCode, ExternalLink, MapPin, Package, Shield, Lock, Clock
+  CreditCard, QrCode, ExternalLink, MapPin, Package, Shield, Lock, Clock, Pencil
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import CouponInput from "@/components/CouponInput";
@@ -63,26 +63,52 @@ const Checkout = () => {
   const [discount, setDiscount] = useState(0);
   const [couponCode, setCouponCode] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [hasSavedAddress, setHasSavedAddress] = useState(false);
+  const [editingAddress, setEditingAddress] = useState(false);
 
-  // Load profile data
+  // Load profile + fallback to last order to prefill address
   useEffect(() => {
     if (!user) return;
-    const loadProfile = async () => {
-      const { data } = await supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle();
-      if (data) {
-        setForm((prev) => ({
-          ...prev,
-          name: data.full_name || prev.name,
-          phone: data.phone || prev.phone,
-          address: data.address || prev.address,
-          city: data.city || prev.city,
-          state: data.state || prev.state,
-          zip: data.zip_code || prev.zip,
-          cpf: (data as any).cpf || prev.cpf,
-        }));
+    const loadPrefill = async () => {
+      const [{ data: profile }, { data: lastOrder }] = await Promise.all([
+        supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle(),
+        supabase
+          .from("orders")
+          .select("shipping_name,shipping_address,shipping_city,shipping_state,shipping_zip,shipping_phone,cpf")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+
+      const pick = (a?: string | null, b?: string | null) => (a && a.trim()) || (b && b.trim()) || "";
+
+      const next = {
+        name: pick(profile?.full_name, lastOrder?.shipping_name),
+        phone: formatPhone(pick(profile?.phone, lastOrder?.shipping_phone)),
+        address: pick(profile?.address, lastOrder?.shipping_address),
+        city: pick(profile?.city, lastOrder?.shipping_city),
+        state: pick(profile?.state, lastOrder?.shipping_state).toUpperCase().slice(0, 2),
+        zip: formatCEP(pick(profile?.zip_code, lastOrder?.shipping_zip)),
+        cpf: formatCPF(pick((profile as any)?.cpf, (lastOrder as any)?.cpf)),
+      };
+
+      setForm((prev) => ({
+        name: next.name || prev.name,
+        phone: next.phone || prev.phone,
+        address: next.address || prev.address,
+        city: next.city || prev.city,
+        state: next.state || prev.state,
+        zip: next.zip || prev.zip,
+        cpf: next.cpf || prev.cpf,
+      }));
+
+      // Address is "complete" enough to offer one-click reuse
+      if (next.name && next.address && next.city && next.state && next.zip) {
+        setHasSavedAddress(true);
       }
     };
-    loadProfile();
+    loadPrefill();
   }, [user]);
 
   const paymentStatus = searchParams.get("status");
@@ -113,15 +139,7 @@ const Checkout = () => {
   }, [isPaymentApproved]);
 
   if (!user) {
-
-    return (
-      <main className="container flex min-h-[60vh] flex-col items-center justify-center">
-        <Lock className="mb-4 h-12 w-12 text-muted-foreground/30" />
-        <p className="mb-2 font-display text-lg font-bold text-foreground">Acesso Restrito</p>
-        <p className="mb-6 text-sm text-muted-foreground">Faça login para finalizar sua compra.</p>
-        <Link to="/login" className="btn-primary-glow rounded-md px-8 py-3 text-sm font-semibold">Entrar</Link>
-      </main>
-    );
+    return <Navigate to="/login?redirect=/checkout" replace />;
   }
 
   if (items.length === 0 && !success && !isPaymentApproved) {
@@ -276,10 +294,18 @@ const Checkout = () => {
 
     await supabase.from("order_items").insert(orderItems);
 
-    // Persist CPF on profile for reuse on future purchases
+    // Persist full address on profile for reuse on future purchases
     await supabase
       .from("profiles")
-      .update({ cpf: form.cpf.replace(/\D/g, "") } as any)
+      .update({
+        full_name: form.name,
+        phone: form.phone,
+        address: form.address,
+        city: form.city,
+        state: form.state,
+        zip_code: form.zip,
+        cpf: form.cpf.replace(/\D/g, ""),
+      } as any)
       .eq("user_id", user.id);
 
     return order;
@@ -373,7 +399,40 @@ const Checkout = () => {
                 <h2 className="mb-5 flex items-center gap-2 font-display text-sm font-bold uppercase tracking-wider text-foreground">
                   <MapPin className="h-4 w-4 text-primary" /> Endereço de Entrega
                 </h2>
-                <div className="space-y-4">
+
+                {hasSavedAddress && !editingAddress && (
+                  <div className="mb-5 rounded-lg border border-primary/30 bg-primary/5 p-4">
+                    <div className="mb-3 flex items-center justify-between gap-2">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-primary">
+                        Endereço salvo
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setEditingAddress(true)}
+                        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        <Pencil className="h-3.5 w-3.5" /> Editar
+                      </button>
+                    </div>
+                    <div className="space-y-0.5 text-sm text-foreground">
+                      <p className="font-medium">{form.name}</p>
+                      <p className="text-muted-foreground">{form.address}</p>
+                      <p className="text-muted-foreground">
+                        {form.city}/{form.state} — CEP {form.zip}
+                      </p>
+                      <p className="text-muted-foreground">{form.phone}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={goToStep2}
+                      className="btn-primary-glow mt-4 inline-flex items-center gap-2 rounded-md px-5 py-2.5 text-xs font-semibold"
+                    >
+                      Usar este endereço <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                <div className={`space-y-4 ${hasSavedAddress && !editingAddress ? "hidden" : ""}`}>
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Nome completo *</label>
                     <input
