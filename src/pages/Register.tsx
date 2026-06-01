@@ -120,7 +120,7 @@ const Register = () => {
           <p className="mb-6 text-sm text-muted-foreground">
             Enviamos um link de confirmação para <span className="text-foreground">{email}</span>.
           </p>
-          <Link to="/login" className="text-sm text-primary hover:underline">Ir para login</Link>
+          <Link to={loginHref} className="text-sm text-primary hover:underline">Ir para login</Link>
         </div>
       </main>
     );
