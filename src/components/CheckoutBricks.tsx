@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { initMercadoPago, Payment, StatusScreen } from "@mercadopago/sdk-react";
-import { Loader2, QrCode, CreditCard, FileText, Copy, CheckCircle } from "lucide-react";
+import { Loader2, QrCode, CreditCard, Copy, CheckCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -27,12 +27,11 @@ type PaymentResult = {
   status_detail?: string;
   payment_method_id?: string;
   point_of_interaction?: any;
-  transaction_details?: any;
 };
 
 const CheckoutBricks = ({ orderId, amount, payerEmail, payerCpf, payerName, onApproved }: Props) => {
   const { toast } = useToast();
-  const [tab, setTab] = useState<"pix" | "card" | "ticket">("pix");
+  const [tab, setTab] = useState<"pix" | "card">("pix");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<PaymentResult | null>(null);
   const [copied, setCopied] = useState(false);
@@ -45,7 +44,7 @@ const CheckoutBricks = ({ orderId, amount, payerEmail, payerCpf, payerName, onAp
     }
   }, []);
 
-  // Poll order status while waiting for PIX/Boleto confirmation
+  // Poll order status while waiting for PIX confirmation
   useEffect(() => {
     if (!result || result.status === "approved") return;
     if (!["pending", "in_process"].includes(result.status)) return;
@@ -68,7 +67,7 @@ const CheckoutBricks = ({ orderId, amount, payerEmail, payerCpf, payerName, onAp
   }, [result, orderId, onApproved]);
 
   const submitPayment = async (
-    paymentType: "credit_card" | "pix" | "ticket",
+    paymentType: "credit_card" | "pix",
     formData: any
   ) => {
     setLoading(true);
@@ -168,29 +167,6 @@ const CheckoutBricks = ({ orderId, amount, payerEmail, payerCpf, payerName, onAp
     }
   }
 
-  // Boleto result
-  if (result && result.transaction_details?.external_resource_url) {
-    return (
-      <div className="space-y-4 text-center">
-        <div className="flex items-center justify-center gap-2 text-primary">
-          <FileText className="h-5 w-5" />
-          <h3 className="font-display text-sm font-bold uppercase tracking-wider">Boleto Gerado</h3>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Pague o boleto até o vencimento. A confirmação pode levar até 3 dias úteis.
-        </p>
-        <a
-          href={result.transaction_details.external_resource_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-primary-glow inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold"
-        >
-          <FileText className="h-4 w-4" /> Visualizar Boleto
-        </a>
-      </div>
-    );
-  }
-
   // Status screen (fallback)
   if (result && result.id && result.status !== "approved") {
     return (
@@ -200,18 +176,15 @@ const CheckoutBricks = ({ orderId, amount, payerEmail, payerCpf, payerName, onAp
     );
   }
 
-  // Default: tabs
+  // Default: tabs (PIX + Card only)
   return (
     <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="w-full">
-      <TabsList className="grid w-full grid-cols-3 bg-secondary">
+      <TabsList className="grid w-full grid-cols-2 bg-secondary">
         <TabsTrigger value="pix" className="flex items-center gap-1.5 text-xs">
           <QrCode className="h-3.5 w-3.5" /> PIX
         </TabsTrigger>
         <TabsTrigger value="card" className="flex items-center gap-1.5 text-xs">
           <CreditCard className="h-3.5 w-3.5" /> Cartão
-        </TabsTrigger>
-        <TabsTrigger value="ticket" className="flex items-center gap-1.5 text-xs">
-          <FileText className="h-3.5 w-3.5" /> Boleto
         </TabsTrigger>
       </TabsList>
 
@@ -229,7 +202,7 @@ const CheckoutBricks = ({ orderId, amount, payerEmail, payerCpf, payerName, onAp
             payer: { email: payerEmail },
           }}
           customization={{
-            paymentMethods: { bankTransfer: "all" },
+            paymentMethods: { bankTransfer: "all" } as any,
             visual: { hideFormTitle: true },
           }}
           onSubmit={async ({ formData }) => {
@@ -258,7 +231,7 @@ const CheckoutBricks = ({ orderId, amount, payerEmail, payerCpf, payerName, onAp
             payer: { email: payerEmail },
           }}
           customization={{
-            paymentMethods: { creditCard: "all", debitCard: "all" },
+            paymentMethods: { creditCard: "all", debitCard: "all" } as any,
             visual: { hideFormTitle: true },
           }}
           onSubmit={async ({ formData }) => {
@@ -278,37 +251,6 @@ const CheckoutBricks = ({ orderId, amount, payerEmail, payerCpf, payerName, onAp
             } catch { /* toast already shown */ }
           }}
           onError={(e) => console.error("Card Brick error:", e)}
-        />
-      </TabsContent>
-
-      <TabsContent value="ticket" className="mt-5">
-        <Payment
-          key={`ticket-${orderId}`}
-          initialization={{
-            amount,
-            payer: { email: payerEmail },
-          }}
-          customization={{
-            paymentMethods: { ticket: "all" },
-            visual: { hideFormTitle: true },
-          }}
-          onSubmit={async ({ formData }) => {
-            try {
-              const fd: any = formData;
-              await submitPayment("ticket", {
-                ...fd,
-                payer: {
-                  ...fd?.payer,
-                  email: payerEmail,
-                  identification:
-                    fd?.payer?.identification || { type: "CPF", number: payerCpf },
-                  first_name: payerName.split(" ")[0],
-                  last_name: payerName.split(" ").slice(1).join(" ") || "—",
-                },
-              });
-            } catch { /* toast already shown */ }
-          }}
-          onError={(e) => console.error("Ticket Brick error:", e)}
         />
       </TabsContent>
     </Tabs>

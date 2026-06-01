@@ -474,7 +474,7 @@ const Checkout = () => {
                       }`}
                     />
                     {errors.cpf && <p className="mt-1 text-xs text-destructive">{errors.cpf}</p>}
-                    <p className="mt-1 text-[10px] text-muted-foreground">Obrigatório para emissão do pagamento (PIX, cartão ou boleto).</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">Obrigatório para emissão do pagamento (PIX ou cartão).</p>
                   </div>
 
                   <button
@@ -609,7 +609,7 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                {/* Payment Bricks (PIX, Cartão, Boleto) */}
+                {/* Payment Bricks (PIX e Cartão) */}
                 <div>
                   {createdOrderId ? (
                     <CheckoutBricks
