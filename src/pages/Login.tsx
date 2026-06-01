@@ -209,6 +209,15 @@ const Login = () => {
           <p className="mt-1 text-sm text-muted-foreground">Acesse sua conta</p>
         </div>
 
+        {isCheckoutFlow && (
+          <div className="mb-5 flex items-start gap-3 rounded-md border border-primary/30 bg-primary/10 p-3">
+            <ShoppingBag className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <p className="text-xs text-foreground">
+              Faça login ou crie sua conta para finalizar a compra.
+            </p>
+          </div>
+        )}
+
         {/* Google Sign In */}
         <button
           type="button"
