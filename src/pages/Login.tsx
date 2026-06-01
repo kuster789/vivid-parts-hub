@@ -312,7 +312,12 @@ const Login = () => {
 
         <div className="mt-6 text-center text-sm text-muted-foreground">
           Não tem conta?{" "}
-          <Link to="/cadastro" className="text-primary hover:underline">Criar conta</Link>
+          <Link
+            to={redirectParam ? `/cadastro?redirect=${encodeURIComponent(redirectParam)}` : "/cadastro"}
+            className="text-primary hover:underline"
+          >
+            Criar conta
+          </Link>
         </div>
       </div>
     </main>
