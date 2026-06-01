@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Navigate } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, ArrowRight, ShoppingBag, CheckCircle, Loader2, Truck,
-  CreditCard, QrCode, ExternalLink, MapPin, Package, Shield, Lock, Clock
+  CreditCard, QrCode, ExternalLink, MapPin, Package, Shield, Lock, Clock, Pencil
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import CouponInput from "@/components/CouponInput";
