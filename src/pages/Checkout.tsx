@@ -399,7 +399,40 @@ const Checkout = () => {
                 <h2 className="mb-5 flex items-center gap-2 font-display text-sm font-bold uppercase tracking-wider text-foreground">
                   <MapPin className="h-4 w-4 text-primary" /> Endereço de Entrega
                 </h2>
-                <div className="space-y-4">
+
+                {hasSavedAddress && !editingAddress && (
+                  <div className="mb-5 rounded-lg border border-primary/30 bg-primary/5 p-4">
+                    <div className="mb-3 flex items-center justify-between gap-2">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-primary">
+                        Endereço salvo
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setEditingAddress(true)}
+                        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        <Pencil className="h-3.5 w-3.5" /> Editar
+                      </button>
+                    </div>
+                    <div className="space-y-0.5 text-sm text-foreground">
+                      <p className="font-medium">{form.name}</p>
+                      <p className="text-muted-foreground">{form.address}</p>
+                      <p className="text-muted-foreground">
+                        {form.city}/{form.state} — CEP {form.zip}
+                      </p>
+                      <p className="text-muted-foreground">{form.phone}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={goToStep2}
+                      className="btn-primary-glow mt-4 inline-flex items-center gap-2 rounded-md px-5 py-2.5 text-xs font-semibold"
+                    >
+                      Usar este endereço <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                <div className={`space-y-4 ${hasSavedAddress && !editingAddress ? "hidden" : ""}`}>
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Nome completo *</label>
                     <input
