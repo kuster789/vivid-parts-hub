@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     q: "Quais formas de pagamento são aceitas?",
-    a: "Aceitamos PIX, cartão de crédito (parcelado em até 12x sem juros) e boleto bancário, tudo processado com segurança pelo Mercado Pago.",
+    a: "Aceitamos PIX e cartão de crédito (parcelado em até 12x sem juros), tudo processado com segurança pelo Mercado Pago.",
   },
   {
     q: "Vocês vendem peças usadas?",
