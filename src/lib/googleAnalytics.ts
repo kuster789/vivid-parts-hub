@@ -85,19 +85,21 @@ export const getGoogleConsentChoice = (): ConsentChoice | null => {
   return stored === "granted" || stored === "denied" ? stored : null;
 };
 
-export const updateGoogleConsent = (choice: ConsentChoice, persist = true) => {
+export const updateGoogleConsent = (choice: ConsentChoice, persist = true, emitEvent = true) => {
   if (!hasBrowser()) return;
   if (persist) window.localStorage.setItem(CONSENT_STORAGE_KEY, choice);
   gtag("consent", "update", consentPayload(choice));
-  gtag("event", choice === "granted" ? "cookie_consent_granted" : "cookie_consent_denied", {
-    event_category: "privacy",
-    event_label: "lgpd_banner",
-  });
+  if (emitEvent) {
+    gtag("event", choice === "granted" ? "cookie_consent_granted" : "cookie_consent_denied", {
+      event_category: "privacy",
+      event_label: "lgpd_banner",
+    });
+  }
 };
 
 export const applyStoredGoogleConsent = () => {
   const choice = getGoogleConsentChoice();
-  if (choice) updateGoogleConsent(choice, false);
+  if (choice) updateGoogleConsent(choice, false, false);
 };
 
 export const trackGooglePageView = (path: string) => {
