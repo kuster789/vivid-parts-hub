@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Search, Package, Truck, Headphones, ChevronRight, MessageSquare, Phone, Mail } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { trackGoogleWhatsAppClick } from "@/lib/googleAnalytics";
 
 const Support = () => {
   const [trackingCode, setTrackingCode] = useState("");
@@ -59,6 +60,7 @@ const Support = () => {
           <div className="grid gap-4 md:grid-cols-2">
             <a
               href="https://wa.me/554396438823"
+              onClick={() => trackGoogleWhatsAppClick("support_page")}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 rounded-lg border border-border p-4 transition-all hover:border-primary/40"

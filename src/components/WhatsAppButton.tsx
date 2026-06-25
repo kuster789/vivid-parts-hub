@@ -1,5 +1,6 @@
 import { MessageCircle } from "lucide-react";
 import { trackEvent } from "@/utils/analytics";
+import { trackGoogleWhatsAppClick } from "@/lib/googleAnalytics";
 
 const WHATSAPP_NUMBER = "554396438823";
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Olá! Vim pelo site e gostaria de informações.")}`;
@@ -12,6 +13,7 @@ const WhatsAppButton = () => {
         source_page: window.location.pathname
       }
     });
+    trackGoogleWhatsAppClick("floating_button");
   };
 
   return (

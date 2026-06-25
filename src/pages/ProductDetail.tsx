@@ -18,6 +18,7 @@ import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ShareButtons from "@/components/ShareButtons";
 import { trackEvent } from "@/utils/analytics";
+import { trackGoogleAddToCart, trackGoogleViewItem } from "@/lib/googleAnalytics";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -59,6 +60,7 @@ const ProductDetail = () => {
             stock_status: data.stock > 0 ? "in_stock" : "out_of_stock",
           }
         });
+        trackGoogleViewItem(data);
 
         trackView({
           id: data.id,
@@ -387,6 +389,7 @@ const ProductDetail = () => {
                         brand: product.brand
                       }
                     });
+                    trackGoogleAddToCart(product, quantity);
                     for (let i = 0; i < quantity; i++) {
                       addItem({ id: product.id, name: product.name, price, brand: product.brand, model: product.model, has_3d: product.has_3d ?? false, images: product.images, selectedColor }, selectedVariations);
                     }

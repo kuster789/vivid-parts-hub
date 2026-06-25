@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Wrench, MessageCircle, Phone, Mail, Clock, HelpCircle, Users, BookOpen, Download } from "lucide-react";
 import { ScrollReveal } from "@/hooks/useScrollReveal";
 import { useSEO } from "@/hooks/useSEO";
+import { trackGoogleWhatsAppClick } from "@/lib/googleAnalytics";
 
 const SuporteTecnico = () => {
   useSEO({
@@ -56,7 +57,7 @@ const SuporteTecnico = () => {
         <div className="card-industrial p-8 mb-8">
           <h2 className="mb-6 font-display text-sm font-bold uppercase tracking-wider text-foreground">Canais de Atendimento</h2>
           <div className="grid gap-4 sm:grid-cols-3">
-            <a href="https://wa.me/554396438823?text=Olá%20vim%20pelo%20Site%20estou%20com%20dúvidas%20sobre%20como%20comprar" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-3 rounded-lg border border-border bg-secondary/50 p-5 text-center transition-all hover:border-primary/40 hover:bg-secondary">
+            <a href="https://wa.me/554396438823?text=Olá%20vim%20pelo%20Site%20estou%20com%20dúvidas%20sobre%20como%20comprar" onClick={() => trackGoogleWhatsAppClick("technical_support_page")} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-3 rounded-lg border border-border bg-secondary/50 p-5 text-center transition-all hover:border-primary/40 hover:bg-secondary">
               <MessageCircle className="h-8 w-8 text-primary" />
               <div>
                 <p className="text-sm font-semibold text-foreground">WhatsApp</p>

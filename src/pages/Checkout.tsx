@@ -12,6 +12,13 @@ import CouponInput from "@/components/CouponInput";
 import CheckoutBricks from "@/components/CheckoutBricks";
 import { useToast } from "@/hooks/use-toast";
 import { trackEvent } from "@/utils/analytics";
+import {
+  clearPendingGooglePurchase,
+  readPendingGooglePurchase,
+  storePendingGooglePurchase,
+  trackGoogleBeginCheckout,
+  trackGooglePurchase,
+} from "@/lib/googleAnalytics";
 
 interface ShippingOption {
   id: number;
@@ -123,6 +130,7 @@ const Checkout = () => {
           total_price: totalPrice
         }
       });
+      trackGoogleBeginCheckout(items, totalPrice);
     }
   }, []);
 
@@ -135,6 +143,11 @@ const Checkout = () => {
           source: "mercadopago"
         }
       });
+      const pendingPurchase = readPendingGooglePurchase();
+      if (pendingPurchase) {
+        trackGooglePurchase(pendingPurchase);
+        clearPendingGooglePurchase();
+      }
     }
   }, [isPaymentApproved]);
 
@@ -294,6 +307,17 @@ const Checkout = () => {
 
     await supabase.from("order_items").insert(orderItems);
 
+    storePendingGooglePurchase({
+      transactionId: order.id,
+      value: finalTotal,
+      shipping: shippingCost,
+      coupon: couponCode || null,
+      items: items.map((item) => ({
+        product: item.product,
+        quantity: item.quantity,
+      })),
+    });
+
     // Persist full address on profile for reuse on future purchases
     await supabase
       .from("profiles")
@@ -335,6 +359,18 @@ const Checkout = () => {
   };
 
   const handlePaymentApproved = () => {
+    const pendingPurchase = readPendingGooglePurchase();
+    trackGooglePurchase(pendingPurchase || {
+      transactionId: createdOrderId || `checkout-${Date.now()}`,
+      value: finalTotal,
+      shipping: shippingCost,
+      coupon: couponCode || null,
+      items: items.map((item) => ({
+        product: item.product,
+        quantity: item.quantity,
+      })),
+    });
+    clearPendingGooglePurchase();
     clearCart();
     setSuccess(true);
   };

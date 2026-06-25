@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { trackGoogleWhatsAppClick } from "@/lib/googleAnalytics";
 
 const Footer = () => (
   <footer className="border-t border-border bg-card">
@@ -13,6 +14,10 @@ const Footer = () => (
           </div>
           <p className="text-sm text-muted-foreground">
             Peças e componentes de alta qualidade para motocicletas clássicas e esportivas.
+          </p>
+          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+            CNPJ 62.440.010/0001-03<br />
+            WhatsApp: (43) 9643-8823
           </p>
         </div>
         <div>
@@ -52,6 +57,7 @@ const Footer = () => (
             </a>
             <a
               href="https://wa.me/554396438823?text=Olá%20vim%20pelo%20Site%20estou%20com%20dúvidas%20sobre%20como%20comprar"
+              onClick={() => trackGoogleWhatsAppClick("footer")}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-md border border-border bg-secondary/50 px-4 py-2.5 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"

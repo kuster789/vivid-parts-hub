@@ -4,6 +4,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlist } from "@/hooks/useWishlist";
 import { trackEvent } from "@/utils/analytics";
+import { trackGoogleAddToCart } from "@/lib/googleAnalytics";
 
 interface ProductCardProps {
   product: {
@@ -109,6 +110,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
                     brand: product.brand
                   }
                 });
+                trackGoogleAddToCart(product, 1);
                 addItem({ id: product.id, name: product.name, price, brand: product.brand, model: product.model, has_3d: product.has_3d ?? false, images: product.images });
               }}
               className="btn-primary-glow flex w-full items-center justify-center gap-2 rounded-md py-2.5 text-xs font-semibold transition-all"

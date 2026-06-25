@@ -48,6 +48,9 @@ const Catalog = () => {
   const currentPage = Number(searchParams.get("pagina")) || 1;
 
   const currentBrand = brands.find((b) => b.slug === activeBrand);
+  const catalogHeading = currentBrand
+    ? `Peças para ${currentBrand.name}${activeModel ? ` ${activeModel}` : ""}`
+    : "Catálogo de Peças";
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
@@ -157,7 +160,7 @@ const Catalog = () => {
     <main className="py-6 md:py-8">
       <div className="container">
         <div className="mb-4 flex items-center justify-between md:mb-6">
-          <h1 className="section-title text-lg md:text-2xl">Catálogo de Peças</h1>
+          <h1 className="section-title text-lg md:text-2xl">{catalogHeading}</h1>
           <CatalogMobileFilters />
         </div>
 

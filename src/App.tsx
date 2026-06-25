@@ -10,6 +10,7 @@ import Footer from "@/components/Footer";
 import ChatBot from "@/components/ChatBot";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import LeadCapturePopup from "@/components/LeadCapturePopup";
+import CookieConsent from "@/components/CookieConsent";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { usePageTracking } from "@/hooks/usePageTracking";
@@ -105,6 +106,7 @@ const App = () => (
             <ChatBot />
             <WhatsAppButton />
             <LeadCapturePopup />
+            <CookieConsent />
           </BrowserRouter>
         </CartProvider>
       </AuthProvider>
